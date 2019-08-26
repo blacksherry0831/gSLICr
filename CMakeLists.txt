@@ -32,6 +32,8 @@ ENDIF(MSVC_IDE)
 ###############################################################################
 include_directories(${CMAKE_SOURCE_DIR})
 ###############################################################################
+ADD_SUBDIRECTORY(cuda_Lib)
+ADD_SUBDIRECTORY(gSLICr_Lib)
 ###############################################################################
 ADD_SUBDIRECTORY(ORUtils)
 ADD_SUBDIRECTORY(MY_SDK_LIB)
@@ -42,28 +44,6 @@ ADD_SUBDIRECTORY(MemcpyCv_gSLICr)
 ADD_SUBDIRECTORY(main.nav)
 ###############################################################################
 ADD_SUBDIRECTORY(SGV)
-###############################################################################
-set(GSLICR_LIB
-gSLICr_Lib/engines/gSLICr_core_engine.h
-gSLICr_Lib/engines/gSLICr_seg_engine.h
-gSLICr_Lib/engines/gSLICr_seg_engine_GPU.h
-gSLICr_Lib/engines/gSLICr_seg_engine_shared.h
-gSLICr_Lib/engines/gSLICr_core_engine.cpp
-gSLICr_Lib/engines/gSLICr_seg_engine.cpp
-gSLICr_Lib/engines/gSLICr_seg_engine_GPU.cu
-gSLICr_Lib/objects/gSLICr_settings.h
-gSLICr_Lib/objects/gSLICr_spixel_info.h
-gSLICr_Lib/gSLICr_defines.h
-gSLICr_Lib/gSLICr.h
-)
-###############################################################################
-SOURCE_GROUP(engines FILES ${GSLICR_LIB})
-###############################################################################
-cuda_add_library(gSLICr_lib
-			${GSLICR_LIB}
-			NVTimer.h
-			OPTIONS -gencode arch=compute_30,code=compute_30)
-target_link_libraries(gSLICr_lib ${CUDA_LIBRARY})
 ###############################################################################
 add_executable(demo demo.cpp)
 target_link_libraries(demo gSLICr_lib )

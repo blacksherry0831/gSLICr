@@ -190,7 +190,7 @@ void gSLICr::engines::seg_engine_GPU::Draw_Segmentation_Result(UChar4Image* out_
 
 __global__ void Cvt_Img_Space_device(const Vector4u* inimg, Vector4f* outimg, Vector2i img_size, COLOR_SPACE color_space)
 {
-	int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
+	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
 	if (x > img_size.x - 1 || y > img_size.y - 1) return;
 
 	cvt_img_space_shared(inimg, outimg, img_size, x, y, color_space);
@@ -199,7 +199,7 @@ __global__ void Cvt_Img_Space_device(const Vector4u* inimg, Vector4f* outimg, Ve
 
 __global__ void Draw_Segmentation_Result_device(const int* idx_img, Vector4u* sourceimg, Vector4u* outimg, Vector2i img_size)
 {
-	int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
+	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
 	if (x == 0 || y == 0 || x > img_size.x - 2 || y > img_size.y - 2) return;
 
 	draw_superpixel_boundry_shared(idx_img, sourceimg, outimg, img_size, x, y);
@@ -207,7 +207,7 @@ __global__ void Draw_Segmentation_Result_device(const int* idx_img, Vector4u* so
 
 __global__ void Init_Cluster_Centers_device(const Vector4f* inimg, spixel_info* out_spixel, Vector2i map_size, Vector2i img_size, int spixel_size)
 {
-	int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
+	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
 	if (x > map_size.x - 1 || y > map_size.y - 1) return;
 
 	init_cluster_centers_shared(inimg, out_spixel, map_size, img_size, spixel_size, x, y);
@@ -215,7 +215,7 @@ __global__ void Init_Cluster_Centers_device(const Vector4f* inimg, spixel_info* 
 
 __global__ void Find_Center_Association_device(const Vector4f* inimg, const spixel_info* in_spixel_map, int* out_idx_img, Vector2i map_size, Vector2i img_size, int spixel_size, float weight, float max_xy_dist, float max_color_dist)
 {
-	int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
+	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
 	if (x > img_size.x - 1 || y > img_size.y - 1) return;
 
 	find_center_association_shared(inimg, in_spixel_map, out_idx_img, map_size, img_size, spixel_size, weight, x, y,max_xy_dist,max_color_dist);
@@ -327,7 +327,7 @@ __global__ void Update_Cluster_Center_device(const Vector4f* inimg, const int* i
 
 __global__ void Finalize_Reduction_Result_device(const spixel_info* accum_map, spixel_info* spixel_list, Vector2i map_size, int no_blocks_per_spixel)
 {
-	int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
+	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
 	if (x > map_size.x - 1 || y > map_size.y - 1) return;
 
 	finalize_reduction_result_shared(accum_map, spixel_list, map_size, no_blocks_per_spixel, x, y);
@@ -335,7 +335,7 @@ __global__ void Finalize_Reduction_Result_device(const spixel_info* accum_map, s
 
 __global__ void Enforce_Connectivity_device(const int* in_idx_img, int* out_idx_img, Vector2i img_size)
 {
-	int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
+	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
 	if (x > img_size.x - 1 || y > img_size.y - 1) return;
 
 	supress_local_lable(in_idx_img, out_idx_img, img_size, x, y);

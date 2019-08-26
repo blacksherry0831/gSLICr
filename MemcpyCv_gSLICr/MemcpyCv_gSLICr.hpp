@@ -18,8 +18,11 @@ public:
 	~MemcpyCv_gSLICr(void);
 public:
 	static void load_4Image_to_MatBGR_BGR(const gSLICr::UChar4Image * inimg, cv::Mat & outimg);
+	static void load_4Image_to_MatBGRA_BGRA(const gSLICr::UChar4Image * inimg, cv::Mat & outimg);
 	static void load_MatBGRA_to_4image_BGR(const cv::Mat & inimg, gSLICr::UChar4Image * outimg);
 	static void load_IplimageBGRA_to_4image_BGR(const IplImage* _inimg, gSLICr::UChar4Image * _outimg);
+	static void load_Iplimage4u_to_4image_4u(const IplImage* _inimg, gSLICr::UChar4Image * _outimg);
+	static void load_4Image_to_MatBGRA_4u(const gSLICr::UChar4Image * inimg, cv::Mat & outimg);
 public:
 
 };

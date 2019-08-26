@@ -22,7 +22,7 @@ namespace ORUtils {
 	template <class T> struct Vector3_{
 		union {
 			struct{ T x, y, z; }; // standard names for components
-			struct{ T r, g, b; }; // standard names for components
+			struct{ T b, g, r; }; // standard names for components
 			struct{ T s, t, p; }; // standard names for components
 			T v[3];
 		};
@@ -31,7 +31,7 @@ namespace ORUtils {
 	template <class T> struct Vector4_ {
 		union {
 			struct { T x, y, z, w; }; // standard names for components
-			struct { T r, g, b, a; }; // standard names for components
+			struct { T b, g, r, a; }; // standard names for components
 			struct { T s, t, p, q; }; // standard names for components
 			T v[4];
 		};

@@ -53,12 +53,13 @@ void SGV_Method::initGlobalCfg()
 /*-------------------------------------------------------------------------*/
 void SGV_Method::initSetting(gSLICr::objects::settings& my_settings)
 {
-	my_settings.no_segs = 2000;
+	const int N = 16;
+	my_settings.no_segs = (2 * N + 1)*(2 * N + 1);
 	my_settings.spixel_size = 16;
 	my_settings.coh_weight = 0.6f;
 	my_settings.no_iters = 5;
 	my_settings.color_space = gSLICr::XYZ; // gSLICr::CIELAB for Lab, or gSLICr::RGB for RGB
-	my_settings.seg_method = gSLICr::GIVEN_SIZE; // or gSLICr::GIVEN_NUM for given number
+	my_settings.seg_method = gSLICr::GIVEN_NUM; // or gSLICr::GIVEN_NUM for given number
 	my_settings.do_enforce_connectivity = true; // whether or not run the enforce connectivity step
 }
 /*-------------------------------------------------------------------------*/
@@ -99,7 +100,7 @@ void SGV_Method::SVG_NAVIGATION_CAR(
 		
 		cv::Size s(my_settings.img_size.x, my_settings.img_size.y);
 		cv::Mat boundry_draw_frame; 
-				boundry_draw_frame.create(s, CV_8UC3);
+				boundry_draw_frame.create(s, CV_8UC4);
 
 		int key; int save_count = 0;
 		int do_count=0;
@@ -109,10 +110,16 @@ void SGV_Method::SVG_NAVIGATION_CAR(
 			{
 					TimeMeasure tm("cpy.superpixel.cpy");
 					TimeMeasure::Config(0, 0);
-					MemcpyCv_gSLICr::load_IplimageBGRA_to_4image_BGR(_img, in_img);
-					gSLICr_engine->Process_Frame(in_img);
-					gSLICr_engine->Draw_Segmentation_Result(out_img);
-					MemcpyCv_gSLICr::load_4Image_to_MatBGR_BGR(out_img, boundry_draw_frame);
+					
+							MemcpyCv_gSLICr::load_Iplimage4u_to_4image_4u(_img, in_img);
+							//MemcpyCv_gSLICr::load_IplimageBGRA_to_4image_BGR(_img, in_img);
+
+										gSLICr_engine->Process_Frame(in_img);
+										gSLICr_engine->Draw_Segmentation_Result(out_img);
+
+							MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(out_img, boundry_draw_frame);
+							//MemcpyCv_gSLICr::load_4Image_to_MatBGRA_BGRA(out_img, boundry_draw_frame);
+
 					TimeMeasure::Config(1, 1);
 			}
 				

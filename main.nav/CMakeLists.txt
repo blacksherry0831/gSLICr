@@ -14,9 +14,9 @@ set(CMAKE_AUTOMOC ON)
    
 # Tell CMake to create the helloworld executable
 					
-add_executable(EXE_NAV
+CUDA_ADD_EXECUTABLE(EXE_NAV
 							main_nav.cpp
-				)
+					)
 
 TARGET_LINK_LIBRARIES(EXE_NAV
 							SGV)

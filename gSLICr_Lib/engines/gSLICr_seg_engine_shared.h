@@ -142,7 +142,7 @@ _CPU_AND_GPU_CODE_ inline void draw_superpixel_boundry_shared(const int* idx_img
 	 || idx_img[idx] != idx_img[(y - 1)*img_size.x + x]
 	 || idx_img[idx] != idx_img[(y + 1)*img_size.x + x])
 	{
-		outimg[idx] = gSLICr::Vector4u(0,0,255,0);
+		outimg[idx] = gSLICr::Vector4u(255,0,0,0);
 	}
 	else
 	{
