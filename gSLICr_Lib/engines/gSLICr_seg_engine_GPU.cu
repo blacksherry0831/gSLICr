@@ -57,8 +57,9 @@ seg_engine_GPU::seg_engine_GPU(const settings& in_settings) : seg_engine(in_sett
 	Vector2i map_size = Vector2i(spixel_per_col, spixel_per_row);
 	spixel_map = new SpixelMap(map_size, true, true);
 
-	float total_pixel_to_search = (float)(spixel_size * spixel_size * 9);
-	no_grid_per_center = (int)ceil(total_pixel_to_search / (float)(BLOCK_DIM * BLOCK_DIM));
+	//float total_pixel_to_search = (float)(spixel_size * spixel_size * 9);
+	//no_grid_per_center = (int)ceil(total_pixel_to_search / (float)(BLOCK_DIM * BLOCK_DIM));
+	no_grid_per_center = Grid_9_Blocks(spixel_size, spixel_size);
 
 	map_size.x *= no_grid_per_center;
 	accum_map = new ORUtils::Image<spixel_info>(map_size, true, true);
@@ -236,25 +237,25 @@ __global__ void Update_Cluster_Center_device(const Vector4f* inimg, const int* i
 	should_add = false;
 	__syncthreads();
 
-	int no_blocks_per_spixel = gridDim.z;
+	const int no_blocks_per_spixel = gridDim.z;
 
-	int spixel_id = blockIdx.y * map_size.x + blockIdx.x;
+	const int spixel_id = blockIdx.y * map_size.x + blockIdx.x;
 
 	// compute the relative position in the search window
-	int block_x = blockIdx.z % no_blocks_per_line;
-	int block_y = blockIdx.z / no_blocks_per_line;
+	const int block_x = blockIdx.z % no_blocks_per_line;
+	const int block_y = blockIdx.z / no_blocks_per_line;
 
-	int x_offset = block_x * BLOCK_DIM + threadIdx.x;
-	int y_offset = block_y * BLOCK_DIM + threadIdx.y;
+	const int x_offset = block_x * BLOCK_DIM + threadIdx.x;
+	const int y_offset = block_y * BLOCK_DIM + threadIdx.y;
 
-	if (x_offset < spixel_size * 3 && y_offset < spixel_size * 3)
+	if (x_offset < Grid_9_Length(spixel_size) && y_offset < Grid_9_Length(spixel_size))
 	{
 		// compute the start of the search window
-		int x_start = blockIdx.x * spixel_size - spixel_size;	
-		int y_start = blockIdx.y * spixel_size - spixel_size;
+		const int x_start = SuperPixelIdx_2_ImgCoord_9Grid_Start(blockIdx.x,spixel_size);
+		const int y_start = SuperPixelIdx_2_ImgCoord_9Grid_Start(blockIdx.y,spixel_size);
 
-		int x_img = x_start + x_offset;
-		int y_img = y_start + y_offset;
+		const int x_img = x_start + x_offset;
+		const int y_img = y_start + y_offset;
 
 		if (x_img >= 0 && x_img < img_size.x && y_img >= 0 && y_img < img_size.y)
 		{
@@ -316,7 +317,7 @@ __global__ void Update_Cluster_Center_device(const Vector4f* inimg, const int* i
 
 	if (local_id == 0)
 	{
-		int accum_map_idx = spixel_id * no_blocks_per_spixel + blockIdx.z;
+		const int accum_map_idx = GetAccumMapIdx(spixel_id,no_blocks_per_spixel,blockIdx.z);
 		accum_map[accum_map_idx].center = xy_shared[0];
 		accum_map[accum_map_idx].color_info = color_shared[0];
 		accum_map[accum_map_idx].no_pixels = count_shared[0];

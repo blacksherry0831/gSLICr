@@ -102,6 +102,9 @@ void SGV_Method::SVG_NAVIGATION_CAR(
 		cv::Mat boundry_draw_frame; 
 				boundry_draw_frame.create(s, CV_8UC4);
 
+		cv::Mat idx_frame;
+				idx_frame.create(s, CV_32SC1);
+
 		int key; int save_count = 0;
 		int do_count=0;
 		while (do_count++<10)
@@ -112,13 +115,13 @@ void SGV_Method::SVG_NAVIGATION_CAR(
 					TimeMeasure::Config(0, 0);
 					
 							MemcpyCv_gSLICr::load_Iplimage4u_to_4image_4u(_img, in_img);
-							//MemcpyCv_gSLICr::load_IplimageBGRA_to_4image_BGR(_img, in_img);
 
 										gSLICr_engine->Process_Frame(in_img);
 										gSLICr_engine->Draw_Segmentation_Result(out_img);
+										const gSLICr::IntImage * idx_img=gSLICr_engine->Get_Seg_Res();
 
+							MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(idx_img,idx_frame);
 							MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(out_img, boundry_draw_frame);
-							//MemcpyCv_gSLICr::load_4Image_to_MatBGRA_BGRA(out_img, boundry_draw_frame);
 
 					TimeMeasure::Config(1, 1);
 			}

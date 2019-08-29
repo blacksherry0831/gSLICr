@@ -1,5 +1,14 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.8.1)
-project(gSLICr)
+project(gSLICr.ex)
+###############################################################################
+option (BUILDING_RELEASE_MODE
+        "" ON)
+###############################################################################
+if(BUILDING_RELEASE_MODE)
+	SET(CMAKE_BUILD_TYPE "Release")
+else()
+	SET(CMAKE_BUILD_TYPE "Debug")
+endif()
 ###############################################################################
 option (BUILDING_OPENCV_LIB
         "" ON)
