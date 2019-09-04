@@ -5,8 +5,14 @@
 #include "../objects/gSLICr_spixel_info.h"
 
 #include "gSLICr_seg_engine_map.h"
-
-_CPU_AND_GPU_CODE_ inline void rgb2xyz(const gSLICr::Vector4u& pix_in, gSLICr::Vector4f& pix_out)
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline void rgb2xyz(
+		const gSLICr::Vector4u& pix_in,
+		gSLICr::Vector4f& pix_out)
 {
 	const float _b = (float)pix_in.b * 0.0039216f;
 	const float _g = (float)pix_in.g * 0.0039216f;
@@ -15,10 +21,15 @@ _CPU_AND_GPU_CODE_ inline void rgb2xyz(const gSLICr::Vector4u& pix_in, gSLICr::V
 	pix_out.x = _r*0.412453f + _g*0.357580f + _b*0.180423f;
 	pix_out.y = _r*0.212671f + _g*0.715160f + _b*0.072169f;
 	pix_out.z = _r*0.019334f + _g*0.119193f + _b*0.950227f;
-
 }
-
-_CPU_AND_GPU_CODE_ inline void rgb2CIELab(const gSLICr::Vector4u& pix_in, gSLICr::Vector4f& pix_out)
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline void rgb2CIELab(
+	const gSLICr::Vector4u& pix_in,
+	gSLICr::Vector4f& pix_out)
 {
 	const float _b = (float)pix_in.b * 0.0039216f;
 	const float _g = (float)pix_in.g * 0.0039216f;
@@ -47,12 +58,22 @@ _CPU_AND_GPU_CODE_ inline void rgb2CIELab(const gSLICr::Vector4u& pix_in, gSLICr
 	if (zr > epsilon)	fz = pow(zr, 1.0f / 3.0f);
 	else				fz = (kappa*zr + 16.0f) / 116.0f;
 
-	pix_out.x = 116.0f*fy - 16.0f;
-	pix_out.y = 500.0f*(fx - fy);
-	pix_out.z = 200.0f*(fy - fz);
+	pix_out.L = 116.0f*fy - 16.0f;
+	pix_out.A = 500.0f*(fx - fy);
+	pix_out.B = 200.0f*(fy - fz);
 }
-
-_CPU_AND_GPU_CODE_ inline void cvt_img_space_shared(const gSLICr::Vector4u* inimg, gSLICr::Vector4f* outimg, const gSLICr::Vector2i& img_size, int x, int y, const gSLICr::COLOR_SPACE& color_space)
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline void cvt_img_space_shared(
+	const gSLICr::Vector4u* inimg,
+	gSLICr::Vector4f* outimg,
+	const gSLICr::Vector2i& img_size,
+	const int x,
+	const int y, 
+	const gSLICr::COLOR_SPACE& color_space)
 {
 	const int idx = y * img_size.x + x;
 
@@ -71,8 +92,26 @@ _CPU_AND_GPU_CODE_ inline void cvt_img_space_shared(const gSLICr::Vector4u* inim
 		break;
 	}
 }
-
-_CPU_AND_GPU_CODE_ inline void init_cluster_centers_shared(const gSLICr::Vector4f* inimg, gSLICr::objects::spixel_info* out_spixel, gSLICr::Vector2i map_size, gSLICr::Vector2i img_size, int spixel_size, int x, int y)
+/*-------------------------------------------------------------------------*/
+/**
+*@param inimg			Í¼Ïñ¾ØÕó
+*@param out_spixel		³¬ÏñËØÊôÐÔ
+*@param map_size		³¬ÏñËØ¶þÎ¬×ø±ê
+*@param img_size		Í¼Ïñ³ß´ç
+*@param spixel_size		³¬ÏñËØ³¤¿í(ÏñËØ)
+*@param x				³¬ÏñËØ¶þÎ¬×ø±ê£¬XÖá×ø±ê
+*@param y				³¬ÏñËØ¶þÎ¬×ø±ê£¬YÖá×ø±ê
+*
+*/
+/*-------------------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline void init_cluster_centers_shared(
+	const gSLICr::Vector4f* inimg,
+	gSLICr::objects::spixel_info* out_spixel,
+	const gSLICr::Vector2i map_size,
+	const gSLICr::Vector2i img_size,
+	const int spixel_size,
+	const int x,
+	const int y)
 {
 	const int cluster_idx = y * map_size.x + x;
 
@@ -90,22 +129,61 @@ _CPU_AND_GPU_CODE_ inline void init_cluster_centers_shared(const gSLICr::Vector4
 	
 	out_spixel[cluster_idx].no_pixels = 0;
 }
-
-_CPU_AND_GPU_CODE_ inline float compute_slic_distance(const gSLICr::Vector4f& pix, int x, int y, const gSLICr::objects::spixel_info& center_info, float weight, float normalizer_xy, float normalizer_color)
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline float compute_slic_distance(
+	const gSLICr::Vector4f& pix,
+	const int x,
+	const int y,
+	const gSLICr::objects::spixel_info& center_info,
+	const float weight,
+	const float normalizer_xy,
+	const float normalizer_color)
 {
-	const float dcolor = (pix.x - center_info.color_info.x)*(pix.x - center_info.color_info.x)
-				 + (pix.y - center_info.color_info.y)*(pix.y - center_info.color_info.y)
-				 + (pix.z - center_info.color_info.z)*(pix.z - center_info.color_info.z);
+	const float dcolor =
+				(pix.x - center_info.color_info.x)*(pix.x - center_info.color_info.x)
+			+	(pix.y - center_info.color_info.y)*(pix.y - center_info.color_info.y)
+			+	(pix.z - center_info.color_info.z)*(pix.z - center_info.color_info.z);
 
-	const float dxy = (x - center_info.center.x) * (x - center_info.center.x)
+	const float dxy =
+				(x - center_info.center.x) * (x - center_info.center.x)
 			  + (y - center_info.center.y) * (y - center_info.center.y);
 
 
 	const float retval = dcolor * normalizer_color + weight * dxy * normalizer_xy;
 	return sqrtf(retval);
 }
-
-_CPU_AND_GPU_CODE_ inline void find_center_association_shared(const gSLICr::Vector4f* inimg, const gSLICr::objects::spixel_info* in_spixel_map, int* out_idx_img, gSLICr::Vector2i map_size, gSLICr::Vector2i img_size, int spixel_size, float weight, int x, int y, float max_xy_dist, float max_color_dist)
+/*-------------------------------------------------------------------------*/
+/**
+*
+*@param	[in]	inimg				Í¼ÏñÊý¾Ý
+*@param	[in]	in_spixel_map		³¬ÏñËØÊôÐÔ
+*@param	[out]	out_idx_img			±êÇ©¾ØÕó
+*@param	[in]	map_size			³¬ÏñËØ³ß´ç
+*@param	[in]	img_size			Í¼Ïñ³ß´ç
+*@param	[in]	spixel_size			³¬ÏñËØ³¤¿í(ÏñËØ)	
+*@param	[in]	weight				×ø±ê¾àÀëÈ¨ÖØ
+*@param	[in]	x					Í¼Ïñ×ø±êX
+*@param	[in]	y					Í¼Ïñ×ø±êY
+*@param	[in]	max_xy_dist			×ø±ê×î´ó¾àÀë
+*@param	[in]	max_color_dist		É«²Ê×î´ó¾àÀë
+*/
+/*-------------------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline void find_center_association_shared(
+	const gSLICr::Vector4f* inimg,
+	const gSLICr::objects::spixel_info* in_spixel_map,
+	int* out_idx_img,
+	const gSLICr::Vector2i map_size,
+	const gSLICr::Vector2i img_size,
+	const int spixel_size,
+	const float weight,
+	const int x,
+	const int y,
+	const float max_xy_dist,
+	const float max_color_dist)
 {
 	const int idx_img = y * img_size.x + x;
 
@@ -117,25 +195,45 @@ _CPU_AND_GPU_CODE_ inline void find_center_association_shared(const gSLICr::Vect
 	float dist = DIST_MAX;
 
 	// search 3x3 neighborhood
-	for (int i = -1; i <= 1; i++) for (int j = -1; j <= 1; j++)
+	for (int i = -1; i <= 1; i++)
+		for (int j = -1; j <= 1; j++)
 	{
 		const int ctr_x_check = ctr_x + j;
 		const int ctr_y_check = ctr_y + i;
-		if (ctr_x_check >= 0 && ctr_y_check >= 0 && ctr_x_check < map_size.x && ctr_y_check < map_size.y)
+
+		if (ctr_x_check >= 0 && 
+			ctr_y_check >= 0 && 
+			ctr_x_check < map_size.x && 
+			ctr_y_check < map_size.y)
 		{
 			const int ctr_idx = ctr_y_check*map_size.x + ctr_x_check;
-			const float cdist = compute_slic_distance(inimg[idx_img], x, y, in_spixel_map[ctr_idx], weight, max_xy_dist, max_color_dist);
+
+			const float cdist = compute_slic_distance(
+														inimg[idx_img],
+														x,
+														y,
+														in_spixel_map[ctr_idx],
+														weight,
+														max_xy_dist,
+														max_color_dist);
+
 			if (cdist < dist)
 			{
 				dist = cdist;
 				minidx = in_spixel_map[ctr_idx].id;
 			}
+
 		}
 	}
 
-	if (minidx >= 0) out_idx_img[idx_img] = minidx;
+	if (minidx >= 0)
+		out_idx_img[idx_img] = minidx;
 }
-
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
 _CPU_AND_GPU_CODE_ inline void draw_superpixel_boundry_shared(const int* idx_img, gSLICr::Vector4u* sourceimg, gSLICr::Vector4u* outimg, gSLICr::Vector2i img_size, int x, int y)
 {
 	const int idx = y * img_size.x + x;
@@ -152,8 +250,18 @@ _CPU_AND_GPU_CODE_ inline void draw_superpixel_boundry_shared(const int* idx_img
 		outimg[idx] = sourceimg[idx];
 	}
 }
-
-_CPU_AND_GPU_CODE_ inline void finalize_reduction_result_shared(const gSLICr::objects::spixel_info* accum_map, gSLICr::objects::spixel_info* spixel_list, gSLICr::Vector2i map_size, int no_blocks_per_spixel, int x, int y)
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline void finalize_reduction_result_shared(
+	const gSLICr::objects::spixel_info* accum_map,
+	gSLICr::objects::spixel_info* spixel_list,
+	const gSLICr::Vector2i map_size,
+	const int no_blocks_per_spixel,
+	const int x,
+	const int y)
 {
 	const int spixel_idx = y * map_size.x + x;
 
@@ -175,16 +283,27 @@ _CPU_AND_GPU_CODE_ inline void finalize_reduction_result_shared(const gSLICr::ob
 		spixel_list[spixel_idx].center /= (float)spixel_list[spixel_idx].no_pixels;
 		spixel_list[spixel_idx].color_info /= (float)spixel_list[spixel_idx].no_pixels;
 	}
-}
 
-_CPU_AND_GPU_CODE_ inline void supress_local_lable(const int* in_idx_img, int* out_idx_img, gSLICr::Vector2i img_size, int x, int y)
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline void supress_local_lable(
+	const int* in_idx_img,
+	int* out_idx_img,
+	const gSLICr::Vector2i img_size,
+	const int x,
+	const int y)
 {
-	const int clable = in_idx_img[y*img_size.x + x];
+	const int IDX = y*img_size.x + x;
+	const int clable = in_idx_img[IDX];
 
 	// don't suppress boundary
 	if (x <= 1 || y <= 1 || x >= img_size.x - 2 || y >= img_size.y - 2)
 	{ 
-		out_idx_img[y*img_size.x + x] = clable;
+		out_idx_img[IDX] = clable;
 		return; 
 	}
 
@@ -202,7 +321,12 @@ _CPU_AND_GPU_CODE_ inline void supress_local_lable(const int* in_idx_img, int* o
 	}
 
 	if (diff_count>=16)
-		out_idx_img[y*img_size.x + x] = diff_lable;
+		out_idx_img[IDX] = diff_lable;
 	else
-		out_idx_img[y*img_size.x + x] = clable;
+		out_idx_img[IDX] = clable;
 }
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/

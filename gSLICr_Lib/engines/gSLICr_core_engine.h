@@ -10,7 +10,7 @@ namespace gSLICr
 	{
 		class core_engine
 		{
-		private:
+		protected:
 
 			seg_engine* slic_seg_engine;
 

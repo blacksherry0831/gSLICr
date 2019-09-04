@@ -43,7 +43,7 @@ seg_engine_GPU::seg_engine_GPU(const settings& in_settings) : seg_engine(in_sett
 
 	if (in_settings.seg_method == GIVEN_NUM)
 	{
-		float cluster_size = (float)(in_settings.img_size.x * in_settings.img_size.y) / (float)in_settings.no_segs;
+		const float cluster_size = (float)(in_settings.img_size.x * in_settings.img_size.y) / (float)in_settings.no_segs;
 		spixel_size = (int)ceil(sqrtf(cluster_size));
 	}
 	else
@@ -51,8 +51,8 @@ seg_engine_GPU::seg_engine_GPU(const settings& in_settings) : seg_engine(in_sett
 		spixel_size = in_settings.spixel_size;
 	}
 	
-	int spixel_per_col = (int)ceil(in_settings.img_size.x / spixel_size);
-	int spixel_per_row = (int)ceil(in_settings.img_size.y / spixel_size);
+	const int spixel_per_col = (int)ceil(in_settings.img_size.x / spixel_size);
+	const int spixel_per_row = (int)ceil(in_settings.img_size.y / spixel_size);
 	
 	Vector2i map_size = Vector2i(spixel_per_col, spixel_per_row);
 	spixel_map = new SpixelMap(map_size, true, true);
@@ -130,7 +130,11 @@ void gSLICr::engines::seg_engine_GPU::Find_Center_Association()
 
 	Find_Center_Association_device << <gridSize, blockSize >> >(img_ptr, spixel_list, idx_ptr, map_size, img_size, spixel_size, gSLICr_settings.coh_weight,max_xy_dist,max_color_dist);
 }
-
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 void gSLICr::engines::seg_engine_GPU::Update_Cluster_Center()
 {
 	spixel_info* accum_map_ptr = accum_map->GetData(MEMORYDEVICE_CUDA);
@@ -141,26 +145,30 @@ void gSLICr::engines::seg_engine_GPU::Update_Cluster_Center()
 	Vector2i map_size = spixel_map->noDims;
 	Vector2i img_size = cvt_img->noDims;
 
-	int no_blocks_per_line = spixel_size * 3 / BLOCK_DIM;
+	const int no_blocks_per_line = spixel_size * 3 / BLOCK_DIM;
 
-	dim3 blockSize(BLOCK_DIM, BLOCK_DIM);
-	dim3 gridSize(map_size.x, map_size.y, no_grid_per_center);
+	const dim3 blockSize(BLOCK_DIM, BLOCK_DIM);
+	const dim3 gridSize(map_size.x, map_size.y, no_grid_per_center);
 
 	Update_Cluster_Center_device<<<gridSize,blockSize>>>(img_ptr, idx_ptr, accum_map_ptr, map_size, img_size, spixel_size, no_blocks_per_line);
 
-	dim3 gridSize2(map_size.x, map_size.y);
+	const dim3 gridSize2(map_size.x, map_size.y);
 
 	Finalize_Reduction_Result_device<<<gridSize2,blockSize>>>(accum_map_ptr, spixel_list_ptr, map_size, no_grid_per_center);
 }
-
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 void gSLICr::engines::seg_engine_GPU::Enforce_Connectivity()
 {
 	int* idx_ptr = idx_img->GetData(MEMORYDEVICE_CUDA);
 	int* tmp_idx_ptr = tmp_idx_img->GetData(MEMORYDEVICE_CUDA);
-	Vector2i img_size = idx_img->noDims;
+	const Vector2i img_size = idx_img->noDims;
 
-	dim3 blockSize(BLOCK_DIM, BLOCK_DIM);
-	dim3 gridSize((int)ceil((float)img_size.x / (float)blockSize.x), (int)ceil((float)img_size.y / (float)blockSize.y));
+	const dim3 blockSize(BLOCK_DIM, BLOCK_DIM);
+	const dim3 gridSize((int)ceil((float)img_size.x / (float)blockSize.x), (int)ceil((float)img_size.y / (float)blockSize.y));
 
 	Enforce_Connectivity_device << <gridSize, blockSize >> >(idx_ptr, tmp_idx_ptr, img_size);
 	Enforce_Connectivity_device << <gridSize, blockSize >> >(tmp_idx_ptr, idx_ptr, img_size);
@@ -221,10 +229,21 @@ __global__ void Find_Center_Association_device(const Vector4f* inimg, const spix
 
 	find_center_association_shared(inimg, in_spixel_map, out_idx_img, map_size, img_size, spixel_size, weight, x, y,max_xy_dist,max_color_dist);
 }
-
-__global__ void Update_Cluster_Center_device(const Vector4f* inimg, const int* in_idx_img, spixel_info* accum_map, Vector2i map_size, Vector2i img_size, int spixel_size, int no_blocks_per_line)
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+__global__ void Update_Cluster_Center_device(
+	const Vector4f* inimg,
+	const int* in_idx_img,
+	spixel_info* accum_map,
+	const Vector2i map_size,
+	const Vector2i img_size,
+	const int spixel_size,
+	const int no_blocks_per_line)
 {
-	int local_id = threadIdx.y * blockDim.x + threadIdx.x;
+	const int local_id = threadIdx.y * blockDim.x + threadIdx.x;
 
 	__shared__ Vector4f color_shared[BLOCK_DIM*BLOCK_DIM];
 	__shared__ Vector2f xy_shared[BLOCK_DIM*BLOCK_DIM];
@@ -325,15 +344,27 @@ __global__ void Update_Cluster_Center_device(const Vector4f* inimg, const int* i
 
 
 }
-
-__global__ void Finalize_Reduction_Result_device(const spixel_info* accum_map, spixel_info* spixel_list, Vector2i map_size, int no_blocks_per_spixel)
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+__global__ void Finalize_Reduction_Result_device(
+	const spixel_info* accum_map,
+	spixel_info* spixel_list,
+	Vector2i map_size,
+	int no_blocks_per_spixel)
 {
 	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
 	if (x > map_size.x - 1 || y > map_size.y - 1) return;
 
 	finalize_reduction_result_shared(accum_map, spixel_list, map_size, no_blocks_per_spixel, x, y);
 }
-
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 __global__ void Enforce_Connectivity_device(const int* in_idx_img, int* out_idx_img, Vector2i img_size)
 {
 	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -341,4 +372,9 @@ __global__ void Enforce_Connectivity_device(const int* in_idx_img, int* out_idx_
 
 	supress_local_lable(in_idx_img, out_idx_img, img_size, x, y);
 }
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 

@@ -33,6 +33,7 @@ void seg_engine::Perform_Segmentation(UChar4Image* in_img)
 
 	for (int i = 0; i < gSLICr_settings.no_iters; i++)
 	{
+
 		Update_Cluster_Center();
 		Find_Center_Association();
 	}
