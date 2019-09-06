@@ -120,13 +120,13 @@ struct spixel_info
 1. 按照Pixel并行；
 2. 每一个线程计算一个Pixel的颜色空间转换
 
+### 2.CODE
+
 | 并行块    | x                                | y                                 | z    |
 | --------- | -------------------------------- | --------------------------------- | ---- |
 | BlockSize | BLOCK_DIM                        | BLOCK_DIM                         | 1    |
 | GridSize  | ceil( ImgSize.Width/BlockSize.x) | ceil( ImgSize.Height/BlockSize.y) | 1    |
 |           |                                  |                                   |      |
-
-### 2.颜色空间转换
 
 #### 2.1 RGB2XYZ
 
@@ -402,17 +402,11 @@ _CPU_AND_GPU_CODE_ inline void find_center_association_shared(
 ### 1.并行计算
 
 1. 按照Seed和9Seeds对应GPU.Pixel.block并行；
-2. 在label上搜索9Seed区域内与Seed值一样的点;
+2. 在旧label上搜索9Seed区域内与Seed值一样的点;
 3. 累加所有符合labels条件的坐标(x,y)和颜色(l,a,b);
 4. 求坐标和颜色的平均值;
 
 ### 2.CODE
-
-| 并行块    | x              | y              | z                  |
-| --------- | -------------- | -------------- | ------------------ |
-| BlockSize | BLOCK_DIM      | BLOCK_DIM      | 1                  |
-| GridSize  | spixel.per.col | spixel.per.row | no.grid.per.center |
-|           |                |                |                    |
 
 | variate   | type        | x              | y              | z                  |
 | --------- | ----------- | -------------- | -------------- | ------------------ |
@@ -421,10 +415,17 @@ _CPU_AND_GPU_CODE_ inline void find_center_association_shared(
 
 #### 2.1 统计坐标与颜色
 
+| 并行块    | x              | y              | z                  |
+| --------- | -------------- | -------------- | ------------------ |
+| BlockSize | BLOCK_DIM      | BLOCK_DIM      | 1                  |
+| GridSize  | spixel.per.col | spixel.per.row | no.grid.per.center |
+|           |                |                |                    |
+
 1. 统计超像素块中每一个并行块（16X16）中的坐标(x,y)和颜色(l,a,b);
 2. GPU一个Block有（16X16）256个线程；
 3. 一次统计一个block内的数据；
 4. 一个warp包含32个并行thread;
+5. 统计新seed时，是以旧的seed为中心的超像素的9宫格内统计；
 
 ```C++
 __global__ void Update_Cluster_Center_device(
@@ -541,6 +542,12 @@ __global__ void Update_Cluster_Center_device(
 
 #### 2.2 求平均
 
+| 并行块    | x              | y              | z    |
+| --------- | -------------- | -------------- | ---- |
+| BlockSize | BLOCK_DIM      | BLOCK_DIM      | 1    |
+| GridSize  | spixel.per.col | spixel.per.row | 1    |
+|           |                |                |      |
+
 1. 一个超像素对应no.grid.per.center个block;
 2. 累加no.grid.per.center个统计数据;
 3. 求平均；
@@ -592,13 +599,13 @@ _CPU_AND_GPU_CODE_ inline void finalize_reduction_result_shared(
 5. 重复（一次）步骤一到步骤四；
 6. 结束；
 
-| 并行块    | x              | y              | z                  |
-| --------- | -------------- | -------------- | ------------------ |
-| BlockSize | BLOCK_DIM      | BLOCK_DIM      | 1                  |
-| GridSize  | spixel.per.col | spixel.per.row | no.grid.per.center |
-|           |                |                |                    |
-
 ### 2.CODE
+
+| 并行块    | x                                | y                                 | z    |
+| --------- | -------------------------------- | --------------------------------- | ---- |
+| BlockSize | BLOCK_DIM                        | BLOCK_DIM                         | 1    |
+| GridSize  | ceil( ImgSize.Width/BlockSize.x) | ceil( ImgSize.Height/BlockSize.y) | 1    |
+|           |                                  |                                   |      |
 
 ```C++
 _CPU_AND_GPU_CODE_ inline void supress_local_lable(
