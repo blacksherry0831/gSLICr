@@ -9,6 +9,8 @@
 /*-------------------------------------------------------------------------*/
 #include "MemcpyCv_gSLICr/MemcpyCv_gSLICr.hpp"
 /*-------------------------------------------------------------------------*/
+#include "gSLICr_Lib/engines/gSLICr_core_engine_cluster.h"
+/*-------------------------------------------------------------------------*/
 int SGV_Method::G_DEBUG = FALSE;
 /*----------------------------------------------------------------*/
 int SGV_Method::G_SAVE = FALSE;
@@ -145,6 +147,85 @@ void SGV_Method::SVG_NAVIGATION_CAR(
 *
 */
 /*-------------------------------------------------------------------------*/
+void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
+	const IplImage* _img,
+	const std::string _saveLocation,
+	const int _K,
+	const float _M,
+	const float _HL_VP)
+{
+
+	TimeMeasure tm("##################### NAVIGATION CAR CLUSTER #####################");
+	{
+
+		gSLICr::objects::settings my_settings;
+		initSetting(my_settings);
+		initSetting(my_settings, _img);
+
+		gSLICr::engines::core_engine_cluster* gSLICr_engine = new gSLICr::engines::core_engine_cluster(my_settings);
+		
+		const gSLICr::engines::seg_engine_GPU_cluster* gSLICr_seg_engine = gSLICr_engine->GetSegEngineGPUCluster();
+		
+		const int SpixelDim = gSLICr_seg_engine->SpixelNum();
+
+		gSLICr::UChar4Image* in_img = new gSLICr::UChar4Image(my_settings.img_size, true, true);
+		gSLICr::UChar4Image* out_img = new gSLICr::UChar4Image(my_settings.img_size, true, true);
+
+		cv::Size img_size_cv(my_settings.img_size.x, my_settings.img_size.y);
+		cv::Size adjacency_size_cv(SpixelDim, SpixelDim);
+		
+
+		cv::Mat boundry_draw_frame(img_size_cv, CV_8UC4);
+		cv::Mat idx_frame(img_size_cv, CV_32SC1);
+		cv::Mat adjacency_frame(adjacency_size_cv, CV_32SC1);
+		
+
+		int key; int save_count = 0;
+		int do_count = 0;
+		while (do_count++<10)
+		{
+
+			{
+				TimeMeasure tm("cpy.superpixel.cpy");
+				TimeMeasure::Config(0, 0);
+
+				MemcpyCv_gSLICr::load_Iplimage4u_to_4image_4u(_img, in_img);
+
+				gSLICr_engine->Process_Frame(in_img);
+				gSLICr_engine->Draw_Segmentation_Result(out_img);
+
+				const gSLICr::IntImage * idx_img = gSLICr_engine->Get_Seg_Res();
+				MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(idx_img, idx_frame);
+				MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(out_img, boundry_draw_frame);
+
+				gSLICr_engine->Perform_Cluster();
+
+				
+				const gSLICr::IntImage * adj_img = gSLICr_engine->Get_Adjacency_Res();
+				MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(adj_img, adjacency_frame);
+
+				TimeMeasure::Config(1, 1);
+			}
+
+			imshow("segmentation", boundry_draw_frame);
+
+			key = cv::waitKey(1);
+			if (key == 27) break;
+			else if (key == 's')
+			{
+				printf("\nsaved segmentation %04i\n", save_count);
+				save_count++;
+			}
+		}
+
+	}
+
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
 void SGV_Method::METHOD_FILE(const std::string _f)
 {
 	ImageDataBasic imgorg(_f,"");
@@ -176,9 +257,18 @@ void SGV_Method::METHOD_MEM(const std::string _f,IplImage* _img)
 		
 		
 
-	}else if (method_t.compare(SGV_CFG_ARITHMETIC::NODE_METHOD_NAV_CAR)==0){
-						
+	}
+	else if (method_t.compare(SGV_CFG_ARITHMETIC::NODE_METHOD_NAV_CAR) == 0) {
+
 		SVG_NAVIGATION_CAR(_img,
+			saveLocation,
+			K,
+			M,
+			AH_VP);
+
+	}else if (method_t.compare(SGV_CFG_ARITHMETIC::NODE_METHOD_NAV_CAR_CLUSTER) == 0) {
+
+		SVG_NAVIGATION_CAR_CLUSTER(_img,
 			saveLocation,
 			K,
 			M,

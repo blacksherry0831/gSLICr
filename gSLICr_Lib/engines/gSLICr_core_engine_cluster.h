@@ -4,7 +4,7 @@
 /*----------------------------------------------------------------*/
 #include "gSLICr_seg_engine_GPU.h"
 /*----------------------------------------------------------------*/
-#include "gSLICr_seg_engine_cluster.h"
+#include "gSLICr_seg_engine_GPU_cluster.h"
 /*----------------------------------------------------------------*/
 /**
 *
@@ -24,18 +24,25 @@ namespace gSLICr
 
 		protected:
 
-			seg_engine_cluster* slic_seg_engine;
+			seg_engine_GPU_cluster* slic_seg_engine;
 
 		public:
 
 			// Function to segment in_img
 			void Process_Frame(UChar4Image* in_img);
 
+			void Perform_Cluster();
+
 			// Function to get the pointer to the segmented mask image
 			const IntImage * Get_Seg_Res();
+			const IntImage * Get_Adjacency_Res();
 
 			// Function to draw segmentation result on out_img
 			void Draw_Segmentation_Result(UChar4Image* out_img);
+
+			const gSLICr::engines::seg_engine_GPU_cluster * GetSegEngineGPUCluster() const;
+
+
 
 		};
 	}

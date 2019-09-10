@@ -6,7 +6,8 @@
 #include "../objects/gSLICr_settings.h"
 #include "../objects/gSLICr_spixel_info.h"
 /*----------------------------------------------------------------*/
-#include "gSLICr_seg_engine.h"
+#include "gSLICr_seg_engine_GPU.h"
+
 /*----------------------------------------------------------------*/
 /**
 *
@@ -16,15 +17,21 @@ namespace gSLICr
 {
 	namespace engines
 	{
-		class seg_engine_cluster :public seg_engine
+		class seg_engine_GPU_cluster :public seg_engine_GPU
 		{
-		protected:
-			IntImage *link_img;
 		public:
+			seg_engine_GPU_cluster(const objects::settings& in_settings);
+			~seg_engine_GPU_cluster();
+		protected:
+			IntImage *adj_img;
+		public:
+			virtual void Find_Adjacency_Matrix_E();
 
-			seg_engine_cluster(const objects::settings& in_settings );
-			~seg_engine_cluster();
-
+			void Perform_Cluster();
+			
+			int SpixelNum() const;
+			
+			const IntImage* Get_Adjacency_Matrix();
 
 		};
 	}

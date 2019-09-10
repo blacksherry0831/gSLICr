@@ -5,6 +5,7 @@ const QString	SGV_CFG_ARITHMETIC::NODE_METHOD_OUT_DOOR_400_IMAGE_STABLE = "out.d
 /*-------------------------------------------------------------------------*/
 const QString	SGV_CFG_ARITHMETIC::NODE_METHOD_LAB_SVG = "Method.lab.svg";
 const QString	SGV_CFG_ARITHMETIC::NODE_METHOD_NAV_CAR = "Method.nav.car";
+const QString	SGV_CFG_ARITHMETIC::NODE_METHOD_NAV_CAR_CLUSTER = "Method.nav.car.cluster";
 /*-------------------------------------------------------------------------*/
 const QString	SGV_CFG_ARITHMETIC::NODE_METHOD_CURRENT = "Method.current";
 /*-------------------------------------------------------------------------*/

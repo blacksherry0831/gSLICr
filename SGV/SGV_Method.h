@@ -41,6 +41,13 @@ static	void SVG_NAVIGATION_CAR(
 						const float _M = 10,
 						const float _HL_VP = 0.5);
 
+static void SVG_NAVIGATION_CAR_CLUSTER(
+						const IplImage * _img,
+						const std::string _saveLocation,
+						const int _K,
+						const float _M,
+						const float _HL_VP);
+
 public:
 
 static	void METHOD_FILE(const std::string _f);
