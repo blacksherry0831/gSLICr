@@ -178,6 +178,7 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 		cv::Mat boundry_draw_frame(img_size_cv, CV_8UC4);
 		cv::Mat idx_frame(img_size_cv, CV_32SC1);
 		cv::Mat adjacency_frame(adjacency_size_cv, CV_32SC1);
+		cv::Mat similar_frame(adjacency_size_cv, CV_32FC1);
 		
 
 		int key; int save_count = 0;
@@ -199,10 +200,16 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 				MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(out_img, boundry_draw_frame);
 
 				gSLICr_engine->Perform_Cluster();
-
-				
+								
 				const gSLICr::IntImage * adj_img = gSLICr_engine->Get_Adjacency_Res();
 				MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(adj_img, adjacency_frame);
+
+				
+
+				const gSLICr::FloatImage *similar_img = gSLICr_engine->Get_Similar_Res();
+				MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(similar_img, similar_frame);
+
+				ImgProcCluster::GetClusterRelation(similar_frame);
 
 				TimeMeasure::Config(1, 1);
 			}

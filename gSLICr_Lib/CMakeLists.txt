@@ -51,6 +51,8 @@ ENDIF()
 #	set(CMAKE_CXX_FLAGS "-fPIC -O3 -march=native ${CFLAGS_WARN} ${CMAKE_CXX_FLAGS}")
 #ENDIF(MSVC_IDE)
 ###############################################################################
+add_definitions(-D_USE_MATH_DEFINES)
+###############################################################################
 SET(CUDA_NVCC_FLAGS 
 		${CUDA_NVCC_FLAGS};
 		-gencode arch=compute_35,code=compute_35;

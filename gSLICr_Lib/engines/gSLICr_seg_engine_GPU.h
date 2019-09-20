@@ -14,7 +14,9 @@ namespace gSLICr
 			int no_grid_per_center;
 			ORUtils::Image<objects::spixel_info>* accum_map;
 			IntImage* tmp_idx_img;
-
+		protected:
+			Vector2i spixel_map_size;
+			Vector2i spixel_accum_map_size;
 		protected:
 			void Cvt_Img_Space(UChar4Image* inimg, Float4Image* outimg, COLOR_SPACE color_space);
 			void Init_Cluster_Centers();

@@ -1,19 +1,20 @@
 // Copyright 2014-2015 Isis Innovation Limited and the authors of gSLICr
-
+/*----------------------------------------------------------------*/
 #include "gSLICr_seg_engine_GPU.h"
 #include "gSLICr_seg_engine_shared.h"
-
-using namespace std;
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 using namespace gSLICr;
 using namespace gSLICr::objects;
 using namespace gSLICr::engines;
-
-// ----------------------------------------------------
-//
-//	kernel function defines
-//
-// ----------------------------------------------------
-
+/*----------------------------------------------------------------*/
+/**
+*kernel function defines
+*/
+/*----------------------------------------------------------------*/
 __global__ void Cvt_Img_Space_device(const Vector4u* inimg, Vector4f* outimg, Vector2i img_size, COLOR_SPACE color_space);
 
 __global__ void Enforce_Connectivity_device(const int* in_idx_img, int* out_idx_img, Vector2i img_size);
@@ -28,12 +29,11 @@ __global__ void Finalize_Reduction_Result_device(const spixel_info* accum_map, s
 
 __global__ void Draw_Segmentation_Result_device(const int* idx_img, Vector4u* sourceimg, Vector4u* outimg, Vector2i img_size);
 
-// ----------------------------------------------------
-//
-//	host function implementations
-//
-// ----------------------------------------------------
-
+/*----------------------------------------------------------------*/
+/**
+*host function implementations
+*/
+/*----------------------------------------------------------------*/
 seg_engine_GPU::seg_engine_GPU(const settings& in_settings) : seg_engine(in_settings)
 {
 	source_img = new UChar4Image(in_settings.img_size,true,true);
@@ -54,15 +54,17 @@ seg_engine_GPU::seg_engine_GPU(const settings& in_settings) : seg_engine(in_sett
 	const int spixel_per_col = (int)ceil(in_settings.img_size.x / spixel_size);
 	const int spixel_per_row = (int)ceil(in_settings.img_size.y / spixel_size);
 	
-	Vector2i map_size = Vector2i(spixel_per_col, spixel_per_row);
-	spixel_map = new SpixelMap(map_size, true, true);
+	spixel_map_size = Vector2i(spixel_per_col, spixel_per_row);
+	spixel_map = new SpixelMap(spixel_map_size, true, true);
 
 	//float total_pixel_to_search = (float)(spixel_size * spixel_size * 9);
 	//no_grid_per_center = (int)ceil(total_pixel_to_search / (float)(BLOCK_DIM * BLOCK_DIM));
 	no_grid_per_center = Grid_9_Blocks(spixel_size, spixel_size);
 
-	map_size.x *= no_grid_per_center;
-	accum_map = new ORUtils::Image<spixel_info>(map_size, true, true);
+	spixel_accum_map_size.x = spixel_map_size.x * no_grid_per_center;
+	spixel_accum_map_size.y = spixel_map_size.y;
+
+	accum_map = new ORUtils::Image<spixel_info>(spixel_accum_map_size, true, true);
 
 	// normalizing factors
 	max_xy_dist = 1.0f / (1.4242f * spixel_size); // sqrt(2) * spixel_size
@@ -82,13 +84,20 @@ seg_engine_GPU::seg_engine_GPU(const settings& in_settings) : seg_engine(in_sett
 	max_color_dist *= max_color_dist;
 	max_xy_dist *= max_xy_dist;
 }
-
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 gSLICr::engines::seg_engine_GPU::~seg_engine_GPU()
 {
 	delete accum_map;
 }
-
-
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 void gSLICr::engines::seg_engine_GPU::Cvt_Img_Space(UChar4Image* inimg, Float4Image* outimg, COLOR_SPACE color_space)
 {
 	Vector4u* inimg_ptr = inimg->GetData(MEMORYDEVICE_CUDA);
@@ -101,7 +110,11 @@ void gSLICr::engines::seg_engine_GPU::Cvt_Img_Space(UChar4Image* inimg, Float4Im
 	Cvt_Img_Space_device << <gridSize, blockSize >> >(inimg_ptr, outimg_ptr, img_size, color_space);
 
 }
-
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 void gSLICr::engines::seg_engine_GPU::Init_Cluster_Centers()
 {
 	spixel_info* spixel_list = spixel_map->GetData(MEMORYDEVICE_CUDA);
@@ -115,18 +128,22 @@ void gSLICr::engines::seg_engine_GPU::Init_Cluster_Centers()
 
 	Init_Cluster_Centers_device << <gridSize, blockSize >> >(img_ptr, spixel_list, map_size, img_size, spixel_size);
 }
-
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 void gSLICr::engines::seg_engine_GPU::Find_Center_Association()
 {
 	spixel_info* spixel_list = spixel_map->GetData(MEMORYDEVICE_CUDA);
 	Vector4f* img_ptr = cvt_img->GetData(MEMORYDEVICE_CUDA);
 	int* idx_ptr = idx_img->GetData(MEMORYDEVICE_CUDA);
 
-	Vector2i map_size = spixel_map->noDims;
-	Vector2i img_size = cvt_img->noDims;
+	const Vector2i map_size = spixel_map->noDims;
+	const Vector2i img_size = cvt_img->noDims;
 
-	dim3 blockSize(BLOCK_DIM, BLOCK_DIM);
-	dim3 gridSize((int)ceil((float)img_size.x / (float)blockSize.x), (int)ceil((float)img_size.y / (float)blockSize.y));
+	const dim3 blockSize(BLOCK_DIM, BLOCK_DIM);
+	const dim3 gridSize((int)ceil((float)img_size.x / (float)blockSize.x), (int)ceil((float)img_size.y / (float)blockSize.y));
 
 	Find_Center_Association_device << <gridSize, blockSize >> >(img_ptr, spixel_list, idx_ptr, map_size, img_size, spixel_size, gSLICr_settings.coh_weight,max_xy_dist,max_color_dist);
 }
@@ -173,7 +190,11 @@ void gSLICr::engines::seg_engine_GPU::Enforce_Connectivity()
 	Enforce_Connectivity_device << <gridSize, blockSize >> >(idx_ptr, tmp_idx_ptr, img_size);
 	Enforce_Connectivity_device << <gridSize, blockSize >> >(tmp_idx_ptr, idx_ptr, img_size);
 }
-
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 void gSLICr::engines::seg_engine_GPU::Draw_Segmentation_Result(UChar4Image* out_img)
 {
 	Vector4u* inimg_ptr = source_img->GetData(MEMORYDEVICE_CUDA);
@@ -188,15 +209,11 @@ void gSLICr::engines::seg_engine_GPU::Draw_Segmentation_Result(UChar4Image* out_
 	Draw_Segmentation_Result_device<<<gridSize,blockSize>>>(idx_img_ptr, inimg_ptr, outimg_ptr, img_size);
 	out_img->UpdateHostFromDevice();
 }
-
-
-
-// ----------------------------------------------------
-//
-//	device function implementations
-//
-// ----------------------------------------------------
-
+/*----------------------------------------------------------------*/
+/**
+*device function implementations
+*/
+/*----------------------------------------------------------------*/
 __global__ void Cvt_Img_Space_device(const Vector4u* inimg, Vector4f* outimg, Vector2i img_size, COLOR_SPACE color_space)
 {
 	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -205,7 +222,11 @@ __global__ void Cvt_Img_Space_device(const Vector4u* inimg, Vector4f* outimg, Ve
 	cvt_img_space_shared(inimg, outimg, img_size, x, y, color_space);
 
 }
-
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 __global__ void Draw_Segmentation_Result_device(const int* idx_img, Vector4u* sourceimg, Vector4u* outimg, Vector2i img_size)
 {
 	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -213,7 +234,11 @@ __global__ void Draw_Segmentation_Result_device(const int* idx_img, Vector4u* so
 
 	draw_superpixel_boundry_shared(idx_img, sourceimg, outimg, img_size, x, y);
 }
-
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 __global__ void Init_Cluster_Centers_device(const Vector4f* inimg, spixel_info* out_spixel, Vector2i map_size, Vector2i img_size, int spixel_size)
 {
 	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -221,7 +246,11 @@ __global__ void Init_Cluster_Centers_device(const Vector4f* inimg, spixel_info* 
 
 	init_cluster_centers_shared(inimg, out_spixel, map_size, img_size, spixel_size, x, y);
 }
-
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 __global__ void Find_Center_Association_device(const Vector4f* inimg, const spixel_info* in_spixel_map, int* out_idx_img, Vector2i map_size, Vector2i img_size, int spixel_size, float weight, float max_xy_dist, float max_color_dist)
 {
 	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;

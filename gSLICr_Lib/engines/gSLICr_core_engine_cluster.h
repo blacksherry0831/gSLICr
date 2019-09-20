@@ -37,6 +37,8 @@ namespace gSLICr
 			const IntImage * Get_Seg_Res();
 			const IntImage * Get_Adjacency_Res();
 
+			const FloatImage * Get_Similar_Res();
+
 			// Function to draw segmentation result on out_img
 			void Draw_Segmentation_Result(UChar4Image* out_img);
 

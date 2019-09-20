@@ -3,9 +3,21 @@
 #pragma once
 /*----------------------------------------------------------------*/
 #include "../gSLICr_defines.h"
+/*----------------------------------------------------------------*/
 #include "../objects/gSLICr_spixel_info.h"
 /*----------------------------------------------------------------*/
-#include <assert.h>
+#include "gSLICr_dbg.h"
+/*----------------------------------------------------------------*/
+#define _USE_MATH_DEFINES
+#include <cmath>
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+using namespace gSLICr;
+using namespace gSLICr::objects;
+using namespace gSLICr::engines;
 /*----------------------------------------------------------------*/
 /**
 *
@@ -47,6 +59,110 @@ _CPU_AND_GPU_CODE_ inline void find_adjacency_matrix_base(
 
 	}
 
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline void lab2LThetaM(
+	const gSLICr::Vector4f& pix_in,
+	gSLICr::Vector4f& pix_out)
+{
+	const float Sqrt2 = 1.4142135623731;
+	const float AB_MAX = 128;
+	const float LAB_M_MAX = AB_MAX * Sqrt2;
+	const float X2_PI = 2 * M_PI;
+	///////////////////////////////////////
+	if (pix_in.A == pix_in.B && pix_in.B == 0) {
+		pix_out.theta = 0;
+	}
+	else
+	{
+		const float theta_arc = atan2(pix_in.B, pix_in.A);//(-pi,pi]
+		pix_out.theta = theta_arc / X2_PI + 0.5F;
+	}
+	///////////////////////////////////////
+	const float m_ab = sqrt(pix_in.A*pix_in.A + pix_in.B*pix_in.B);
+	pix_out.m = m_ab / (LAB_M_MAX);
+	///////////////////////////////////////
+	pix_out.l = pix_in.L / 100;
+	///////////////////////////////////////
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline void cvt_spixel_to_l_theta_m(
+	const spixel_info* _spixel_list_src,
+	spixel_info* _spixel_list_dst,
+	const gSLICr::Vector2i _map_size,
+	const int x,
+	const int y)
+{
+	const int IDX = x + y*_map_size.x;
+
+	DgbCheckLAB_100_128(_spixel_list_src[IDX].color_info);
+	lab2LThetaM(_spixel_list_src[IDX].color_info, _spixel_list_dst[IDX].color_info);
+	DgbCheckLThetaM(_spixel_list_dst[IDX].color_info);
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline int cal_spixel_similar(
+	const  spixel_info&		_sp_0,
+	const  spixel_info&		_sp_1)
+{
+
+	const float M_THRESHOLD=1.0F/50;
+	const float L_THRESHOLD =1.0F/32;
+	const float THETA_THRESHOLD = 1.0F/64;
+
+	if (_sp_0.color_info.m <M_THRESHOLD &&
+		_sp_1.color_info.m<M_THRESHOLD){
+
+		return abs(_sp_0.color_info.l - _sp_1.color_info.l)<L_THRESHOLD;
+
+	}else if (_sp_0.color_info.m >=M_THRESHOLD &&
+			  _sp_1.color_info.m>=M_THRESHOLD){
+
+		return abs(_sp_0.color_info.theta - _sp_1.color_info.theta)<THETA_THRESHOLD;
+
+	}else{
+		return 0;
+	}
+
+	return 0;
+
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline void cvt_spixel_similar(
+	const int *				_adj_img,
+	float *					_similar_img,
+	const  spixel_info*		_spixel_list,
+	const  gSLICr::Vector2i _adj_size,
+	const int _x,
+	const int _y)
+{
+		
+		const int IDX = _x + _y*_adj_size.x;
+		const int ADJ= _adj_img[IDX];
+
+		if (ADJ==0) {
+				if (_x==_y){
+					_similar_img[IDX] = 1;
+				}				
+		}else{
+					_similar_img[IDX]=cal_spixel_similar(_spixel_list[_x] , _spixel_list[_y]);//	Adjacent
+		}
+		
 }
 /*----------------------------------------------------------------*/
 /**

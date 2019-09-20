@@ -84,4 +84,12 @@ const IntImage * gSLICr::engines::core_engine_cluster::Get_Adjacency_Res()
 *
 */
 /*----------------------------------------------------------------*/
-
+const FloatImage * gSLICr::engines::core_engine_cluster::Get_Similar_Res()
+{
+	return slic_seg_engine->Get_Similar_Matrix_Host();
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/

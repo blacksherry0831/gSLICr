@@ -9,6 +9,10 @@ ConfigMFC_2()
 SET(MY_SDK_SRCS
 
 	Base.cpp	
+	
+	ImgProcCluster.cpp
+	ImgProcBase.cpp
+	
 	TimeMeasure.cpp)
 	
 ADD_LIBRARY(MY_SDK_LIB   STATIC    ${MY_SDK_SRCS})

@@ -131,12 +131,39 @@ void MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(const gSLICr::UChar4Image * _ini
 *
 */
 /*-------------------------------------------------------------------------*/
+void MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(const gSLICr::FloatImage * _inimg, cv::Mat & _outimg)
+{
+	TimeMeasure tm("load_4Image_to_MatBGR_BGR.float");
+	const float* inimg_ptr = _inimg->GetData(MEMORYDEVICE_CPU);
+	float*				outimg_ptr = _outimg.ptr<float>(0);
+	const int FloatSize = sizeof(float);
+	const int src_SZ = _inimg->dataSize * sizeof(float);
+	
+	const int DEPTH = _outimg.depth();
+	
+	int FloatSizeCv= 0;
+
+	if (DEPTH==CV_32F){
+		FloatSizeCv = FloatSize;
+	}
+	
+	const int dst_SZ = _outimg.size().area()*_outimg.channels()*FloatSizeCv;
+
+	ASSERT(src_SZ == dst_SZ);
+	memcpy(outimg_ptr, inimg_ptr, src_SZ);
+
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
 void MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(const gSLICr::IntImage * _inimg, cv::Mat & _outimg)
 {
 	TimeMeasure tm("load_4Image_to_MatBGR_BGR");
 	const int* inimg_ptr = _inimg->GetData(MEMORYDEVICE_CPU);
 	uchar*				outimg_ptr = _outimg.ptr<uchar>(0);
-	const int src_SZ = _inimg->dataSize * 4;
+	const int src_SZ = _inimg->dataSize * sizeof(int);
 
 	const int dst_SZ = _outimg.size().area()*_outimg.channels()*_outimg.depth();
 	

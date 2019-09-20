@@ -33,7 +33,8 @@ namespace ORUtils {
 			struct { T x, y, z, w; }; // standard names for components
 			struct { T b, g, r, a; }; // standard names for components
 			struct { T s, t, p, q; }; // standard names for components
-			struct { T L, A, B, _N; }; // standard names for components
+			struct { T L, A, B, _LAB; }; // standard names for components
+			struct { T l, theta, m, _l_theta_m; }; // standard names for components
 			T v[4];
 		};
 	};
