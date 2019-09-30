@@ -26,6 +26,6 @@ public:
 	static void load_4Image_to_MatBGRA_4u(const gSLICr::IntImage * _inimg, cv::Mat & _outimg);
 	static void load_4Image_to_MatBGRA_4u(const gSLICr::FloatImage * _inimg, cv::Mat & _outimg);
 public:
-
+	static void load_SpixelMap_to_Vector();
 };
 

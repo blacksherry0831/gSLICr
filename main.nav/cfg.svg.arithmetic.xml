@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <cfg.data>
+        <out.door.human>1</out.door.human>
+        <out.door.400.image.stable>1</out.door.400.image.stable>
+        
+        <Method.lab.svg>1</Method.lab.svg>
+        <Method.nav.car>1</Method.nav.car>
+        <Method.current>Method.nav.car.cluster</Method.current>
+        
+        <property>arithmetic</property>
+		
+        <SuperPixel.Number>27</SuperPixel.Number>
+        <SuperPixel.Weight.XY>1.9</SuperPixel.Weight.XY>
+        <SuperPixel.Compactness>10</SuperPixel.Compactness>
+		
+        <SVG.ApparentHorizon.VanishingPoint>0.5</SVG.ApparentHorizon.VanishingPoint>
+		
+         <Cluster.LThetaM.L.Threshold>0.06</Cluster.LThetaM.L.Threshold>
+        <Cluster.LThetaM.M.Threshold>0.02</Cluster.LThetaM.M.Threshold>
+        <Cluster.LThetaM.Theta.Threshold>0.03</Cluster.LThetaM.Theta.Threshold>
+		
+    </cfg.data>
+</config>

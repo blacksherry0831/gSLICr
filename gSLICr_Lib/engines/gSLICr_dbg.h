@@ -65,3 +65,17 @@ _CPU_AND_GPU_CODE_ inline void  DgbCheckLAB_100_128(const Vector4f _f)
 *
 */
 /*----------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline void  DgbCheck_LThetaM_0_1(const Vector4f _f)
+{
+	const double EPS = 1E-3;
+	const double MIN = 0;
+	const double MAX = 1;
+	DgbCheckRange(_f.l, MIN, MAX, EPS);
+	DgbCheckRange(_f.theta, MIN, MAX, EPS);
+	DgbCheckRange(_f.m, MIN, MAX, EPS);
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/

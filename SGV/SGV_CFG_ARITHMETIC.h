@@ -28,14 +28,24 @@ public:
 public:
 	static const QString  NODE_CFG_SuperPixel_Number;
 	static const QString  NODE_CFG_SuperPixel_Compactness;
+	static const QString  NODE_CFG_SuperPixel_Weight_XY;
 	static const QString  NODE_CFG_SVG_ApparentHorizon_VanishingPoint;
+public:
+	static const QString  NODE_CFG_Cluster_LThetaM_L_THRESHOLD;
+	static const QString  NODE_CFG_Cluster_LThetaM_M_THRESHOLD;
+	static const QString  NODE_CFG_Cluster_LThetaM_Theta_THRESHOLD;
 public:
 	QString getMethod_Current();
 	int		getMethod_LAB_SVG();
 	int		getMethod_NAV_CAR();
 public:
+	float		GetCluster_LThetaM_L_THRESHOLD();
+	float		GetCluster_LThetaM_M_THRESHOLD();
+	float		GetCluster_LThetaM_Theta_THRESHOLD();
+public:
 	int		getSuperPixel_Number();
 	int		getSuperPixel_Compactness();
+	float   getSuperPixel_Weight_XY();
 public:
 	float	getSVG_G_ApparentHorizon_VanishingPoint();
 public:

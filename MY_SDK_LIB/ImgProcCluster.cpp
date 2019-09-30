@@ -47,95 +47,10 @@ bool ImgProcCluster::IsSimilar(
 *
 */
 /*-----------------------------------------*/
-void ImgProcCluster::CombineSimilar(
-	std::vector<std::vector<int>>& _similar_set,
-	const int _i,
-	const int _j)
-{
-	std::vector<int>&  set_0 = _similar_set.at(_i);
-	std::vector<int>&  set_1 = _similar_set.at(_j);
-
-		while (set_1.size()>0){
-
-					const int sp_t = set_1.back();
-					 set_1.pop_back();
-
-					if(std::find(set_0.begin(), set_0.end(), sp_t) == set_0.begin()) {
-						//没有这个值
-						set_0.push_back(sp_t);
-					}else {
-						//有这个值
-					}
-		
-		}
-	
-}
-/*-----------------------------------------*/
-/**
-*
-*/
-/*-----------------------------------------*/
-bool ImgProcCluster::IsAdjacent(
-	const cv::Mat & _m ,
-	const int _ri,
-	const int _ci)
-{
-	int result_t = _m.at<float>(_ri,_ci);
-	return result_t;
-}
-/*-----------------------------------------*/
-/**
-*
-*/
-/*-----------------------------------------*/
-bool ImgProcCluster::MergeNeighbor(
-	const cv::Mat & _m,
-	const int _i,
-	const int _j)
-{
-	assert(_m.cols == _m.rows);
-	
-	float* labels = (float*)_m.ptr<float>(0);
-	const int WH = _m.cols;
-
-		for (size_t ci = 0; ci <WH; ci++) {
-			const int IDX_I = _i*WH + ci;
-			const int IDX_J = _j*WH + ci;
-			const int I_v = labels[IDX_I];
-			const int J_v = labels[IDX_J];
-			const int IJ_v = I_v | J_v;
-			labels[IDX_J] = IJ_v;
-		}
-	
-	return true;
-}
-/*-----------------------------------------*/
-/**
-*
-*/
-/*-----------------------------------------*/
-bool ImgProcCluster::RemoveLine(
-	const cv::Mat & _m,
-	const int _i)
-{
-	assert(_m.cols == _m.rows);
-	float* labels = (float*)_m.ptr<float>(0);
-	const int WH = _m.cols;
-
-	for (size_t ci = 0; ci < WH; ci++) {
-		const int IDX_I = _i*WH + ci;
-		const int I_v = labels[IDX_I];
-		labels[IDX_I] = 0;
-	}
-
-	return false;
-}
-/*-----------------------------------------*/
-/**
-*
-*/
-/*-----------------------------------------*/
-bool ImgProcCluster::RemoveLine_Float(float* _mat,const int _wh, const int _li)
+bool ImgProcCluster::RemoveLine_Float(
+	float* _mat,
+	const int _wh,
+	const int _li)
 {
 
 	for (size_t ci = 0; ci < _wh; ci++) {
@@ -151,23 +66,23 @@ bool ImgProcCluster::RemoveLine_Float(float* _mat,const int _wh, const int _li)
 *
 */
 /*-----------------------------------------*/
-void ImgProcCluster::CombineSimilar(std::vector<std::vector<int>>& _similar_set)
+bool ImgProcCluster::MergeNeighbor_Float(
+	float * _mat,
+	const int _wh,
+	const int _i,
+	const int _j)
 {
-	const int DIM=_similar_set.size();
-
-	for (int spi = 0; spi <DIM; spi++){
-		for (int spj = spi+1; spj <DIM; spj++) {
-
-			std::vector<int>& _set_0 = _similar_set.at(spi);
-			std::vector<int>& _set_1 = _similar_set.at(spj);
-			assert(spi != spj);
-			if (IsSimilar(_set_0,_set_1)) {
-				CombineSimilar(_similar_set, spi, spj);
-			}
-
-		}
+	
+	for (size_t ci = 0; ci < _wh; ci++) {
+		const int IDX_I = _i* _wh + ci;
+		const int IDX_J = _j* _wh + ci;
+		const int I_v = _mat[IDX_I];
+		const int J_v = _mat[IDX_J];
+		const int IJ_v = I_v | J_v;
+		_mat[IDX_J] = IJ_v;
 	}
 
+	return true;
 }
 /*-----------------------------------------*/
 /**
@@ -178,40 +93,16 @@ void ImgProcCluster::getMatCluster(const cv::Mat & _m)
 {
 
 	assert(_m.cols == _m.rows);
-	float* labels = (float*)_m.ptr<float>(0);
 	const int WH = _m.cols;
 	float* similar = (float*)_m.ptr<float>(0);
 
-	for (int ci = WH - 1; ci >= 0; ci--) {
-
-		std::vector<int> sameClass;
-
-		for (int ri = 0; ri < WH; ri++) {
-			const int IDX = ci + ri*WH;
-			const int W = similar[IDX];
-			if (W) {
-				sameClass.push_back(ri);
-			}
-		}
-
-		if (sameClass.size() > 0) {
-			const int ri_min = sameClass.at(0);
-			for (int ri = 1; ri < sameClass.size(); ri++) {
-				const int ri_current = sameClass.at(ri);
-				MergeNeighbor(_m, ri_current,ri_min);
-				RemoveLine(_m, ri_current);
-			}
-		}
-	}
+	getMatCluster_Float(similar,WH);
 
 #if _DEBUG
 	cv::Scalar ss = cv::sum(_m);
 	assert(ss[0] == WH);
 #endif // _DEBUG
-
-
-
-
+	
 }
 /*-----------------------------------------*/
 /**
@@ -236,8 +127,8 @@ void ImgProcCluster::getMatCluster_Float(float * _mat, const int _wh)
 			const int ri_min = sameClass.at(0);
 			for (int ri = 1; ri < sameClass.size(); ri++) {
 				const int ri_current = sameClass.at(ri);
-				//MergeNeighbor(_mat, ri_current, ri_min);
-				//RemoveLine(_mat, ri_current);
+				MergeNeighbor_Float(_mat,_wh, ri_current, ri_min);
+				RemoveLine_Float(_mat,_wh, ri_current);
 			}
 		}
 	}

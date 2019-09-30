@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <cfg.data>
+        <property>debug</property>
+        <save.image>1</save.image>
+        <save.debug>1</save.debug>
+        <output.path>E:\OutPutImg\</output.path>
+    </cfg.data>
+</config>

@@ -27,8 +27,13 @@ __global__ void Update_Cluster_Center_device(const Vector4f* inimg, const int* i
 
 __global__ void Finalize_Reduction_Result_device(const spixel_info* accum_map, spixel_info* spixel_list, Vector2i map_size, int no_blocks_per_spixel);
 
-__global__ void Draw_Segmentation_Result_device(const int* idx_img, Vector4u* sourceimg, Vector4u* outimg, Vector2i img_size);
 
+/*----------------------------------------------------------------*/
+__global__ void Draw_Segmentation_Result_device(
+	const int* idx_img,
+	const Vector4u* sourceimg,
+	Vector4u* outimg,
+	const Vector2i img_size);
 /*----------------------------------------------------------------*/
 /**
 *host function implementations
@@ -195,6 +200,45 @@ void gSLICr::engines::seg_engine_GPU::Enforce_Connectivity()
 *
 */
 /*----------------------------------------------------------------*/
+const IntImage * gSLICr::engines::seg_engine_GPU::Get_Idx()
+{
+	tmp_idx_img->UpdateHostFromDevice();
+	return tmp_idx_img;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+const IntImage * gSLICr::engines::seg_engine_GPU::Do_Idx_Cpy_Dev_to_Host()
+{
+	tmp_idx_img->UpdateHostFromDevice();
+	return tmp_idx_img;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+const SpixelMap * gSLICr::engines::seg_engine_GPU::Do_Spixel_Map_Cpy_Dev_to_Host()
+{
+	spixel_map->UpdateHostFromDevice();
+	return spixel_map;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+const SpixelMap * gSLICr::engines::seg_engine_GPU::Get_Spixel_Map()
+{
+	return spixel_map;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 void gSLICr::engines::seg_engine_GPU::Draw_Segmentation_Result(UChar4Image* out_img)
 {
 	Vector4u* inimg_ptr = source_img->GetData(MEMORYDEVICE_CUDA);
@@ -208,6 +252,29 @@ void gSLICr::engines::seg_engine_GPU::Draw_Segmentation_Result(UChar4Image* out_
 
 	Draw_Segmentation_Result_device<<<gridSize,blockSize>>>(idx_img_ptr, inimg_ptr, outimg_ptr, img_size);
 	out_img->UpdateHostFromDevice();
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void gSLICr::engines::seg_engine_GPU::Draw_Segmentation_Result_Ex(
+	const UChar4Image *_source_img,
+	const IntImage * _labels_img,
+	UChar4Image * _out_img)
+{
+
+	const int* idx_img_ptr = _labels_img->GetData(MEMORYDEVICE_CUDA);
+	const Vector4u* inimg_ptr = _source_img->GetData(MEMORYDEVICE_CUDA);
+	Vector4u* outimg_ptr = _out_img->GetData(MEMORYDEVICE_CUDA);
+	
+	const Vector2i img_size = _labels_img->noDims;
+
+	const dim3 blockSize(BLOCK_DIM, BLOCK_DIM);
+	const dim3 gridSize((int)ceil((float)img_size.x / (float)blockSize.x), (int)ceil((float)img_size.y / (float)blockSize.y));
+
+	Draw_Segmentation_Result_device << <gridSize, blockSize >> >(idx_img_ptr, inimg_ptr, outimg_ptr, img_size);
+	_out_img->UpdateHostFromDevice();
 }
 /*----------------------------------------------------------------*/
 /**
@@ -227,7 +294,11 @@ __global__ void Cvt_Img_Space_device(const Vector4u* inimg, Vector4f* outimg, Ve
 *
 */
 /*----------------------------------------------------------------*/
-__global__ void Draw_Segmentation_Result_device(const int* idx_img, Vector4u* sourceimg, Vector4u* outimg, Vector2i img_size)
+__global__ void Draw_Segmentation_Result_device(
+	const int* idx_img,
+	const Vector4u* sourceimg,
+	Vector4u* outimg,
+	const Vector2i img_size)
 {
 	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
 	if (x == 0 || y == 0 || x > img_size.x - 2 || y > img_size.y - 2) return;

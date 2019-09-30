@@ -31,6 +31,11 @@ static void initGlobalCfg();
 
 static void initSetting(gSLICr::objects::settings& my_settings);
 
+static void initSetting_no(
+	gSLICr::objects::settings & my_settings, 
+	const int _N,
+	const float _Weight_XY= 0.6F);
+
 static void initSetting(
 	gSLICr::objects::settings& my_settings,
 	const IplImage* _img);
@@ -43,10 +48,10 @@ static	void SVG_NAVIGATION_CAR(
 						const float _HL_VP = 0.5);
 
 static void SVG_NAVIGATION_CAR_CLUSTER(
+						const std::string _file_full_name,
 						const IplImage * _img,
 						const std::string _saveLocation,
 						const int _K,
-						const float _M,
 						const float _HL_VP);
 
 public:

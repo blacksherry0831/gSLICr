@@ -234,7 +234,13 @@ _CPU_AND_GPU_CODE_ inline void find_center_association_shared(
 *
 */
 /*-------------------------------------------------------------------------*/
-_CPU_AND_GPU_CODE_ inline void draw_superpixel_boundry_shared(const int* idx_img, gSLICr::Vector4u* sourceimg, gSLICr::Vector4u* outimg, gSLICr::Vector2i img_size, int x, int y)
+_CPU_AND_GPU_CODE_ inline void draw_superpixel_boundry_shared(
+	const int* idx_img,
+	const gSLICr::Vector4u* sourceimg,
+	gSLICr::Vector4u* outimg,
+	const gSLICr::Vector2i img_size,
+	const int x,
+	const int y)
 {
 	const int idx = y * img_size.x + x;
 

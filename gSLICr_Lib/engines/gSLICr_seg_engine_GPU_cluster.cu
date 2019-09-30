@@ -10,6 +10,8 @@ using namespace gSLICr;
 using namespace gSLICr::objects;
 using namespace gSLICr::engines;
 /*-------------------------------------------------------------------------*/
+#include <vector>
+/*-------------------------------------------------------------------------*/
 /**
 *kernel function defines
 */
@@ -62,7 +64,10 @@ __global__ void Kernel_Cvt_Spixel_Similar(
 	const int *				_adj_img,
 	float *					_similar_img,
 	const  spixel_info*		_spixel_list,
-	const  gSLICr::Vector2i _adj_size)
+	const  gSLICr::Vector2i _adj_size,
+	const float  _L_THRESHOLD,
+	const float  _M_THRESHOLD,
+	const float  _THETA_THRESHOLD)
 {
 	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
 	if (x > _adj_size.x - 1 || y > _adj_size.y - 1) return;
@@ -73,7 +78,10 @@ __global__ void Kernel_Cvt_Spixel_Similar(
 				_spixel_list,
 				_adj_size,
 				x,
-				y);
+				y,
+				_L_THRESHOLD,
+				_M_THRESHOLD,
+				_THETA_THRESHOLD);
 
 }
 /*----------------------------------------------------------------*/
@@ -82,16 +90,13 @@ __global__ void Kernel_Cvt_Spixel_Similar(
 */
 /*----------------------------------------------------------------*/
 seg_engine_GPU_cluster::seg_engine_GPU_cluster(const objects::settings& in_settings) : seg_engine_GPU(in_settings)
-{	
-	const int AdjDim = this->SpixelNum();
+{
 
-	const Vector2i link_size_t(AdjDim, AdjDim);
+	this->malloc_Spixel_Mem();
 
-	adj_img = new IntImage(link_size_t, true, true);
-
-	similar_img = new FloatImage(link_size_t, true, true);
-
+	cluster_idx_img = new IntImage(gSLICr_settings.img_size, true, true);
 	m_spixel_map_cvt = new SpixelMap(spixel_map_size, true, true);
+	
 }
 /*----------------------------------------------------------------*/
 /**
@@ -101,6 +106,23 @@ seg_engine_GPU_cluster::seg_engine_GPU_cluster(const objects::settings& in_setti
 seg_engine_GPU_cluster::~seg_engine_GPU_cluster()
 {
 	if (adj_img != NULL) delete adj_img;
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+void gSLICr::engines::seg_engine_GPU_cluster::malloc_Spixel_Mem()
+{
+	const int AdjDim = this->SpixelNum();
+	const Vector2i link_size_t(AdjDim, AdjDim);
+	const Vector2i map_size_t(AdjDim, 1);
+
+	adj_img = new IntImage(link_size_t, true, true);
+	similar_img = new FloatImage(link_size_t, true, true);
+
+	cluster_map_img = new IntImage(map_size_t, true, true);
+
 }
 /*-------------------------------------------------------------------------*/
 /**
@@ -165,11 +187,27 @@ void gSLICr::engines::seg_engine_GPU_cluster::Find_Adjacency_Matrix_E()
 *
 */
 /*-------------------------------------------------------------------------*/
+void gSLICr::engines::seg_engine_GPU_cluster::SetClusterLThetaM_Threshold(
+	const float _L_th,
+	const float _M_th,
+	const float _Theta_th)
+{
+
+	mClusterL_Threshold=_L_th;
+	mClusterM_Threshold=_M_th;
+	mClusterTheta_Threshold=_Theta_th;
+
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
 void gSLICr::engines::seg_engine_GPU_cluster::Cvt_Spixel_Similar()
 {
 	const int*	adj_mat_ptr = adj_img->GetData(MEMORYDEVICE_CUDA);
 	float*	similar_mat_ptr =similar_img->GetData(MEMORYDEVICE_CUDA);
-	spixel_info* spixel_list_cvt = spixel_map->GetData(MEMORYDEVICE_CUDA);
+	spixel_info* spixel_list_cvt = m_spixel_map_cvt->GetData(MEMORYDEVICE_CUDA);
 
 	const Vector2i map_adj_size = adj_img->noDims;
 
@@ -180,7 +218,10 @@ void gSLICr::engines::seg_engine_GPU_cluster::Cvt_Spixel_Similar()
 		adj_mat_ptr,
 		similar_mat_ptr,
 		spixel_list_cvt,
-		map_adj_size);
+		map_adj_size,
+		mClusterL_Threshold,
+		mClusterM_Threshold,
+		mClusterTheta_Threshold);
 
 }
 /*-------------------------------------------------------------------------*/
@@ -190,6 +231,9 @@ void gSLICr::engines::seg_engine_GPU_cluster::Cvt_Spixel_Similar()
 /*-------------------------------------------------------------------------*/
 void gSLICr::engines::seg_engine_GPU_cluster::Cvt_Spixel_to_LThetaM()
 {
+
+	assert(gSLICr_settings.color_space == COLOR_SPACE::CIELAB);
+
 	const spixel_info* spixel_list		=	spixel_map->GetData(MEMORYDEVICE_CUDA);
 		  spixel_info* spixel_list_cvt	=	m_spixel_map_cvt->GetData(MEMORYDEVICE_CUDA);
 	const Vector2i map_size = spixel_map->noDims;
@@ -216,6 +260,77 @@ void gSLICr::engines::getMatTriangular_Float(float* _mat, const int _wh)
 	}
 
 }
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+bool gSLICr::engines::RemoveLine_Float(
+	float* _mat,
+	const int _wh,
+	const int _li)
+{
+
+	for (size_t ci = 0; ci < _wh; ci++) {
+		const int IDX_I = _li*_wh + ci;
+		const int I_v = _mat[IDX_I];
+		_mat[IDX_I] = 0;
+	}
+
+	return false;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+bool gSLICr::engines::MergeNeighbor_Float(
+	float * _mat,
+	const int _wh,
+	const int _i,
+	const int _j)
+{
+
+	for (size_t ci = 0; ci < _wh; ci++) {
+		const int IDX_I = _i* _wh + ci;
+		const int IDX_J = _j* _wh + ci;
+		const int I_v = _mat[IDX_I];
+		const int J_v = _mat[IDX_J];
+		const int IJ_v = I_v | J_v;
+		_mat[IDX_J] = IJ_v;
+	}
+
+	return true;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void gSLICr::engines::getMatCluster_Float(float * _mat, const int _wh)
+{
+	for (int ci = _wh - 1; ci >= 0; ci--) {
+
+		std::vector<int> sameClass;
+
+		for (int ri = 0; ri <_wh; ri++) {
+			const int IDX = ci + ri*_wh;
+			const int W = _mat[IDX];
+			if (W) {
+				sameClass.push_back(ri);
+			}
+		}
+
+		if (sameClass.size() > 0) {
+			const int ri_min = sameClass.at(0);
+			for (int ri = 1; ri < sameClass.size(); ri++) {
+				const int ri_current = sameClass.at(ri);
+				MergeNeighbor_Float(_mat, _wh, ri_current, ri_min);
+				RemoveLine_Float(_mat, _wh, ri_current);
+			}
+		}
+	}
+}
 /*-------------------------------------------------------------------------*/
 /**
 *
@@ -223,13 +338,72 @@ void gSLICr::engines::getMatTriangular_Float(float* _mat, const int _wh)
 /*-------------------------------------------------------------------------*/
 void gSLICr::engines::seg_engine_GPU_cluster::Cvt_Similar_to_Cluster_CPU()
 {
-	const FloatImage * similar_img= this->Get_Similar_Matrix_Host();
-	float* similar_ptr = (float*) similar_img->GetData(MEMORYDEVICE_CPU);
-	const int WH = similar_img->noDims.height;
-	assert(similar_img->noDims.height == similar_img->noDims.width);
+	const FloatImage * similar_img_t= this->Get_Similar_Matrix();
+	float* similar_ptr = (float*) similar_img_t->GetData(MEMORYDEVICE_CPU);
+	const int WH = similar_img_t->noDims.height;
+	assert(similar_img_t->noDims.height == similar_img_t->noDims.width);
 
 	getMatTriangular_Float(similar_ptr,WH);
 
+	getMatCluster_Float(similar_ptr, WH);
+
+	int * map=cluster_map_img->GetData(MEMORYDEVICE_CPU);
+	
+	getMapCluster_Idx(map,similar_ptr,WH);
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+void gSLICr::engines::seg_engine_GPU_cluster::Cvt_Labels_to_ClusterLabels_CPU()
+{
+	const FloatImage * similar_img_t = this->Get_Similar_Matrix();
+	const IntImage *labels_idx= Get_Idx();
+	const int WIDTH  = labels_idx->noDims.width;
+	const int HEIGHT = labels_idx->noDims.height;
+	const int WH = similar_img_t->noDims.width;
+
+	const int*  map_ptr = cluster_map_img->GetData(MEMORYDEVICE_CPU);
+	const int*  labels_idx_ptr =(int*) labels_idx->GetData(MEMORYDEVICE_CPU);
+	int*  cluster_idx_ptr = (int*)cluster_idx_img->GetData(MEMORYDEVICE_CPU);
+
+
+	for (int ci = 0; ci <WIDTH; ci++){
+		for (int ri = 0; ri < HEIGHT; ri++){
+			const int IDX = ci + ri*WIDTH;
+			const int LABEL_OLD = labels_idx_ptr[IDX];
+			const int LABEL_NEW = map_ptr[LABEL_OLD];
+			cluster_idx_ptr[IDX] = LABEL_NEW;
+		}
+	}
+	
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+void gSLICr::engines::getMapCluster_Idx(int* _map, const float * _mat, const int _wh)
+{
+
+	for (int ri = 0; ri < _wh; ri++){
+
+		for (int ci = 0; ci < _wh; ci++){
+
+			const int IDX = ci + ri*_wh;
+
+			const int N = _mat[IDX];
+
+			if (N){
+				_map[ci] = ri;
+			}
+
+
+		}
+
+	}
+	
 }
 /*-------------------------------------------------------------------------*/
 /**
@@ -243,11 +417,19 @@ void gSLICr::engines::seg_engine_GPU_cluster::Perform_Cluster()
 	this->Cvt_Spixel_to_LThetaM();
 	this->Cvt_Spixel_Similar();
 
-	this->Cvt_Similar_to_Cluster_CPU();
-	
-
 	cudaThreadSynchronize();
 
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+void gSLICr::engines::seg_engine_GPU_cluster::Perform_Cluster_CPU()
+{
+	this->Cvt_Similar_to_Cluster_CPU();
+
+	this->Cvt_Labels_to_ClusterLabels_CPU();
 }
 /*-------------------------------------------------------------------------*/
 /**
@@ -263,7 +445,7 @@ int gSLICr::engines::seg_engine_GPU_cluster::SpixelNum() const
 *
 */
 /*-------------------------------------------------------------------------*/
-const IntImage * gSLICr::engines::seg_engine_GPU_cluster::Get_Adjacency_Matrix()
+const IntImage * gSLICr::engines::seg_engine_GPU_cluster::Do_Adjacency_Matrix_Cpy_Dev_to_Host()
 {
 	adj_img->UpdateHostFromDevice();
 	return adj_img;
@@ -273,10 +455,75 @@ const IntImage * gSLICr::engines::seg_engine_GPU_cluster::Get_Adjacency_Matrix()
 *
 */
 /*-------------------------------------------------------------------------*/
-const FloatImage * gSLICr::engines::seg_engine_GPU_cluster::Get_Similar_Matrix_Host()
+const IntImage * gSLICr::engines::seg_engine_GPU_cluster::Get_Adjacency_Matrix()
+{
+	return adj_img;
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+const FloatImage * gSLICr::engines::seg_engine_GPU_cluster::Do_Similar_Matrix_Cpy_Dev_to_Host()
 {
 	similar_img->UpdateHostFromDevice();
 	return similar_img;
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+const FloatImage * gSLICr::engines::seg_engine_GPU_cluster::Get_Similar_Matrix()
+{
+	return similar_img;
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+const IntImage * gSLICr::engines::seg_engine_GPU_cluster::Get_Cluster_Idx_Seg_Matrix()
+{
+	return  cluster_idx_img;
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+const IntImage * gSLICr::engines::seg_engine_GPU_cluster::Do_Cluster_Idx_Seg_Matrix_Cpy_Host_to_Dev()
+{
+	cluster_idx_img->UpdateDeviceFromHost();
+	return cluster_idx_img;
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+const SpixelMap * gSLICr::engines::seg_engine_GPU_cluster::Do_Spixel_Map_Cvt_Spy_Dev_to_Host()
+{
+	m_spixel_map_cvt->UpdateHostFromDevice();
+	return m_spixel_map_cvt;
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+const SpixelMap * gSLICr::engines::seg_engine_GPU_cluster::Get_Spixel_Map_Cvt()
+{
+	return m_spixel_map_cvt;
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+void gSLICr::engines::seg_engine_GPU_cluster::Draw_Segmentation_Cluster_Result(UChar4Image * _out_img)
+{
+	this->Draw_Segmentation_Result_Ex(source_img, cluster_idx_img,_out_img);
 }
 /*-------------------------------------------------------------------------*/
 /**

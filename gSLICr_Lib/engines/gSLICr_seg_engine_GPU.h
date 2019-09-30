@@ -18,11 +18,21 @@ namespace gSLICr
 			Vector2i spixel_map_size;
 			Vector2i spixel_accum_map_size;
 		protected:
-			void Cvt_Img_Space(UChar4Image* inimg, Float4Image* outimg, COLOR_SPACE color_space);
+			void Cvt_Img_Space(
+				UChar4Image* inimg,
+				Float4Image* outimg,
+				COLOR_SPACE color_space);
+
 			void Init_Cluster_Centers();
 			void Find_Center_Association();
 			void Update_Cluster_Center();
 			void Enforce_Connectivity();
+		public:
+			const IntImage*		Get_Idx();
+			const IntImage*		Do_Idx_Cpy_Dev_to_Host();
+
+			const SpixelMap*	Do_Spixel_Map_Cpy_Dev_to_Host();
+			const SpixelMap*    Get_Spixel_Map();
 
 		public:
 
@@ -30,6 +40,11 @@ namespace gSLICr
 			~seg_engine_GPU();
 
 			void Draw_Segmentation_Result(UChar4Image* out_img);
+			void Draw_Segmentation_Result_Ex(
+				const UChar4Image *_source_img,
+				const IntImage * _labels_img,
+				UChar4Image * _out_img);
+			
 		};
 	}
 }
