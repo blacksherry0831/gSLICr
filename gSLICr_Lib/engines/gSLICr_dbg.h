@@ -43,8 +43,25 @@ _CPU_AND_GPU_CODE_ inline void  DgbCheck01(const double _f)
 _CPU_AND_GPU_CODE_ inline void  DgbCheckLThetaM(const Vector4f _f)
 {
 	DgbCheck01(_f.l);
-	DgbCheck01(_f.a);
-	DgbCheck01(_f.b);
+	DgbCheck01(_f.theta);
+	DgbCheck01(_f.m);
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline void  DgbCheckLThetaM_Raw(const Vector4f _f)
+{
+
+	const double AB_MAX = 128;
+	const double EPS = 1E-3;
+	const double M_MAX = AB_MAX * 1.4142135623731;
+	DgbCheckRange(_f.l, 0, 100.0F, EPS);
+	//DgbCheckRange(_f.theta, -180.0F, 180.0F, EPS);
+	DgbCheckRange(_f.theta, 0.0F, 360.0F, EPS);
+	DgbCheckRange(_f.m, 0, M_MAX, EPS);
+
 }
 /*----------------------------------------------------------------*/
 /**

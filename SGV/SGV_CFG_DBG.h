@@ -51,6 +51,13 @@ public:
 		std::vector<gSLICr::objects::spixel_info> spixel_list_t,
 		std::string _file_name);
 
+	const void SGV_CFG_DBG::Save_Spixel_Map_And_Cvt_Vector(
+		const ORUtils::Vector2<int>						 _Spixel_Map_noDims_t,
+		const std::vector<gSLICr::objects::spixel_info>  _spixel_list_cvt_t,
+		const std::vector<gSLICr::objects::spixel_info>  _spixel_list_org_t,
+		const std::string _file_name);
+
 public:
+
 };
 

@@ -34,6 +34,7 @@ public:
 	static const QString  NODE_CFG_Cluster_LThetaM_L_THRESHOLD;
 	static const QString  NODE_CFG_Cluster_LThetaM_M_THRESHOLD;
 	static const QString  NODE_CFG_Cluster_LThetaM_Theta_THRESHOLD;
+	static const QString  NODE_CFG_Cluster_LThetaM_Color_THRESHOLD;
 public:
 	QString getMethod_Current();
 	int		getMethod_LAB_SVG();
@@ -42,6 +43,7 @@ public:
 	float		GetCluster_LThetaM_L_THRESHOLD();
 	float		GetCluster_LThetaM_M_THRESHOLD();
 	float		GetCluster_LThetaM_Theta_THRESHOLD();
+	float		GetCluster_LThetaM_Color_THRESHOLD();
 public:
 	int		getSuperPixel_Number();
 	int		getSuperPixel_Compactness();

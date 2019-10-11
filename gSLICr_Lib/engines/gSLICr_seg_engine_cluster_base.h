@@ -94,6 +94,36 @@ _CPU_AND_GPU_CODE_ inline void lab2LThetaM(
 *
 */
 /*----------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline void lab2LThetaM_Raw(
+	const gSLICr::Vector4f& pix_in,
+	gSLICr::Vector4f& pix_out)
+{
+	const float Degree_360 = 360.0F;
+	///////////////////////////////////////
+	if (pix_in.A == pix_in.B && pix_in.B == 0) {
+		pix_out.theta = 0;
+	}else{
+		const float theta_arc = atan2(pix_in.B, pix_in.A);//(-pi,pi]
+		pix_out.theta = theta_arc / M_PI *180;
+
+		if (pix_out.theta<0){
+			
+			pix_out.theta += Degree_360;
+
+		}
+		
+	}
+	///////////////////////////////////////
+	pix_out.m = sqrt(pix_in.A*pix_in.A + pix_in.B*pix_in.B);
+	///////////////////////////////////////
+	pix_out.l = pix_in.L;
+	///////////////////////////////////////
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 _CPU_AND_GPU_CODE_ inline void cvt_spixel_to_l_theta_m(
 	const spixel_info* _spixel_list_src,
 	spixel_info* _spixel_list_dst,
@@ -112,26 +142,57 @@ _CPU_AND_GPU_CODE_ inline void cvt_spixel_to_l_theta_m(
 *
 */
 /*----------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline void cvt_spixel_to_l_theta_m_raw(
+	const spixel_info* _spixel_list_src,
+	spixel_info* _spixel_list_dst,
+	const gSLICr::Vector2i _map_size,
+	const int x,
+	const int y)
+{
+
+
+	const int IDX = x + y*_map_size.x;
+
+	DgbCheckLAB_100_128(_spixel_list_src[IDX].color_info);
+	lab2LThetaM_Raw(_spixel_list_src[IDX].color_info, _spixel_list_dst[IDX].color_info);
+	DgbCheckLThetaM_Raw(_spixel_list_dst[IDX].color_info);
+
+#if _DEBUG
+	_spixel_list_dst[IDX].id = _spixel_list_src[IDX].id;
+#endif // _DEBUG
+
+
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 _CPU_AND_GPU_CODE_ inline int cal_spixel_similar(
 	const  spixel_info&		_sp_0,
 	const  spixel_info&		_sp_1,
-	const float  _L_THRESHOLD=0.031F,
-	const float  _M_THRESHOLD=0.020F,
-	const float  _THETA_THRESHOLD=0.0156F)
+	const float  _L_THRESHOLD,
+	const float  _M_THRESHOLD,
+	const float  _THETA_THRESHOLD,
+	const float	 _M_Color_th)
 {
 
-	DgbCheck_LThetaM_0_1(_sp_0.color_info);
-	DgbCheck_LThetaM_0_1(_sp_1.color_info);
+	DgbCheckLThetaM_Raw(_sp_0.color_info);
+	DgbCheckLThetaM_Raw(_sp_1.color_info);
 
-	if (_sp_0.color_info.m <_M_THRESHOLD &&
-		_sp_1.color_info.m<_M_THRESHOLD){
+	const float diff_l		= abs(_sp_0.color_info.l - _sp_1.color_info.l);
+	const float diff_m		= abs(_sp_0.color_info.m - _sp_1.color_info.m);
+	const float diff_theta	= abs(_sp_0.color_info.theta - _sp_1.color_info.theta);
 
-		return abs(_sp_0.color_info.l - _sp_1.color_info.l)<_L_THRESHOLD;
+	if (_sp_0.color_info.m <_M_Color_th &&
+		_sp_1.color_info.m<_M_Color_th){
 
-	}else if (_sp_0.color_info.m >=_M_THRESHOLD &&
-			  _sp_1.color_info.m>=_M_THRESHOLD){
+		return diff_l<_L_THRESHOLD;
 
-		return abs(_sp_0.color_info.theta - _sp_1.color_info.theta)<_THETA_THRESHOLD;
+	}else if (_sp_0.color_info.m >= _M_Color_th &&
+			  _sp_1.color_info.m>= _M_Color_th){
+					
+		return  (diff_l<_L_THRESHOLD) && (diff_m<_M_THRESHOLD) && (diff_theta<_THETA_THRESHOLD);
 
 	}else{
 		return 0;
@@ -154,7 +215,8 @@ _CPU_AND_GPU_CODE_ inline void cvt_spixel_similar(
 	const int _y,
 	const float  _L_THRESHOLD,
 	const float  _M_THRESHOLD,
-	const float  _THETA_THRESHOLD)
+	const float  _THETA_THRESHOLD,
+	const float	 _M_Color_th)
 {
 		
 		const int IDX = _x + _y*_adj_size.x;
@@ -165,12 +227,19 @@ _CPU_AND_GPU_CODE_ inline void cvt_spixel_similar(
 					_similar_img[IDX] = 1;
 				}				
 		}else{
+
+#if _DEBUG
+					assert(_spixel_list[_x].id == _x);
+					assert(_spixel_list[_y].id == _y);
+#endif // _DEBUG
+
 					_similar_img[IDX]=cal_spixel_similar(
 						_spixel_list[_x] ,
 						_spixel_list[_y] ,
 						_L_THRESHOLD,
 						_M_THRESHOLD,
-						_THETA_THRESHOLD);//	Adjacent
+						_THETA_THRESHOLD,
+						_M_Color_th);//	Adjacent
 		}
 		
 }

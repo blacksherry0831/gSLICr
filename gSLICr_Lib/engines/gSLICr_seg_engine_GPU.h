@@ -31,13 +31,16 @@ namespace gSLICr
 			const IntImage*		Get_Idx();
 			const IntImage*		Do_Idx_Cpy_Dev_to_Host();
 
-			const SpixelMap*	Do_Spixel_Map_Cpy_Dev_to_Host();
-			const SpixelMap*    Get_Spixel_Map();
+			const SpixelMap*			   Do_Spixel_Map_Cpy_Dev_to_Host();
+			const SpixelMap*			   Get_Spixel_Map();
+			const ORUtils::Vector2<int>    Get_Spixel_Map_noDims() const;
 
 		public:
 
 			seg_engine_GPU(const objects::settings& in_settings);
 			~seg_engine_GPU();
+
+		public:
 
 			void Draw_Segmentation_Result(UChar4Image* out_img);
 			void Draw_Segmentation_Result_Ex(

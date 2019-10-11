@@ -29,11 +29,13 @@ namespace gSLICr
 			float mClusterL_Threshold;
 			float mClusterM_Threshold;
 			float mClusterTheta_Threshold;
+			float mClusterM_Color_Threshold;
 		public:
 			void SetClusterLThetaM_Threshold(
 				const float _L_th,
 				const float _M_th,
-				const float _Theta_th);
+				const float _Theta_th,
+				const float _M_Color_th);
 		protected:
 			IntImage* cluster_map_img;
 			IntImage* adj_img;
@@ -84,14 +86,9 @@ namespace gSLICr
 			int* _map,
 			const float * _mat,
 			const int _wh);
-
-
-
-
+		
 		bool RemoveLine_Float(float * _mat, const int _wh, const int _li);
 		bool MergeNeighbor_Float(float * _mat, const int _wh, const int _i, const int _j);
-
-
+		
 	}
 }
-

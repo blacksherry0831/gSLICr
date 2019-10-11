@@ -91,8 +91,18 @@ W(i,j)=\left\{
 
 1 &&     \left\{
 \begin{aligned} 
- when && |L_{j}-L_{i}|<L_{th} && if(M_{i}<M_{th}, M_{j}<M_{th})\\
- when && |θ_{j}-θ_{i}|<θ_{th} && if(M_{i}\geq M_{th}, M_{j} \geq M_{th})\\
+ 
+ when &&
+ |L_{j}-L_{i}|<L_{th} &&
+ if(M_{i}<M_{Cth}, M_{j}<M_{Cth})\\
+ 
+ when &&
+ |θ_{j}-θ_{i}|<θ_{th}  \& \space
+ |L_{j}-L_{i}|<L_{th}  \& \space
+ |M_{j}-M_{i}|<M_{th} &&
+ 
+ if(M_{i}\geq M_{Cth}, M_{j} \geq M_{Cth})\\
+ 
  if(i==j)
 \end{aligned}
 \right. \\

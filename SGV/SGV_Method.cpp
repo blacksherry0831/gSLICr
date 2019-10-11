@@ -177,6 +177,8 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 	const float M_th = cfg_arithmetic.GetCluster_LThetaM_M_THRESHOLD();
 	const float Theta_th = cfg_arithmetic.GetCluster_LThetaM_Theta_THRESHOLD();
 
+	const float M_Color_th = cfg_arithmetic.GetCluster_LThetaM_Color_THRESHOLD();
+
 	const float weight_xy=cfg_arithmetic.getSuperPixel_Weight_XY();
 
 	const std::string file_name_t=Base::file_name_without_ext(_file_full_name);
@@ -195,7 +197,7 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 		
 		const gSLICr::engines::seg_engine_GPU_cluster* gSLICr_seg_engine = gSLICr_engine->GetSegEngineGPUCluster();
 		
-		((gSLICr::engines::seg_engine_GPU_cluster* )gSLICr_seg_engine)->SetClusterLThetaM_Threshold(L_th,M_th,Theta_th);
+		((gSLICr::engines::seg_engine_GPU_cluster* )gSLICr_seg_engine)->SetClusterLThetaM_Threshold(L_th,M_th,Theta_th, M_Color_th);
 
 		const int SpixelDim = gSLICr_seg_engine->SpixelNum();
 
@@ -215,11 +217,13 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 		cv::Mat adjacency_frame(adjacency_size_cv, CV_32SC1);
 		cv::Mat similar_frame(adjacency_size_cv, CV_32FC1);
 		
-		std::vector<gSLICr::objects::spixel_info> spixel_info_t;
+		std::vector<gSLICr::objects::spixel_info> spixel_info_cvt_t;
+		std::vector<gSLICr::objects::spixel_info> spixel_info_org_t;
 
 		int key; int save_count = 0;
 		int do_count = 0;
-		while (do_count++<10)
+		const int COUNT_MAX = 1;
+		while (do_count++<COUNT_MAX)
 		{
 
 			{
@@ -272,8 +276,19 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 				gSLICr_engine->MEM_CPU_to_GPU_Cluster_Idx();
 				gSLICr_engine->MEM_GPU_to_CPU_Spixel_Map_Cvt();
 				/*-------------------------------------------------------------------------*/
-				spixel_info_t =gSLICr_engine->Get_Spixel_Map_Cvt_Vector();
-				cfg_dbg.Save_Spixel_Map_Cvt_Vector(spixel_info_t,"Save_Spixel_Map_Cvt_Vector.txt");
+				spixel_info_cvt_t = gSLICr_engine->Get_Spixel_Map_Cvt_Vector();
+				spixel_info_org_t = gSLICr_engine->Get_Spixel_Map_Vector();
+
+				const ORUtils::Vector2<int> Spixel_Map_noDims_t =gSLICr_seg_engine->Get_Spixel_Map_noDims();
+
+#if 1
+				cfg_dbg.Save_Spixel_Map_And_Cvt_Vector(
+					Spixel_Map_noDims_t,
+					spixel_info_cvt_t,
+					spixel_info_org_t,
+					"Save_Spixel_Map_Cvt_Vector.txt");
+#endif  
+				
 				/*-------------------------------------------------------------------------*/
 				gSLICr_engine->Draw_Segmentation_Cluster_Result(out_img);
 				MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(out_img, boundry_cluster_draw_frame);

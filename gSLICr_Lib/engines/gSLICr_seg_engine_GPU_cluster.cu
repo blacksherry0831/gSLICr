@@ -47,7 +47,7 @@ __global__ void Kernel_Cvt_Spixel_to_LThetaM(
 	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
 	if (x > _map_size.x - 1 || y > _map_size.y - 1) return;
 	
-	cvt_spixel_to_l_theta_m(
+	cvt_spixel_to_l_theta_m_raw(
 		_spixel_list_src,
 		_spixel_list_dst,
 		_map_size,
@@ -67,7 +67,8 @@ __global__ void Kernel_Cvt_Spixel_Similar(
 	const  gSLICr::Vector2i _adj_size,
 	const float  _L_THRESHOLD,
 	const float  _M_THRESHOLD,
-	const float  _THETA_THRESHOLD)
+	const float  _THETA_THRESHOLD,
+	const float	 _M_Color_th)
 {
 	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
 	if (x > _adj_size.x - 1 || y > _adj_size.y - 1) return;
@@ -81,7 +82,8 @@ __global__ void Kernel_Cvt_Spixel_Similar(
 				y,
 				_L_THRESHOLD,
 				_M_THRESHOLD,
-				_THETA_THRESHOLD);
+				_THETA_THRESHOLD,
+				_M_Color_th);
 
 }
 /*----------------------------------------------------------------*/
@@ -190,12 +192,15 @@ void gSLICr::engines::seg_engine_GPU_cluster::Find_Adjacency_Matrix_E()
 void gSLICr::engines::seg_engine_GPU_cluster::SetClusterLThetaM_Threshold(
 	const float _L_th,
 	const float _M_th,
-	const float _Theta_th)
+	const float _Theta_th,
+	const float _M_Color_th)
 {
 
 	mClusterL_Threshold=_L_th;
 	mClusterM_Threshold=_M_th;
 	mClusterTheta_Threshold=_Theta_th;
+
+	mClusterM_Color_Threshold=_M_Color_th;
 
 }
 /*-------------------------------------------------------------------------*/
@@ -221,7 +226,8 @@ void gSLICr::engines::seg_engine_GPU_cluster::Cvt_Spixel_Similar()
 		map_adj_size,
 		mClusterL_Threshold,
 		mClusterM_Threshold,
-		mClusterTheta_Threshold);
+		mClusterTheta_Threshold,
+		mClusterM_Color_Threshold);
 
 }
 /*-------------------------------------------------------------------------*/

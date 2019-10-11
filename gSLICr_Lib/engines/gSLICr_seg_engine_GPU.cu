@@ -477,4 +477,13 @@ __global__ void Enforce_Connectivity_device(const int* in_idx_img, int* out_idx_
 *
 */
 /*----------------------------------------------------------------*/
+const ORUtils::Vector2<int> gSLICr::engines::seg_engine_GPU::Get_Spixel_Map_noDims() const
+{
+	return	spixel_map->noDims;
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
 

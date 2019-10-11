@@ -18,6 +18,8 @@ const QString  SGV_CFG_ARITHMETIC::NODE_CFG_Cluster_LThetaM_L_THRESHOLD =		"Clus
 const QString  SGV_CFG_ARITHMETIC::NODE_CFG_Cluster_LThetaM_M_THRESHOLD =		"Cluster.LThetaM.M.Threshold";
 const QString  SGV_CFG_ARITHMETIC::NODE_CFG_Cluster_LThetaM_Theta_THRESHOLD =	"Cluster.LThetaM.Theta.Threshold";
 /*-------------------------------------------------------------------------*/
+const QString  SGV_CFG_ARITHMETIC::NODE_CFG_Cluster_LThetaM_Color_THRESHOLD =	"Cluster.LThetaM.M.Color.Threshold";
+/*-------------------------------------------------------------------------*/
 /**
 *
 */
@@ -91,7 +93,7 @@ void SGV_CFG_ARITHMETIC::CreateChildCfgNode(QSharedPointer<QDomDocument> _Xml, Q
 		_Xml,
 		_parent,
 		NODE_CFG_SuperPixel_Number,
-		QString::number(1089));
+		QString::number(27));
 
 	createElement_txt_append(
 		_Xml,
@@ -118,19 +120,25 @@ void SGV_CFG_ARITHMETIC::CreateChildCfgNode(QSharedPointer<QDomDocument> _Xml, Q
 		_Xml,
 		_parent,
 		NODE_CFG_Cluster_LThetaM_L_THRESHOLD,
-		QString::number(0.031F));
+		QString::number(6.25F));
 
 	createElement_txt_append(
 		_Xml,
 		_parent,
 		NODE_CFG_Cluster_LThetaM_M_THRESHOLD,
-		QString::number(0.02F));
+		QString::number(2.0F));
 
 	createElement_txt_append(
 		_Xml,
 		_parent,
 		NODE_CFG_Cluster_LThetaM_Theta_THRESHOLD,
-		QString::number(0.015F));
+		QString::number(8.0F));
+
+	createElement_txt_append(
+		_Xml,
+		_parent,
+		NODE_CFG_Cluster_LThetaM_Color_THRESHOLD,
+		QString::number(2.0F));
 
 #endif // 1
 
@@ -226,6 +234,15 @@ float		SGV_CFG_ARITHMETIC::GetCluster_LThetaM_M_THRESHOLD()
 float		SGV_CFG_ARITHMETIC::GetCluster_LThetaM_Theta_THRESHOLD()
 {
 	return getFloatFromDomDoc_Pro(NODE_CFG_Cluster_LThetaM_Theta_THRESHOLD);
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+float SGV_CFG_ARITHMETIC::GetCluster_LThetaM_Color_THRESHOLD()
+{
+	return getFloatFromDomDoc_Pro(NODE_CFG_Cluster_LThetaM_Color_THRESHOLD);
 }
 /*-------------------------------------------------------------------------*/
 /**

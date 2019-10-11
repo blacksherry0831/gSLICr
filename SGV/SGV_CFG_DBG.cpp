@@ -165,8 +165,66 @@ const void SGV_CFG_DBG::Save_Spixel_Map_Cvt_Vector(
 		outfile << spi_t.color_info.m << " ";
 		outfile<< std::endl;
 	}
+	
+}
+/*-------------------------------------------------------------------------*/
+/**
+*gSLICr::UChar4Image* out_img = new gSLICr::UChar4Image(my_settings.img_size, true, true);
+*/
+/*-------------------------------------------------------------------------*/
+const void SGV_CFG_DBG::Save_Spixel_Map_And_Cvt_Vector(
+	const ORUtils::Vector2<int>						 _Spixel_Map_noDims_t,
+	const std::vector<gSLICr::objects::spixel_info>  _spixel_list_cvt_t,
+	const std::vector<gSLICr::objects::spixel_info>  _spixel_list_org_t,
+	const std::string _file_name)
+{
+	const int SZ_CVT = _spixel_list_cvt_t.size();
+	const int SZ	 = _spixel_list_org_t.size();
 
-	return ;
+	assert(SZ==SZ_CVT);
+
+	std::string path = getOutputPath().toStdString();
+	std::string file_full_name = path + _file_name;
+
+	std::ofstream outfile;
+	outfile.open(file_full_name);
+	if (!outfile) std::cout << "error" << endl;
+
+		const int X_DIM = _Spixel_Map_noDims_t.y;
+		const int Y_DIM = _Spixel_Map_noDims_t.x;
+		int idx = 0;
+		for (int xi = 0; xi <X_DIM; xi++){
+		for (int yi = 0; yi <Y_DIM; yi++){
+	 
+				const int SPI=xi+yi*X_DIM;
+
+				const gSLICr::objects::spixel_info spi_cvt_t = _spixel_list_cvt_t.at(SPI);
+				const gSLICr::objects::spixel_info spi_org_t = _spixel_list_org_t.at(SPI);
+
+				assert(spi_cvt_t.id == spi_org_t.id);
+				assert(spi_org_t.id == idx++);
+				assert(spi_cvt_t.color_info.L== spi_org_t.color_info.l);
+#if 1
+				/////////////////////////////////////////////////////////////////////////////
+				outfile << spi_cvt_t.id << " ";
+				outfile << spi_cvt_t.no_pixels << " ";
+				outfile << spi_cvt_t.center.x << " ";
+				outfile << spi_cvt_t.center.y << " ";
+				/////////////////////////////////////////////////////////////////////////////
+				outfile << spi_org_t.color_info.L << " ";
+				outfile << spi_org_t.color_info.A << " ";
+				outfile << spi_org_t.color_info.B << " ";
+				///////////////////////////////////////////////////////////////////////////
+				outfile << spi_cvt_t.color_info.l << " ";
+				outfile << spi_cvt_t.color_info.theta << " ";
+				outfile << spi_cvt_t.color_info.m << " ";
+				////////////////////////////////////////////////////////////////////////////
+				outfile << std::endl;
+#endif // 1
+	
+		}
+	}
+	
 }
 /*-------------------------------------------------------------------------*/
 /**
