@@ -14,11 +14,17 @@ const QString   SGV_CFG_ARITHMETIC::NODE_CFG_SuperPixel_Compactness = "SuperPixe
 const QString   SGV_CFG_ARITHMETIC::NODE_CFG_SuperPixel_Weight_XY = "SuperPixel.Weight.XY";
 const QString   SGV_CFG_ARITHMETIC::NODE_CFG_SVG_ApparentHorizon_VanishingPoint = "SVG.ApparentHorizon.VanishingPoint";
 /*-------------------------------------------------------------------------*/
-const QString  SGV_CFG_ARITHMETIC::NODE_CFG_Cluster_LThetaM_L_THRESHOLD =		"Cluster.LThetaM.L.Threshold";
-const QString  SGV_CFG_ARITHMETIC::NODE_CFG_Cluster_LThetaM_M_THRESHOLD =		"Cluster.LThetaM.M.Threshold";
-const QString  SGV_CFG_ARITHMETIC::NODE_CFG_Cluster_LThetaM_Theta_THRESHOLD =	"Cluster.LThetaM.Theta.Threshold";
+const QString   SGV_CFG_ARITHMETIC::NODE_CFG_Fuzzy_Method="Fuzzy.Method";
 /*-------------------------------------------------------------------------*/
-const QString  SGV_CFG_ARITHMETIC::NODE_CFG_Cluster_LThetaM_Color_THRESHOLD =	"Cluster.LThetaM.M.Color.Threshold";
+const QString   SGV_CFG_ARITHMETIC::NODE_CFG_Cluster_LThetaM_L_COLOR_THRESHOLD =		"Cluster.LThetaM.L.Color.Threshold";
+const QString   SGV_CFG_ARITHMETIC::NODE_CFG_Cluster_LThetaM_M_COLOR_THRESHOLD =		"Cluster.LThetaM.M.Color.Threshold";
+const QString	SGV_CFG_ARITHMETIC::NODE_CFG_Cluster_LThetaM_Theta_COLOR_THRESHOLD =	"Cluster.LThetaM.Theta.Color.Threshold";
+/*-------------------------------------------------------------------------*/
+const QString   SGV_CFG_ARITHMETIC::NODE_CFG_Cluster_LThetaM_L_GRAY_THRESHOLD		= "Cluster.LThetaM.L.Gray.Threshold";
+const QString   SGV_CFG_ARITHMETIC::NODE_CFG_Cluster_LThetaM_M_GRAY_THRESHOLD		= "Cluster.LThetaM.M.Gray.Threshold";
+const QString	SGV_CFG_ARITHMETIC::NODE_CFG_Cluster_LThetaM_Theta_GRAY_THRESHOLD	= "Cluster.LThetaM.Theta.Gray.Threshold";
+/*-------------------------------------------------------------------------*/
+const QString	SGV_CFG_ARITHMETIC::NODE_CFG_Cluster_LThetaM_Gray_Color_THRESHOLD =	"Cluster.LThetaM.M.Gray.Color.Threshold";
 /*-------------------------------------------------------------------------*/
 /**
 *
@@ -113,34 +119,70 @@ void SGV_CFG_ARITHMETIC::CreateChildCfgNode(QSharedPointer<QDomDocument> _Xml, Q
 		QString::number(0.5));
 
 #endif
+	createElement_txt_append(_Xml,
+		_parent,
+		NODE_CFG_Fuzzy_Method,
+		"svg");
 
-#if 1
 
+	this->CreateElement_Threshold(
+		_Xml,
+		_parent);
+
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+void SGV_CFG_ARITHMETIC::CreateElement_Threshold(
+	QSharedPointer<QDomDocument> _Xml,
+	QDomElement& _parent)
+{
 	createElement_txt_append(
 		_Xml,
 		_parent,
-		NODE_CFG_Cluster_LThetaM_L_THRESHOLD,
+		NODE_CFG_Cluster_LThetaM_L_COLOR_THRESHOLD,
 		QString::number(6.25F));
 
 	createElement_txt_append(
 		_Xml,
 		_parent,
-		NODE_CFG_Cluster_LThetaM_M_THRESHOLD,
-		QString::number(2.0F));
+		NODE_CFG_Cluster_LThetaM_M_COLOR_THRESHOLD,
+		QString::number(11.315F));
 
 	createElement_txt_append(
 		_Xml,
 		_parent,
-		NODE_CFG_Cluster_LThetaM_Theta_THRESHOLD,
+		NODE_CFG_Cluster_LThetaM_Theta_COLOR_THRESHOLD,
 		QString::number(8.0F));
 
+
+
 	createElement_txt_append(
 		_Xml,
 		_parent,
-		NODE_CFG_Cluster_LThetaM_Color_THRESHOLD,
-		QString::number(2.0F));
+		NODE_CFG_Cluster_LThetaM_L_GRAY_THRESHOLD,
+		QString::number(3.0F));
 
-#endif // 1
+	createElement_txt_append(
+		_Xml,
+		_parent,
+		NODE_CFG_Cluster_LThetaM_M_GRAY_THRESHOLD,
+		QString::number(0.0F));
+
+	createElement_txt_append(
+		_Xml,
+		_parent,
+		NODE_CFG_Cluster_LThetaM_Theta_GRAY_THRESHOLD,
+		QString::number(4.0F));
+	
+
+	createElement_txt_append(
+		_Xml,
+		_parent,
+		NODE_CFG_Cluster_LThetaM_Gray_Color_THRESHOLD,
+		QString::number(2.0F));
 
 
 
@@ -213,36 +255,72 @@ float SGV_CFG_ARITHMETIC::getSVG_G_ApparentHorizon_VanishingPoint()
 *
 */
 /*-------------------------------------------------------------------------*/
-float		SGV_CFG_ARITHMETIC::GetCluster_LThetaM_L_THRESHOLD()
+QString SGV_CFG_ARITHMETIC::getFuzzyMethod()
 {
-	return getFloatFromDomDoc_Pro(NODE_CFG_Cluster_LThetaM_L_THRESHOLD);
+	return getStringFromDomDoc_Pro(NODE_CFG_Fuzzy_Method);
 }
 /*-------------------------------------------------------------------------*/
 /**
 *
 */
 /*-------------------------------------------------------------------------*/
-float		SGV_CFG_ARITHMETIC::GetCluster_LThetaM_M_THRESHOLD()
+float		SGV_CFG_ARITHMETIC::GetCluster_LThetaM_L_COLOR_THRESHOLD()
 {
-	return getFloatFromDomDoc_Pro(NODE_CFG_Cluster_LThetaM_M_THRESHOLD);
+	return getFloatFromDomDoc_Pro(NODE_CFG_Cluster_LThetaM_L_COLOR_THRESHOLD);
 }
 /*-------------------------------------------------------------------------*/
 /**
 *
 */
 /*-------------------------------------------------------------------------*/
-float		SGV_CFG_ARITHMETIC::GetCluster_LThetaM_Theta_THRESHOLD()
+float		SGV_CFG_ARITHMETIC::GetCluster_LThetaM_M_COLOR_THRESHOLD()
 {
-	return getFloatFromDomDoc_Pro(NODE_CFG_Cluster_LThetaM_Theta_THRESHOLD);
+	return getFloatFromDomDoc_Pro(NODE_CFG_Cluster_LThetaM_M_COLOR_THRESHOLD);
 }
 /*-------------------------------------------------------------------------*/
 /**
 *
 */
 /*-------------------------------------------------------------------------*/
-float SGV_CFG_ARITHMETIC::GetCluster_LThetaM_Color_THRESHOLD()
+float		SGV_CFG_ARITHMETIC::GetCluster_LThetaM_Theta_COLOR_THRESHOLD()
 {
-	return getFloatFromDomDoc_Pro(NODE_CFG_Cluster_LThetaM_Color_THRESHOLD);
+	return getFloatFromDomDoc_Pro(NODE_CFG_Cluster_LThetaM_Theta_COLOR_THRESHOLD);
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+float SGV_CFG_ARITHMETIC::GetCluster_LThetaM_L_GRAY_THRESHOLD()
+{
+	return getFloatFromDomDoc_Pro(NODE_CFG_Cluster_LThetaM_L_GRAY_THRESHOLD);
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+float SGV_CFG_ARITHMETIC::GetCluster_LThetaM_M_GRAY_THRESHOLD()
+{
+	return getFloatFromDomDoc_Pro(NODE_CFG_Cluster_LThetaM_M_GRAY_THRESHOLD);
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+float SGV_CFG_ARITHMETIC::GetCluster_LThetaM_Theta_GRAY_THRESHOLD()
+{
+	return getFloatFromDomDoc_Pro(NODE_CFG_Cluster_LThetaM_Theta_GRAY_THRESHOLD);
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+float SGV_CFG_ARITHMETIC::GetCluster_LThetaM_Gray_Color_THRESHOLD()
+{
+	return getFloatFromDomDoc_Pro(NODE_CFG_Cluster_LThetaM_Gray_Color_THRESHOLD);
 }
 /*-------------------------------------------------------------------------*/
 /**

@@ -65,10 +65,13 @@ __global__ void Kernel_Cvt_Spixel_Similar(
 	float *					_similar_img,
 	const  spixel_info*		_spixel_list,
 	const  gSLICr::Vector2i _adj_size,
-	const float  _L_THRESHOLD,
-	const float  _M_THRESHOLD,
-	const float  _THETA_THRESHOLD,
-	const float	 _M_Color_th)
+	const float _L_Color_th,
+	const float _M_Color_th,
+	const float _Theta_Color_th,
+	const float _L_Gray_th,
+	const float _M_Gray_th,
+	const float _Theta_Gray_th,
+	const float _M_Gray_Color_th)
 {
 	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
 	if (x > _adj_size.x - 1 || y > _adj_size.y - 1) return;
@@ -80,10 +83,13 @@ __global__ void Kernel_Cvt_Spixel_Similar(
 				_adj_size,
 				x,
 				y,
-				_L_THRESHOLD,
-				_M_THRESHOLD,
-				_THETA_THRESHOLD,
-				_M_Color_th);
+				_L_Color_th,
+				_M_Color_th,
+				_Theta_Color_th,
+				_L_Gray_th,
+				_M_Gray_th,
+				_Theta_Gray_th,
+				_M_Gray_Color_th);
 
 }
 /*----------------------------------------------------------------*/
@@ -107,7 +113,10 @@ seg_engine_GPU_cluster::seg_engine_GPU_cluster(const objects::settings& in_setti
 /*----------------------------------------------------------------*/
 seg_engine_GPU_cluster::~seg_engine_GPU_cluster()
 {
-	if (adj_img != NULL) delete adj_img;
+	this->free_Spixel_Mem();
+
+	if (cluster_idx_img  != NULL)				delete cluster_idx_img;
+	if (m_spixel_map_cvt != NULL)				delete m_spixel_map_cvt;
 }
 /*-------------------------------------------------------------------------*/
 /**
@@ -122,9 +131,43 @@ void gSLICr::engines::seg_engine_GPU_cluster::malloc_Spixel_Mem()
 
 	adj_img = new IntImage(link_size_t, true, true);
 	similar_img = new FloatImage(link_size_t, true, true);
-
 	cluster_map_img = new IntImage(map_size_t, true, true);
 
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+void gSLICr::engines::seg_engine_GPU_cluster::free_Spixel_Mem()
+{
+	if (adj_img != NULL)				delete adj_img;
+	if (similar_img != NULL)			delete similar_img;
+	if (cluster_map_img != NULL)		delete cluster_map_img;
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+void gSLICr::engines::seg_engine_GPU_cluster::SetClusterLThetaM_Threshold(
+	const float _L_Color_th,
+	const float _M_Color_th,
+	const float _Theta_Color_th,
+	const float _L_Gray_th,
+	const float _M_Gray_th,
+	const float _Theta_Gray_th,
+	const float _M_Gray_Color_th)
+{
+	mClusterL_Color_Threshold= _L_Color_th;
+	mClusterM_Color_Threshold= _M_Color_th;
+	mClusterTheta_Color_Threshold= _Theta_Color_th;
+
+	mClusterL_Gray_Threshold= _L_Gray_th;
+	mClusterM_Gray_Threshold= _M_Gray_th;
+	mClusterTheta_Gray_Threshold= _Theta_Gray_th;
+
+	mClusterM_Gray_Color_Threshold= _M_Gray_Color_th;
 }
 /*-------------------------------------------------------------------------*/
 /**
@@ -189,25 +232,6 @@ void gSLICr::engines::seg_engine_GPU_cluster::Find_Adjacency_Matrix_E()
 *
 */
 /*-------------------------------------------------------------------------*/
-void gSLICr::engines::seg_engine_GPU_cluster::SetClusterLThetaM_Threshold(
-	const float _L_th,
-	const float _M_th,
-	const float _Theta_th,
-	const float _M_Color_th)
-{
-
-	mClusterL_Threshold=_L_th;
-	mClusterM_Threshold=_M_th;
-	mClusterTheta_Threshold=_Theta_th;
-
-	mClusterM_Color_Threshold=_M_Color_th;
-
-}
-/*-------------------------------------------------------------------------*/
-/**
-*
-*/
-/*-------------------------------------------------------------------------*/
 void gSLICr::engines::seg_engine_GPU_cluster::Cvt_Spixel_Similar()
 {
 	const int*	adj_mat_ptr = adj_img->GetData(MEMORYDEVICE_CUDA);
@@ -224,10 +248,13 @@ void gSLICr::engines::seg_engine_GPU_cluster::Cvt_Spixel_Similar()
 		similar_mat_ptr,
 		spixel_list_cvt,
 		map_adj_size,
-		mClusterL_Threshold,
-		mClusterM_Threshold,
-		mClusterTheta_Threshold,
-		mClusterM_Color_Threshold);
+		mClusterL_Color_Threshold,
+		mClusterM_Color_Threshold,
+		mClusterTheta_Color_Threshold,
+		mClusterL_Gray_Threshold,
+		mClusterM_Gray_Threshold,
+		mClusterTheta_Gray_Threshold,
+		mClusterM_Gray_Color_Threshold);
 
 }
 /*-------------------------------------------------------------------------*/
@@ -531,6 +558,12 @@ void gSLICr::engines::seg_engine_GPU_cluster::Draw_Segmentation_Cluster_Result(U
 {
 	this->Draw_Segmentation_Result_Ex(source_img, cluster_idx_img,_out_img);
 }
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+
 /*-------------------------------------------------------------------------*/
 /**
 *

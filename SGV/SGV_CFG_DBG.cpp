@@ -7,6 +7,7 @@
 const QString   SGV_CFG_DBG::NODE_CFG_SAVE_IMG		=	"save.image";
 const QString   SGV_CFG_DBG::NODE_CFG_SAVE_DBG		=	"save.debug";
 const QString   SGV_CFG_DBG::NODE_CFG_OUTPUT_PATH	=	"output.path";
+const QString   SGV_CFG_DBG::NODE_CFG_SOURCE_PATH   =   "source.path";
 /*-------------------------------------------------------------------------*/
 /**
 *
@@ -38,7 +39,13 @@ void SGV_CFG_DBG::CreateChildCfgNode(QSharedPointer<QDomDocument> _Xml, QDomElem
 	createElement_txt_append(_Xml,_parent, NODE_CFG_SAVE_DBG, QString::number(0));
 
 	createElement_txt_append(_Xml, _parent, NODE_CFG_OUTPUT_PATH, "E:\\OutPutImg\\");
-
+	
+	// <yy>X:/ImageDataBase/400img/</yy>
+	// <xx>X:/ImageDataBase/400img/img-math2-p-220t0.jpg</xx>
+	//
+	createElement_txt_append(_Xml, _parent, NODE_CFG_SOURCE_PATH, "X:\\ImageDataBase\\400img\\img-math2-p-220t0.jpg");
+	//
+	//
 }
 /*-------------------------------------------------------------------------*/
 /**
@@ -72,6 +79,15 @@ QString SGV_CFG_DBG::getOutputPath()
 *
 */
 /*-------------------------------------------------------------------------*/
+QString SGV_CFG_DBG::getSourcePath()
+{
+	return getStringFromDomDoc_Pro(NODE_CFG_SOURCE_PATH);
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
 void SGV_CFG_DBG::SaveImage(const cv::Mat _m,const std::string _file_name,const std::string _suffix)
 {
 	const std::string file_output = getOutputPath().toStdString();
@@ -87,7 +103,8 @@ void SGV_CFG_DBG::SaveImage_Width_Idx(
 	const gSLICr::IntImage * _idx_img,
 	const std::string _file_name,
 	const std::string _suffix,
-	std::vector<gSLICr::objects::spixel_info> _spixels)
+	std::vector<gSLICr::objects::spixel_info> _spixels,
+	const float _M_Gray_Color_th)
 {
 	cv::Size img_size_cv(_idx_img->noDims.x, _idx_img->noDims.y);
 	cv::Mat  img_frame(img_size_cv, CV_32SC1);
@@ -97,7 +114,8 @@ void SGV_CFG_DBG::SaveImage_Width_Idx(
 		img_frame,
 		_file_name,
 		_suffix,
-		_spixels);
+		_spixels,
+		_M_Gray_Color_th);
 	
 }
 /*-------------------------------------------------------------------------*/
@@ -109,21 +127,39 @@ void SGV_CFG_DBG::SaveImage_Width_Idx(
 	cv::Mat _m,
 	const std::string _file_name,
 	const std::string _suffix,
-	std::vector<gSLICr::objects::spixel_info> _spixels)
+	std::vector<gSLICr::objects::spixel_info> _spixels,
+	const float _M_Gray_Color_th)
 {
 	const int SP_SZ = _spixels.size();
 	const int ALPHA = 255;
+	const cv::Scalar color_yellow=cv::Scalar(255,255, 0, ALPHA);
+	const cv::Scalar color_blue = cv::Scalar(255, 0, 0, ALPHA);
+	const cv::Scalar color_red = cv::Scalar(0, 0, 255, ALPHA);
+	const cv::Scalar color_white = cv::Scalar(255, 255, 255, ALPHA);
+	const cv::Scalar color_black = cv::Scalar(0, 0, 0, ALPHA);
+
 	for (int i = 0; i < SP_SZ; i++) {
 
 		const gSLICr::objects::spixel_info& spi = _spixels.at(i);
 
 		const int x = spi.center.x;
 		const int y = spi.center.y;
+		const int lthetam_m = spi.color_info.m;
+
+		cv::Scalar color_t;
+
+		if (lthetam_m<_M_Gray_Color_th){
+			color_t= color_black;
+		}
+		else
+		{
+			color_t= color_blue;
+		}
 
 		const std::string idx_str = Base::int2str(spi.id);
 
-		cv::circle(_m, cv::Point(x, y),1, cv::Scalar(255,255, 0, ALPHA),CV_FILLED);
-		cv::putText(_m, idx_str, cv::Point(x, y), cv::FONT_HERSHEY_PLAIN, 0.5, cv::Scalar(255, 0, 0, ALPHA), 1);
+		cv::circle(_m, cv::Point(x, y),2,color_t ,CV_FILLED);
+		cv::putText(_m, idx_str, cv::Point(x, y), cv::FONT_HERSHEY_PLAIN, 0.5,color_t, 1);
 
 	}
 
@@ -176,7 +212,8 @@ const void SGV_CFG_DBG::Save_Spixel_Map_And_Cvt_Vector(
 	const ORUtils::Vector2<int>						 _Spixel_Map_noDims_t,
 	const std::vector<gSLICr::objects::spixel_info>  _spixel_list_cvt_t,
 	const std::vector<gSLICr::objects::spixel_info>  _spixel_list_org_t,
-	const std::string _file_name)
+	const std::string _file_name,
+	const std::string _suffix)
 {
 	const int SZ_CVT = _spixel_list_cvt_t.size();
 	const int SZ	 = _spixel_list_org_t.size();
@@ -184,7 +221,7 @@ const void SGV_CFG_DBG::Save_Spixel_Map_And_Cvt_Vector(
 	assert(SZ==SZ_CVT);
 
 	std::string path = getOutputPath().toStdString();
-	std::string file_full_name = path + _file_name;
+	std::string file_full_name = path +_file_name+"." + _suffix + ".txt";
 
 	std::ofstream outfile;
 	outfile.open(file_full_name);

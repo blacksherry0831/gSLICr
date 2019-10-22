@@ -50,6 +50,8 @@ ADD_SUBDIRECTORY(QT_SDK_LIB)
 ADD_SUBDIRECTORY(SGVBaseCode)
 ADD_SUBDIRECTORY(MemcpyCv_gSLICr)
 ###############################################################################
+ADD_SUBDIRECTORY(Fuzzy)
+###############################################################################
 ADD_SUBDIRECTORY(main.nav)
 ###############################################################################
 ADD_SUBDIRECTORY(SGV)

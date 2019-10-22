@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <cfg.data>
+        <out.door.human>1</out.door.human>
+        <out.door.400.image.stable>1</out.door.400.image.stable>
+		
+        <Method.lab.svg>1</Method.lab.svg>
+        <Method.nav.car>1</Method.nav.car>
+        <Method.current>Method.nav.car.cluster</Method.current>
+		
+        <property>arithmetic</property>
+        <SuperPixel.Number>27</SuperPixel.Number>
+        <SuperPixel.Weight.XY>1.9</SuperPixel.Weight.XY>
+        <SuperPixel.Compactness>10</SuperPixel.Compactness>
+		
+        <SVG.ApparentHorizon.VanishingPoint>0.5</SVG.ApparentHorizon.VanishingPoint>
+		
+        <Fuzzy.Method>vg</Fuzzy.Method>
+		
+ 
+
+
+      <Cluster.LThetaM.L.Color.Threshold>3</Cluster.LThetaM.L.Color.Threshold>
+      <Cluster.LThetaM.M.Color.Threshold>10</Cluster.LThetaM.M.Color.Threshold>
+      <Cluster.LThetaM.Theta.Color.Threshold>6</Cluster.LThetaM.Theta.Color.Threshold>
+
+      <Cluster.LThetaM.L.Gray.Threshold>3</Cluster.LThetaM.L.Gray.Threshold>
+      <Cluster.LThetaM.M.Gray.Threshold>0</Cluster.LThetaM.M.Gray.Threshold>
+      <Cluster.LThetaM.Theta.Gray.Threshold>6</Cluster.LThetaM.Theta.Gray.Threshold>
+
+      <Cluster.LThetaM.M.Gray.Color.Threshold>0</Cluster.LThetaM.M.Gray.Color.Threshold>
+      
+    </cfg.data>
+</config>

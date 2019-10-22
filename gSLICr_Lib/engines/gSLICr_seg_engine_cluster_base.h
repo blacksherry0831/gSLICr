@@ -159,6 +159,8 @@ _CPU_AND_GPU_CODE_ inline void cvt_spixel_to_l_theta_m_raw(
 
 #if _DEBUG
 	_spixel_list_dst[IDX].id = _spixel_list_src[IDX].id;
+	_spixel_list_dst[IDX].center.x = _spixel_list_src[IDX].center.x;
+	_spixel_list_dst[IDX].center.y = _spixel_list_src[IDX].center.y;
 #endif // _DEBUG
 
 
@@ -171,10 +173,13 @@ _CPU_AND_GPU_CODE_ inline void cvt_spixel_to_l_theta_m_raw(
 _CPU_AND_GPU_CODE_ inline int cal_spixel_similar(
 	const  spixel_info&		_sp_0,
 	const  spixel_info&		_sp_1,
-	const float  _L_THRESHOLD,
-	const float  _M_THRESHOLD,
-	const float  _THETA_THRESHOLD,
-	const float	 _M_Color_th)
+	const float _L_Color_th,
+	const float _M_Color_th,
+	const float _Theta_Color_th,
+	const float _L_Gray_th,
+	const float _M_Gray_th,
+	const float _Theta_Gray_th,
+	const float _M_Gray_Color_th)
 {
 
 	DgbCheckLThetaM_Raw(_sp_0.color_info);
@@ -184,15 +189,15 @@ _CPU_AND_GPU_CODE_ inline int cal_spixel_similar(
 	const float diff_m		= abs(_sp_0.color_info.m - _sp_1.color_info.m);
 	const float diff_theta	= abs(_sp_0.color_info.theta - _sp_1.color_info.theta);
 
-	if (_sp_0.color_info.m <_M_Color_th &&
-		_sp_1.color_info.m<_M_Color_th){
+	if (_sp_0.color_info.m <_M_Gray_Color_th &&
+		_sp_1.color_info.m<_M_Gray_Color_th){
 
-		return diff_l<_L_THRESHOLD;
+		return (diff_l< _L_Gray_th) && (diff_theta<_Theta_Gray_th);
 
-	}else if (_sp_0.color_info.m >= _M_Color_th &&
-			  _sp_1.color_info.m>= _M_Color_th){
+	}else if (_sp_0.color_info.m >= _M_Gray_Color_th &&
+			  _sp_1.color_info.m>= _M_Gray_Color_th){
 					
-		return  (diff_l<_L_THRESHOLD) && (diff_m<_M_THRESHOLD) && (diff_theta<_THETA_THRESHOLD);
+		return  (diff_l<_L_Color_th) && (diff_m<_M_Color_th) && (diff_theta<_Theta_Color_th);
 
 	}else{
 		return 0;
@@ -213,10 +218,13 @@ _CPU_AND_GPU_CODE_ inline void cvt_spixel_similar(
 	const  gSLICr::Vector2i _adj_size,
 	const int _x,
 	const int _y,
-	const float  _L_THRESHOLD,
-	const float  _M_THRESHOLD,
-	const float  _THETA_THRESHOLD,
-	const float	 _M_Color_th)
+	const float _L_Color_th,
+	const float _M_Color_th,
+	const float _Theta_Color_th,
+	const float _L_Gray_th,
+	const float _M_Gray_th,
+	const float _Theta_Gray_th,
+	const float _M_Gray_Color_th)
 {
 		
 		const int IDX = _x + _y*_adj_size.x;
@@ -236,10 +244,13 @@ _CPU_AND_GPU_CODE_ inline void cvt_spixel_similar(
 					_similar_img[IDX]=cal_spixel_similar(
 						_spixel_list[_x] ,
 						_spixel_list[_y] ,
-						_L_THRESHOLD,
-						_M_THRESHOLD,
-						_THETA_THRESHOLD,
-						_M_Color_th);//	Adjacent
+						_L_Color_th,
+						_M_Color_th,
+						_Theta_Color_th,
+						_L_Gray_th,
+						_M_Gray_th,
+						_Theta_Gray_th,
+						_M_Gray_Color_th);//	Adjacent
 		}
 		
 }

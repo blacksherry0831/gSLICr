@@ -25,17 +25,26 @@ namespace gSLICr
 
 		private:
 			void  malloc_Spixel_Mem();
+			void  free_Spixel_Mem();
 		private:
-			float mClusterL_Threshold;
-			float mClusterM_Threshold;
-			float mClusterTheta_Threshold;
+			float mClusterL_Color_Threshold;
 			float mClusterM_Color_Threshold;
+			float mClusterTheta_Color_Threshold;
+
+			float mClusterL_Gray_Threshold;
+			float mClusterM_Gray_Threshold;
+			float mClusterTheta_Gray_Threshold;
+
+			float mClusterM_Gray_Color_Threshold;
 		public:
 			void SetClusterLThetaM_Threshold(
-				const float _L_th,
-				const float _M_th,
-				const float _Theta_th,
-				const float _M_Color_th);
+				const float _L_Color_th,
+				const float _M_Color_th,
+				const float _Theta_Color_th,
+				const float _L_Gray_th,
+				const float _M_Gray_th,
+				const float _Theta_Gray_th,
+				const float _M_Gray_Color_th);
 		protected:
 			IntImage* cluster_map_img;
 			IntImage* adj_img;

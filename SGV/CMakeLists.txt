@@ -22,6 +22,7 @@ SET(BASE_LINK_LIB
 			QT_SDK_LIB
 			gSLICr_lib
 			MemcpyCv_gSLICr
+			FUZZY
 		
 	)
 ###############################################################################

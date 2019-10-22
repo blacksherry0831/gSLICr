@@ -100,17 +100,12 @@ std::string Base::base_name(std::string const & path)
 /*-----------------------------------------*/
 std::string Base::file_name_without_ext(std::string const path)
 {
-	std::string base_name = Base::base_name(path);
+	const std::string base_name = Base::base_name(path);
+		
+	const int pos_dot = base_name.find_last_of(".");
+	const std::string name= base_name.substr(0,pos_dot);
+	const std::string ext= base_name.substr( pos_dot+ 1);
 	
-	std::vector<std::string> name_ext=split(base_name, ".");
-
-	std::string name;
-	std::string ext;
-	
-	if (name_ext.size()==2) {
-		name=name_ext.at(0);
-		ext=name_ext.at(1);	
-	}
 	return name;
 }
 /*-----------------------------------------*/

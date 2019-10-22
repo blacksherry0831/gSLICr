@@ -11,6 +11,8 @@
 /*-------------------------------------------------------------------------*/
 #include "gSLICr_Lib/engines/gSLICr_core_engine_cluster.h"
 /*-------------------------------------------------------------------------*/
+#include "Fuzzy/FuzzyMethod.h"
+/*-------------------------------------------------------------------------*/
 int SGV_Method::G_DEBUG = FALSE;
 /*----------------------------------------------------------------*/
 int SGV_Method::G_SAVE = FALSE;
@@ -119,7 +121,7 @@ void SGV_Method::SVG_NAVIGATION_CAR(
 		cv::Mat idx_frame;
 				idx_frame.create(s, CV_32SC1);
 
-		int key; int save_count = 0;
+		int save_count = 0;
 		int do_count=0;
 		while (do_count++<10)
 		{
@@ -139,16 +141,20 @@ void SGV_Method::SVG_NAVIGATION_CAR(
 
 					TimeMeasure::Config(1, 1);
 			}
-				
+		
+#if _DEBUG && 0
 			imshow("segmentation", boundry_draw_frame);
 
-			 key = cv::waitKey(1);
+			const int key = cv::waitKey(1);
 			if (key == 27) break;
 			else if (key == 's')
 			{
 				printf("\nsaved segmentation %04i\n", save_count);
 				save_count++;
 			}
+#endif // _DEBUG
+
+
 		}
 
 	}
@@ -173,15 +179,23 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 	cfg_arithmetic.InitLoad();
 	cfg_dbg.InitLoad();
 
-	const float L_th = cfg_arithmetic.GetCluster_LThetaM_L_THRESHOLD();
-	const float M_th = cfg_arithmetic.GetCluster_LThetaM_M_THRESHOLD();
-	const float Theta_th = cfg_arithmetic.GetCluster_LThetaM_Theta_THRESHOLD();
+	const float L_Color_th = cfg_arithmetic.GetCluster_LThetaM_L_COLOR_THRESHOLD();
+	const float M_Color_th = cfg_arithmetic.GetCluster_LThetaM_M_COLOR_THRESHOLD();
+	const float Theta_Color_th = cfg_arithmetic.GetCluster_LThetaM_Theta_COLOR_THRESHOLD();
 
-	const float M_Color_th = cfg_arithmetic.GetCluster_LThetaM_Color_THRESHOLD();
+	const float L_Gray_th = cfg_arithmetic.GetCluster_LThetaM_L_GRAY_THRESHOLD();
+	const float M_Gray_th = cfg_arithmetic.GetCluster_LThetaM_M_GRAY_THRESHOLD();
+	const float Theta_Gray_th = cfg_arithmetic.GetCluster_LThetaM_Theta_GRAY_THRESHOLD();
+
+	const float M_Gray_Color_th = cfg_arithmetic.GetCluster_LThetaM_Gray_Color_THRESHOLD();
 
 	const float weight_xy=cfg_arithmetic.getSuperPixel_Weight_XY();
 
+
+	const std::string fuzzy_svg_t = cfg_arithmetic.getFuzzyMethod().toStdString();
+
 	const std::string file_name_t=Base::file_name_without_ext(_file_full_name);
+
 
 
 	TimeMeasure tm("##################### NAVIGATION CAR CLUSTER #####################");
@@ -193,16 +207,30 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 		initSetting_no(my_settings, _K,weight_xy);
 		initSetting(my_settings, _img);
 
-		gSLICr::engines::core_engine_cluster* gSLICr_engine = new gSLICr::engines::core_engine_cluster(my_settings);
-		
+		const int HEIGHT = _img->height;
+		const int WIDTH = _img->width;
+
+
+		std::shared_ptr<gSLICr::engines::core_engine_cluster>  gSLICr_engine_shared_ptr(new gSLICr::engines::core_engine_cluster(my_settings));
+
+		gSLICr::engines::core_engine_cluster* gSLICr_engine = gSLICr_engine_shared_ptr.get();
+
 		const gSLICr::engines::seg_engine_GPU_cluster* gSLICr_seg_engine = gSLICr_engine->GetSegEngineGPUCluster();
 		
-		((gSLICr::engines::seg_engine_GPU_cluster* )gSLICr_seg_engine)->SetClusterLThetaM_Threshold(L_th,M_th,Theta_th, M_Color_th);
+		((gSLICr::engines::seg_engine_GPU_cluster* )gSLICr_seg_engine)->SetClusterLThetaM_Threshold(
+			L_Color_th,
+			M_Color_th,
+			Theta_Color_th,
+			L_Gray_th,
+			M_Gray_th,
+			Theta_Gray_th,
+			M_Gray_Color_th);
 
-		const int SpixelDim = gSLICr_seg_engine->SpixelNum();
+		const int	SpixelDim = gSLICr_seg_engine->SpixelNum();
+				
+		std::shared_ptr<gSLICr::UChar4Image>  in_img(new gSLICr::UChar4Image(my_settings.img_size, true, true));
+		std::shared_ptr<gSLICr::UChar4Image>  out_img(new gSLICr::UChar4Image(my_settings.img_size, true, true));
 
-		gSLICr::UChar4Image* in_img = new gSLICr::UChar4Image(my_settings.img_size, true, true);
-		gSLICr::UChar4Image* out_img = new gSLICr::UChar4Image(my_settings.img_size, true, true);
 
 		cv::Size img_size_cv(my_settings.img_size.x, my_settings.img_size.y);
 		cv::Size cluster_map_size_cv(SpixelDim, 1);
@@ -213,6 +241,7 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 		cv::Mat boundry_cluster_draw_frame(img_size_cv, CV_8UC4);
 		cv::Mat cluster_map_frame(cluster_map_size_cv, CV_32SC1);
 		cv::Mat idx_frame(img_size_cv, CV_32SC1);
+		cv::Mat idx_svg_frame(img_size_cv, CV_8UC4);
 		cv::Mat idx_cluster_frame(img_size_cv, CV_32SC1);
 		cv::Mat adjacency_frame(adjacency_size_cv, CV_32SC1);
 		cv::Mat similar_frame(adjacency_size_cv, CV_32FC1);
@@ -220,7 +249,7 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 		std::vector<gSLICr::objects::spixel_info> spixel_info_cvt_t;
 		std::vector<gSLICr::objects::spixel_info> spixel_info_org_t;
 
-		int key; int save_count = 0;
+		int save_count = 0;
 		int do_count = 0;
 		const int COUNT_MAX = 1;
 		while (do_count++<COUNT_MAX)
@@ -229,11 +258,12 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 			{
 				TimeMeasure tm("cpy.superpixel.cpy");
 				TimeMeasure::Config(0, 0);
+				/*-------------------------------------------------------------------------*/
+#if 1
+				MemcpyCv_gSLICr::load_Iplimage4u_to_4image_4u(_img, in_img.get());
 
-				MemcpyCv_gSLICr::load_Iplimage4u_to_4image_4u(_img, in_img);
-
-				gSLICr_engine->Process_Frame(in_img);
-				gSLICr_engine->Draw_Segmentation_Result(out_img);
+				gSLICr_engine->Process_Frame(in_img.get());
+				gSLICr_engine->Draw_Segmentation_Result(out_img.get());
 
 				gSLICr_engine->Perform_Cluster();
 				gSLICr_engine->MEM_GPU_to_CPU();				
@@ -241,19 +271,31 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 
 				/*-------------------------------------------------------------------------*/
 				const gSLICr::IntImage * idx_img = gSLICr_engine->Get_Seg_Res();
+				const int* inimg_ptr = idx_img->GetData(MEMORYDEVICE_CPU);
 				MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(idx_img, idx_frame);
 				cfg_dbg.SaveImage(idx_frame,
 					file_name_t,
 					"idx.frame");
-				/*-------------------------------------------------------------------------*/
-				MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(out_img, boundry_draw_frame);
+		
+				MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(out_img.get(), boundry_draw_frame);
 				cfg_dbg.SaveImage(boundry_draw_frame,
 					file_name_t,
 					"boundry.draw.frame");
+				
 				/*-------------------------------------------------------------------------*/
 				gSLICr_engine->MEM_GPU_to_CPU_Spixel_Map();
 				const std::vector<gSLICr::objects::spixel_info> spixel_info_center_t= gSLICr_engine->Get_Spixel_Map_Vector();
-				cfg_dbg.SaveImage_Width_Idx(boundry_draw_frame, file_name_t, "txt.idx.frame", spixel_info_center_t);
+#if 0
+
+				cfg_dbg.SaveImage_Width_Idx(
+					boundry_draw_frame,
+					file_name_t,
+					"txt.idx.frame",
+					spixel_info_center_t,
+					M_Gray_Color_th);
+#endif // 0
+
+
 				/*-------------------------------------------------------------------------*/
 				const gSLICr::IntImage * adj_img = gSLICr_engine->Get_Adjacency();
 				MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(adj_img, adjacency_frame);
@@ -282,36 +324,124 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 				const ORUtils::Vector2<int> Spixel_Map_noDims_t =gSLICr_seg_engine->Get_Spixel_Map_noDims();
 
 #if 1
+
+				cfg_dbg.SaveImage_Width_Idx(
+					boundry_draw_frame,
+					file_name_t,
+					"txt.idx.frame",
+					spixel_info_cvt_t,
+					M_Gray_Color_th);
+
 				cfg_dbg.Save_Spixel_Map_And_Cvt_Vector(
 					Spixel_Map_noDims_t,
 					spixel_info_cvt_t,
 					spixel_info_org_t,
-					"Save_Spixel_Map_Cvt_Vector.txt");
+					file_name_t,
+					"Save_Spixel_Map_Cvt_Vector");
 #endif  
 				
 				/*-------------------------------------------------------------------------*/
-				gSLICr_engine->Draw_Segmentation_Cluster_Result(out_img);
-				MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(out_img, boundry_cluster_draw_frame);
+				gSLICr_engine->Draw_Segmentation_Cluster_Result(out_img.get());
+				MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(out_img.get(), boundry_cluster_draw_frame);
 				cfg_dbg.SaveImage(boundry_cluster_draw_frame,
 					file_name_t,
 					"boundry.cluster.frame");
-				/*-------------------------------------------------------------------------*/
-				ImgProcCluster::GetClusterRelation(similar_frame);
 
+#if TRUE
+				/*-------------------------------------------------------------------------*/
+				FuzzyMethod::FuzzySuperPixel_Method(
+					fuzzy_svg_t,
+					_HL_VP,
+					idx_cluster_frame.ptr<int>(0),
+					SpixelDim,
+					WIDTH,
+					HEIGHT,
+					idx_svg_frame.ptr<int>(0));
+
+				/*-------------------------------------------------------------------------*/
+				cfg_dbg.SaveImage(idx_svg_frame,
+					file_name_t,
+					"idx_svg_frame");
+				/*-------------------------------------------------------------------------*/
+
+				MemcpyCv_gSLICr::cpy_svg_2_img(
+					boundry_cluster_draw_frame,
+					idx_svg_frame,
+					boundry_cluster_draw_frame);
+				
+				cfg_dbg.SaveImage(boundry_cluster_draw_frame,
+					file_name_t,
+					"boundry.svg.draw.frame");
+#endif // TRUE
+#endif // 0
+				/*-------------------------------------------------------------------------*/				
 				TimeMeasure::Config(1, 1);
 			}
-
+#if 0
 			imshow("segmentation", boundry_draw_frame);
 
-			key = cv::waitKey(1);
+			int key = cv::waitKey(1);
 			if (key == 27) break;
 			else if (key == 's')
 			{
 				printf("\nsaved segmentation %04i\n", save_count);
 				save_count++;
 			}
+#endif // 0
+
+
 		}
 
+	}
+
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+void SGV_Method::METHOD_PATH_CFG()
+{
+
+	SGV_CFG_DBG cfg_dbg;
+	cfg_dbg.InitLoad();
+
+	const QString path_qstr = cfg_dbg.getSourcePath();
+
+	QString path_native_t = QDir::toNativeSeparators(path_qstr);
+
+	QFileInfo fi(path_native_t);
+
+	if (fi.exists()){
+
+			if(fi.isFile()){
+				METHOD_FILE(path_native_t.toStdString());
+			}else{
+
+			}
+
+			if (fi.isDir()){
+				METHOD_PATH(path_native_t.toStdString());
+			}
+
+	}
+			
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+void SGV_Method::METHOD_PATH(const std::string _path)
+{
+
+	std::vector<std::string> files_t;
+
+	Base::FS_getFiles(_path,"png",files_t);
+	Base::FS_getFiles(_path, "jpg", files_t);
+	
+	for each (const std::string file_img_t in files_t){
+		METHOD_FILE(file_img_t);
 	}
 
 }

@@ -41,45 +41,58 @@ struct spixel_info
 #### 2.1 CIE L*a*b↔ LθM
 
 $$
-θ= \frac{ atan2(B,A)}{(2 * PI)}+0.5
+θ^{'}= atan2(B,A) \qquad θ^{'}\in(-\pi,\pi]
 $$
 
 $$
-m=  \frac{ \sqrt{ A^2+B^2 }  }{ 128* \sqrt{2} }
+\begin{equation}
+θ=
+\begin{cases}
+ θ^{'}*180/\pi	& 	 {θ^{'} \geq  0}		\\
+ θ^{'}*180/\pi+360	& 	 {θ^{'} <  0}
+\end{cases}
+\end{equation}
+\qquad
+θ\in[0,360)
 $$
 
 $$
-l=\frac{L}{100}
+m=   \sqrt{ A^2+B^2 } \qquad m\in[0,128\sqrt{2}]
 $$
 
-```C++
-inline void ImageColorSpaceThetaML::ColorSpaceLab2ThetaML(
-	const double L,
-	const double A,
-	const double B,
-	double & _theta,
-	double & _m,
-	double & _l)
+$$
+l=L  \qquad l \in [0,100]
+$$
+
+```c++
+_CPU_AND_GPU_CODE_ inline void lab2LThetaM_Raw(
+	const gSLICr::Vector4f& pix_in,
+	gSLICr::Vector4f& pix_out)
 {
-	const float LAB_M_MAX = 128 * 1.4142135623731;
-	const float X2_PI = 2 * CV_PI;
+	const float Degree_360 = 360.0F;
 	///////////////////////////////////////
-	if (A == B && B == 0) {
-		_theta = 0;
+	if (pix_in.A == pix_in.B && pix_in.B == 0) {
+		pix_out.theta = 0;
+	}else{
+		const float theta_arc = atan2(pix_in.B, pix_in.A);//(-pi,pi]
+		pix_out.theta = theta_arc / M_PI *180;
+
+		if (pix_out.theta<0){
+			
+			pix_out.theta += Degree_360;
+
+		}
+		
 	}
-	else
-	{
-		_theta = atan2(B, A);//(-pi,pi]
-		_theta = _theta / X2_PI + 0.5F;
-	}
 	///////////////////////////////////////
-	_m = sqrt(A*A + B*B);
-	_m = _m / (LAB_M_MAX);
+	pix_out.m = sqrt(pix_in.A*pix_in.A + pix_in.B*pix_in.B);
 	///////////////////////////////////////
-	_l = L / 100;
+	pix_out.l = pix_in.L;
 	///////////////////////////////////////
 }
 ```
+
+
 
 #### 2.2 相似度计算
 
@@ -93,13 +106,14 @@ W(i,j)=\left\{
 \begin{aligned} 
  
  when &&
- |L_{j}-L_{i}|<L_{th} &&
+ |θ_{j}-θ_{i}|<θ_{th0}  \& \space
+ |L_{j}-L_{i}|<L_{th0} &&
  if(M_{i}<M_{Cth}, M_{j}<M_{Cth})\\
  
  when &&
- |θ_{j}-θ_{i}|<θ_{th}  \& \space
- |L_{j}-L_{i}|<L_{th}  \& \space
- |M_{j}-M_{i}|<M_{th} &&
+ |θ_{j}-θ_{i}|<θ_{th1}  \& \space
+ |L_{j}-L_{i}|<L_{th1}  \& \space
+ |M_{j}-M_{i}|<M_{th1} &&
  
  if(M_{i}\geq M_{Cth}, M_{j} \geq M_{Cth})\\
  
@@ -178,8 +192,13 @@ $$
 
 ##### 第一步：
 
-从矩阵的第n行n列开始，搜索所有n列上为1的数组，如果第n列上为1的数组只有第n行，否则
+从矩阵的第n行n列开始，搜索所有n列上为1的数组，如果第n列上为1的数组只有第n行，
 
+如果是，则：
+$$
+a(n,n)=1
+$$
+否则
 $$
 a(n,n)=0
 $$
@@ -195,14 +214,14 @@ $$
 如果
 
 $$
-a(n,n) \neq 0
+a(n,n) = 0
 $$
 则对这些数组按照“行降序”的顺序将其各列（1、2、3……n）进行逻辑或运算，并将结果赋值给行号最小的数组中。列的或运算算法如下：
 $$
 a(i_{min},j_{n})=a(i_{min},j_{n})\bigcup...\bigcup a(n,j_{n}) \\
 a(i_{min},j_{n-1})=a(i_{min},j_{n})\bigcup...\bigcup a(n,j_{n-1}) \\
 ......\\
-a(i_{min},j_{min})=a(i_{min},j_{n})\bigcup...\bigcup a(n,j_{min})\\
+a(i_{min},i_{min})=a(i_{min},j_{n})\bigcup...\bigcup a(n,j_{min})\\
 $$
 赋值运算：
 
@@ -216,7 +235,7 @@ $$
 从矩阵的第*n*-1行*n*-1列开始，搜索所有n-1列上为1的数组，如果第n列上为1的数组只有第n行，否则
 
 $$
-a(n,n)=0
+a(n-1,n-1)=0
 $$
 ，公式如下：
 $$
@@ -225,7 +244,7 @@ $$
 如果
 
 $$
-a(n-1,n \sim n-1) \neq 0
+a(n-1,n \sim n-1) = 0
 $$
 则对这些数组按照“行降序”的顺序将其各列（1、2、3……n-1）进行逻辑或运算，并将结果赋值给行号最小的数组中。列的或运算算法如下：
 $$
@@ -244,7 +263,7 @@ $$
 
 i行，否则
 $$
-a(i,n \sim i)=0
+a(i,i)=0
 $$
 ，公式如下：
 $$
@@ -253,7 +272,7 @@ $$
 如果
 
 $$
-a(i,n \sim i) \neq 0
+a(i,n \sim i) = 0
 $$
 则对这些数组按照“行降序”的顺序将其各列（1、2、3……n）进行逻辑或运算，并将结果赋值给行号最小的数组中。列的或运算算法如下：
 $$
@@ -274,7 +293,7 @@ $$
 		&j_{0} & j_{1} & j_{2} & j_{3} &j_{4} & j_{...} & j_{n-1} &j_{n}	\\
 i_{0} 		& 1 & 0 & 1 & 0 & 0 & ... & 0 & 0\\
 i_{1} 		& 0 & 1 & 0 & 1 & 0 & ... & 0 & 0\\
-i_{2} 		& 0 & 0 & 0 & 0 & 0 & ... & 0 & 1\\
+i_{2} 		& 0 & 0 & 1 & 0 & 0 & ... & 0 & 1\\
 i_{3} 		& 0 & 0 & 0 & 0 & 1 & ... & 0 & 0\\
 i_{4} 		& 0 & 0 & 0 & 0 & 0 & ... & 1 & 0\\
 i_{...} 	&...&...&...&...&...& ... &...&...\\

@@ -115,7 +115,9 @@ void MemcpyCv_gSLICr::load_Iplimage4u_to_4image_4u(const IplImage * _inimg, gSLI
 *
 */
 /*-------------------------------------------------------------------------*/
-void MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(const gSLICr::UChar4Image * _inimg, cv::Mat & _outimg)
+void MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(
+	const gSLICr::UChar4Image * _inimg,
+	cv::Mat & _outimg)
 {
 	TimeMeasure tm("load_4Image_to_MatBGR_BGR");
 	const gSLICr::Vector4u* inimg_ptr = _inimg->GetData(MEMORYDEVICE_CPU);
@@ -152,6 +154,35 @@ void MemcpyCv_gSLICr::load_4Image_to_MatBGRA_4u(const gSLICr::FloatImage * _inim
 	ASSERT(src_SZ == dst_SZ);
 	memcpy(outimg_ptr, inimg_ptr, src_SZ);
 
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+void MemcpyCv_gSLICr::cpy_svg_2_img(cv::Mat _img, cv::Mat _svg, cv::Mat _result)
+{
+	assert(_img.cols == _svg.cols);
+	assert(_img.rows == _svg.rows);
+
+	const int*	img_ptr_t = _img.ptr<int>(0);
+	const int*	svg_ptr_t = _svg.ptr<int>(0);
+	int*	result_ptr_t = _result.ptr<int>(0);
+	
+	for (int ci = 0; ci < _img.cols; ci++){
+		for (int ri = 0; ri <_img.rows; ri++){
+
+			const int idx = ci + ri*_img.cols;
+			const int pixel_color = img_ptr_t[idx];
+			if (ci%2==0 && ri%2==0 && pixel_color!=0xffffffff)	{
+				  result_ptr_t[idx] = svg_ptr_t[idx];
+			}else{
+				result_ptr_t[idx] = img_ptr_t[idx];
+			}
+			
+		}
+	}
+	
 }
 /*-------------------------------------------------------------------------*/
 /**

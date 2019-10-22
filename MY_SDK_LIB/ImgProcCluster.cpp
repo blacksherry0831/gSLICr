@@ -291,16 +291,6 @@ void find_one_block(std::vector<int>& _same_type, int _spi, const float* _labels
 *
 */
 /*-----------------------------------------*/
-void ImgProcCluster::GetClusterRelation(const cv::Mat & _m)
-{
-	getMatTriangular(_m);
-	getMatCluster(_m);
-}
-/*-----------------------------------------*/
-/**
-*
-*/
-/*-----------------------------------------*/
 void ImgProcCluster::GetClusterRelation_Recurve(const cv::Mat & _m)
 {
 	assert(_m.cols == _m.rows);

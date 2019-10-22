@@ -37,8 +37,6 @@ public:
 	static void getMatTriangular(const cv::Mat & _m);
 	static void getMatTriangular_Float(float * _mat, const int _wh);
 public:
-	static void GetClusterRelation(const cv::Mat& _m);
-	
 	static void GetClusterRelation_old(const cv::Mat& _m);
 	static void GetClusterRelation_Recurve(const cv::Mat& _m);
 public:

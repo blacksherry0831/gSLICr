@@ -6,6 +6,8 @@
 /*----------------------------------------------------------------*/
 #include <opencv_basic.h>
 /*----------------------------------------------------------------*/
+#include <QDir>
+/*----------------------------------------------------------------*/
 #include <MY_SDK_LIB/TimeMeasure.hpp>
 #include <MY_SDK_LIB/ImgProcCluster.hpp>
 /*----------------------------------------------------------------*/
@@ -55,7 +57,8 @@ static void SVG_NAVIGATION_CAR_CLUSTER(
 						const float _HL_VP);
 
 public:
-
+static	void METHOD_PATH_CFG();
+static	void METHOD_PATH(const std::string _path);
 static	void METHOD_FILE(const std::string _f);
 static	void METHOD_MEM(const std::string _f,IplImage* _img);
 
