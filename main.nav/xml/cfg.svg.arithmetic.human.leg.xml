@@ -17,10 +17,17 @@
 		
         <Fuzzy.Method>vg</Fuzzy.Method>
 		
-        <Cluster.LThetaM.L.Threshold>6.5</Cluster.LThetaM.L.Threshold>
-        <Cluster.LThetaM.M.Threshold>11.315</Cluster.LThetaM.M.Threshold>
-        <Cluster.LThetaM.Theta.Threshold>12</Cluster.LThetaM.Theta.Threshold>
-		
-        <Cluster.LThetaM.M.Color.Threshold>2.6</Cluster.LThetaM.M.Color.Threshold>
+      <Cluster.LThetaM.L.Color.Threshold>6.5</Cluster.LThetaM.L.Color.Threshold>
+      <Cluster.LThetaM.M.Color.Threshold>11.315</Cluster.LThetaM.M.Color.Threshold>
+      <Cluster.LThetaM.Theta.Color.Threshold>12</Cluster.LThetaM.Theta.Color.Threshold>
+
+      <Cluster.LThetaM.L.Gray.Threshold>6</Cluster.LThetaM.L.Gray.Threshold>
+      <Cluster.LThetaM.M.Gray.Threshold>0</Cluster.LThetaM.M.Gray.Threshold>
+      <Cluster.LThetaM.Theta.Gray.Threshold>5</Cluster.LThetaM.Theta.Gray.Threshold>
+
+      <Cluster.LThetaM.M.Gray.Color.Threshold>2.6</Cluster.LThetaM.M.Gray.Color.Threshold>
+      
+      
+      
     </cfg.data>
 </config>
