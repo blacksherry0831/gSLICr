@@ -601,7 +601,9 @@ _CPU_AND_GPU_CODE_ inline void finalize_reduction_result_shared(
 
 ### 2.CODE
 
-| 并行块    | x                                | y                                 | z    |
+#### GPU
+
+| 并行块    | x    ∈[1,Width-2]                | y    ∈[1,Height-2]                | z    |
 | --------- | -------------------------------- | --------------------------------- | ---- |
 | BlockSize | BLOCK_DIM                        | BLOCK_DIM                         | 1    |
 | GridSize  | ceil( ImgSize.Width/BlockSize.x) | ceil( ImgSize.Height/BlockSize.y) | 1    |
@@ -645,5 +647,139 @@ _CPU_AND_GPU_CODE_ inline void supress_local_lable(
 }
 ```
 
+#### CPU
 
+```c++
+/*----------------------------------------------------------------------------------------------------------------*/
+/**
+*	EnforceLabelConnectivity
+*	1. finding an adjacent label for each new component at the start
+*	2. if a certain component is too small, assigning the previously found
+*	adjacent label to this component, and not incrementing the label.
+*/
+/*----------------------------------------------------------------------------------------------------------------*/
+void SLIC_LAB_CUDA_INT::EnforceLabelConnectivity_List(
+	const int*					labels,//input labels that need to be corrected to remove stray labels
+	const int					width,
+	const int					height,
+	int*&						nlabels,//new labels
+	int&						numlabels,//the number of labels changes in the end if segments are removed
+	const int&					K) //the number of superpixels desired by the user
+{
+#if 0
+		const int dx8[8] = {-1, -1,  0,  1, 1, 1, 0, -1};
+		const int dy8[8] = { 0, -1, -1, -1, 0, 1, 1,  1};
+#else
+		const int dx4[4] = { -1,  0,  1,  0 };
+		const int dy4[4] = { 0, -1,  0,  1 };
+#endif // 0
+		
+	const int sz = width*height;
+	const int SUPSZ = sz / K;
 
+	for (int i = 0; i < sz; i++)
+		nlabels[i] = -1;
+
+	int label(0);
+	int* xvec = new int[sz];
+	int* yvec = new int[sz];
+	int oindex(0);
+	int adjlabel(0);//adjacent label
+	for (int j = 0; j < height; j++)
+	{
+		for (int k = 0; k < width; k++)
+		{
+			if (0 > nlabels[oindex])
+			{
+				std::list<CvPoint>	super_pixel_block;
+				nlabels[oindex] = label;
+				//--------------------
+				// Start a new segment
+				//--------------------
+				xvec[0] = k;
+				yvec[0] = j;
+				super_pixel_block.push_back(cvPoint(k, j));
+				//-------------------------------------------------------
+				// Quickly find an adjacent label for use later if needed
+				//-------------------------------------------------------
+				for (register int n = 0; n < 4; n++){
+					int x = xvec[0] + dx4[n];
+					int y = yvec[0] + dy4[n];
+					if ((x >= 0 && x < width) && (y >= 0 && y < height))
+					{
+						const int nindex = y*width + x;
+						if (nlabels[nindex] >= 0) adjlabel = nlabels[nindex];
+					}
+				}
+
+				int count(1);
+				
+				for (register int c = 0; c < count; c++)
+				{
+					for (register int n = 0; n < 4; n++)
+					{
+						const int x = xvec[c] + dx4[n];
+						const int y = yvec[c] + dy4[n];
+
+						if ((x >= 0 && x < width) && (y >= 0 && y < height))
+						{
+							const int nindex = y*width + x;
+
+							if (0 > nlabels[nindex] && labels[oindex] == labels[nindex])
+							{
+								xvec[count] = x;
+								yvec[count] = y;
+								nlabels[nindex] = label;
+
+								super_pixel_block.push_back(cvPoint(x, y));
+
+								count++;
+							}
+						}
+
+					}
+				}
+				//-------------------------------------------------------
+				// If segment size is less then a limit, assign an
+				// adjacent label found before, and decrement label count.
+				//-------------------------------------------------------
+				mSuperPixel.resize(label + 1);
+
+				if (count <= SUPSZ >> 2)
+				{
+					for (register int c = 0; c < count; c++)
+					{
+						const int ind = yvec[c] * width + xvec[c];
+						nlabels[ind] = adjlabel;
+						mSuperPixel[adjlabel].push_back(cvPoint(xvec[c], yvec[c]));
+					}
+
+					
+
+					label--;
+
+					
+				}
+				else
+				{
+					mSuperPixel[label]=super_pixel_block;
+				}
+				label++;
+			}
+			oindex++;
+		}
+	}
+	numlabels = label;
+
+	if (xvec) delete[] xvec;
+	if (yvec) delete[] yvec;
+}
+```
+
+## 九、参考资料
+
+http://avlcode.org/
+
+http://www.robots.ox.ac.uk/~victor/gslicr/
+
+https://github.com/carlren/gSLICr
