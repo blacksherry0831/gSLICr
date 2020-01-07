@@ -39,9 +39,29 @@ void gSLICr::engines::core_engine_cluster::Process_Frame(UChar4Image * in_img)
 *
 */
 /*----------------------------------------------------------------*/
+void gSLICr::engines::core_engine_cluster::Process_Frame(
+	const char* _data,
+	const size_t _size)
+{
+	slic_seg_engine->Perform_Segmentation(_data,_size);
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 void  gSLICr::engines::core_engine_cluster::Perform_Cluster()
 {
 	slic_seg_engine->Perform_Cluster();
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void gSLICr::engines::core_engine_cluster::cudaThreadSync()
+{
+	slic_seg_engine->cudaThreadSync();
 }
 /*----------------------------------------------------------------*/
 /**
@@ -225,6 +245,15 @@ const std::vector<gSLICr::objects::spixel_info>  gSLICr::engines::core_engine_cl
 const IntImage* gSLICr::engines::core_engine_cluster::Get_Cluster_Idx_Seg()
 {
 	return slic_seg_engine->Get_Cluster_Idx_Seg_Matrix();
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+const int gSLICr::engines::core_engine_cluster::SpixelNum() const
+{
+	return slic_seg_engine->SpixelNum();
 }
 /*----------------------------------------------------------------*/
 /**

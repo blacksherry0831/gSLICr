@@ -55,12 +55,13 @@ add_definitions(-D_USE_MATH_DEFINES)
 ###############################################################################
 SET(CUDA_NVCC_FLAGS 
 		${CUDA_NVCC_FLAGS};
+		-gencode arch=compute_30,code=compute_30;
 		-gencode arch=compute_35,code=compute_35;
 		)
 ###############################################################################
-cuda_add_library(gSLICr_lib
-			${GSLICR_LIB}
-			)
+cuda_add_library(	gSLICr_lib
+					${GSLICR_LIB}
+				)
 ###############################################################################
 target_link_libraries(gSLICr_lib ${CUDA_LIBRARY})
 ###############################################################################

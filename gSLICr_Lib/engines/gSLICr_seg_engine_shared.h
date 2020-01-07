@@ -336,3 +336,104 @@ _CPU_AND_GPU_CODE_ inline void supress_local_lable(
 *
 */
 /*----------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline void supress_local_lable_grid3(
+	const int* in_idx_img,
+	int* out_idx_img,
+	const gSLICr::Vector2i img_size,
+	const int x,
+	const int y)
+{
+	const int IDX = y*img_size.x + x;
+	const int clable = in_idx_img[IDX];
+
+	// don't suppress boundary
+	if (x <= 1 || y <= 1 || x >= img_size.x - 2 || y >= img_size.y - 2)
+	{
+		out_idx_img[IDX] = clable;
+		return;
+	}
+
+	int diff_count = 0;
+	int diff_lable = -1;
+
+	const int OFF_MIN = -1;
+	const int OFF_MAX =  1;
+
+	for (int j = OFF_MIN; j <= OFF_MAX; j++) for (int i = OFF_MIN; i <= OFF_MAX; i++)
+	{
+		int nlable = in_idx_img[(y + j)*img_size.x + (x + i)];
+		if (nlable != clable)
+		{
+			diff_lable = nlable;
+			diff_count++;
+		}
+	}
+
+	if (diff_count >= 5)
+		out_idx_img[IDX] = diff_lable;
+	else
+		out_idx_img[IDX] = clable;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+__constant__ const int X_OFF[] = {-2,-1,0,1,2,2,2, 2, 2, 1, 0,-1,-2,-2,-2,-2,-1, 0, 1, 1, 1, 0,-1,-1,0 };
+__constant__ const int Y_OFF[] = { 2, 2,2,2,2,1,0,-1,-2,-2,-2,-2,-2,-1, 0, 1, 1, 1, 1, 0,-1,-1,-1, 0,0 };
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline void supress_local_lable_table(
+	const int* in_idx_img,
+	int* out_idx_img,
+	const gSLICr::Vector2i img_size,
+	const int x,
+	const int y)
+{
+	const int IDX = y*img_size.x + x;
+	const int clable = in_idx_img[IDX];
+
+	// don't suppress boundary
+	if (x <= 1 || y <= 1 || x >= img_size.x - 2 || y >= img_size.y - 2)
+	{
+		out_idx_img[IDX] = clable;
+		return;
+	}
+
+	int diff_count = 0;
+	int diff_lable = -1;
+	
+
+
+	assert(sizeof(X_OFF) / sizeof(int) == 25);
+	assert(sizeof(Y_OFF) / sizeof(int) == 25);
+	
+	const int SZ = sizeof(X_OFF) / sizeof(int);
+
+
+	for (int pi= 0; pi <SZ; pi++)
+	{
+		const int	x_p = x+X_OFF[pi];
+		const int	y_p = y+Y_OFF[pi];
+
+		int nlable = in_idx_img[y_p*img_size.x + x_p];
+		if (nlable != clable)
+		{
+			diff_lable = nlable;
+			diff_count++;
+		}
+	}
+
+	if (diff_count >= 16)
+		out_idx_img[IDX] = diff_lable;
+	else
+		out_idx_img[IDX] = clable;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/

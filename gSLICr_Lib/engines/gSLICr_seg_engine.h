@@ -35,7 +35,10 @@ namespace gSLICr
 			virtual void Find_Center_Association() = 0;
 			virtual void Update_Cluster_Center() = 0;
 			virtual void Enforce_Connectivity() = 0;
-
+			virtual void Enforce_Connectivity_Table() = 0;
+			virtual void Enforce_Connectivity_Grid3() = 0;
+		private:
+			void Perform_Segmentation_Base();
 		public:
 
 			seg_engine(const objects::settings& in_settings );
@@ -47,6 +50,10 @@ namespace gSLICr
 			};
 
 			void Perform_Segmentation(UChar4Image* in_img);
+			void Perform_Segmentation(const char * _data, const size_t _size);
+			
+			void cudaThreadSync();
+
 			virtual void Draw_Segmentation_Result(UChar4Image* out_img){};
 		};
 	}

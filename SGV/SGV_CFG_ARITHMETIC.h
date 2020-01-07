@@ -28,6 +28,7 @@ public:
 	static const QString  NODE_METHOD_LAB_SVG;
 	static const QString  NODE_METHOD_NAV_CAR;
 	static const QString  NODE_METHOD_NAV_CAR_CLUSTER;
+	static const QString  NODE_METHOD_NAV_CAR_CLUSTER_FAST;
 	static const QString  NODE_METHOD_CURRENT;
 public:
 	static const QString  NODE_CFG_SuperPixel_Number;

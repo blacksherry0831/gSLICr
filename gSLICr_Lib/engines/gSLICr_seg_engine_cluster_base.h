@@ -65,6 +65,40 @@ _CPU_AND_GPU_CODE_ inline void find_adjacency_matrix_base(
 *
 */
 /*----------------------------------------------------------------*/
+_CPU_AND_GPU_CODE_ inline void find_adjacency_matrix_base_UpTri(
+	const int * inimg,
+	int * outimg,
+	const gSLICr::Vector2i img_size,
+	const gSLICr::Vector2i adj_size,
+	const int x,
+	const int y)
+{
+
+	const int idx_center = x + y*img_size.x;
+	const int label_center = inimg[idx_center];
+
+	for (size_t pi = 0; pi < dxy4_Pixels; pi++) {
+		const int x_n = x + dx4[pi];
+		const int y_n = y + dy4[pi];
+
+		assert(x_n >= 0 && x_n<img_size.x);
+		assert(y_n >= 0 && y_n<img_size.y);
+
+		const int idx_neighbor = x_n + y_n*img_size.x;
+		const int label_neighbor = inimg[idx_neighbor];
+
+		if (label_center > label_neighbor) {
+			outimg[label_center + label_neighbor*adj_size.x] = 1;
+		}
+
+	}
+
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 _CPU_AND_GPU_CODE_ inline void lab2LThetaM(
 	const gSLICr::Vector4f& pix_in,
 	gSLICr::Vector4f& pix_out)
@@ -182,9 +216,11 @@ _CPU_AND_GPU_CODE_ inline int cal_spixel_similar(
 	const float _M_Gray_Color_th)
 {
 
+#if _DEBUG
 	DgbCheckLThetaM_Raw(_sp_0.color_info);
 	DgbCheckLThetaM_Raw(_sp_1.color_info);
-
+#endif // _DEBUG
+	
 	const float diff_l		= abs(_sp_0.color_info.l - _sp_1.color_info.l);
 	const float diff_m		= abs(_sp_0.color_info.m - _sp_1.color_info.m);
 	const float diff_theta	= abs(_sp_0.color_info.theta - _sp_1.color_info.theta);

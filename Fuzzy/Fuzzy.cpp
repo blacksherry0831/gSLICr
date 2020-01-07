@@ -6,6 +6,12 @@
  float  Fuzzy::pYweight_V[Y_HEIGHT_MAX];
  float  Fuzzy::pYweight_G[Y_HEIGHT_MAX];
  float  Fuzzy::pYweight_S[Y_HEIGHT_MAX];
+ /*-----------------------------------------*/
+ cv::Mat  Fuzzy::FuzzyResult_Classify;
+ cv::Mat  Fuzzy::FuzzyResult_S;
+ cv::Mat  Fuzzy::FuzzyResult_V;
+ cv::Mat  Fuzzy::FuzzyResult_G;
+ cv::Mat  Fuzzy::FuzzyResult_Count;
 /*-----------------------------------------*/
 /**
 *
@@ -152,6 +158,20 @@ void Fuzzy::InitYweightTable_VG(const int _height, const float _HorizontalLinePo
 *
 */
 /*--------------------------------------------------------------------*/
+void Fuzzy::MallocResultMemory(const cv::Size & _sp_num)
+{
+	FuzzyResult_Classify.create(_sp_num, CV_32SC1);
+	FuzzyResult_S.create(_sp_num, CV_32FC1);
+	FuzzyResult_V.create(_sp_num, CV_32FC1);
+	FuzzyResult_G.create(_sp_num, CV_32FC1);
+	FuzzyResult_Count.create(_sp_num, CV_32SC1);
+}
+/*--------------------------------------------------------------------*/
+/**
+*
+*
+*/
+/*--------------------------------------------------------------------*/
 void Fuzzy::Fuzzy_Property(
 	const float* _p,
 	float * _mat,
@@ -198,12 +218,13 @@ void Fuzzy::Fuzzy_Property(
 */
 /*--------------------------------------------------------------------*/
 void Fuzzy::Fuzzy_S(
-	float * _mat,
 	const int _dim,
 	const int * _label,
 	const int _w,
 	const int _h)
 {
+	float * _mat=FuzzyResult_S.ptr<float>(0);
+
 	Fuzzy_Property(
 		pYweight_S,
 		_mat,
@@ -218,8 +239,10 @@ void Fuzzy::Fuzzy_S(
 *
 */
 /*--------------------------------------------------------------------*/
-void Fuzzy::Fuzzy_V(float * _mat, const int _dim, const int * _label, const int _w, const int _h)
+void Fuzzy::Fuzzy_V( const int _dim, const int * _label, const int _w, const int _h)
 {
+	float * _mat= FuzzyResult_V.ptr<float>(0);
+
 	Fuzzy_Property(
 		pYweight_V,
 		_mat,
@@ -234,8 +257,10 @@ void Fuzzy::Fuzzy_V(float * _mat, const int _dim, const int * _label, const int 
 *
 */
 /*--------------------------------------------------------------------*/
-void Fuzzy::Fuzzy_G(float * _mat, const int _dim, const int * _label, const int _w, const int _h)
+void Fuzzy::Fuzzy_G(const int _dim, const int * _label, const int _w, const int _h)
 {
+	float * _mat= FuzzyResult_G.ptr<float>(0);
+
 	Fuzzy_Property(
 		pYweight_G,
 		_mat,
@@ -243,6 +268,50 @@ void Fuzzy::Fuzzy_G(float * _mat, const int _dim, const int * _label, const int 
 		_label,
 		_w,
 		_h);
+}
+/*--------------------------------------------------------------------*/
+/**
+*
+*
+*/
+/*--------------------------------------------------------------------*/
+void Fuzzy::Fuzzy_VG_FAST(
+	const int _dim,
+	const int * _label,
+	const int _w,
+	const int _h)
+{
+	
+	FuzzyResult_Count.setTo(cv::Scalar::all(0));
+	FuzzyResult_V.setTo(cv::Scalar::all(0));
+	FuzzyResult_G.setTo(cv::Scalar::all(0));
+
+	int*	fuzzy_count_ptr	= FuzzyResult_Count.ptr<int>(0);
+	float*	fuzzy_v_ptr		= FuzzyResult_V.ptr<float>(0);
+	float*	fuzzy_g_ptr		= FuzzyResult_G.ptr<float>(0);
+
+	for (int wi = 0; wi < _w; wi++) {
+		for (int hi = 0; hi < _h; hi++) {
+			const int IDX = wi + hi*_w;
+			const int SP_IDX = _label[IDX];
+			assert(SP_IDX < _dim);
+			fuzzy_v_ptr[SP_IDX] += pYweight_V[hi];
+			fuzzy_g_ptr[SP_IDX] += pYweight_G[hi];
+			fuzzy_count_ptr[SP_IDX]++;
+
+		}
+	}
+
+	for (int spi = 0; spi < _dim; spi++) {
+		const int sp_count = fuzzy_count_ptr[spi];
+		if (sp_count == 0) {
+
+		}else {
+			fuzzy_v_ptr[spi] /= sp_count;
+			fuzzy_g_ptr[spi] /= sp_count;
+		}
+	}
+	
 }
 /*--------------------------------------------------------------------*/
 /**
@@ -272,17 +341,42 @@ void Fuzzy::Fuzzy_Classify(
 *
 */
 /*--------------------------------------------------------------------*/
-void Fuzzy::Fuzzy_Classify_VG(
-	int * _mat_Classify,
-	const float * _mat_V,
-	const float * _mat_G,
-	const int _dim)
+void Fuzzy::Fuzzy_Classify_SVG()
 {
 
-	for (int spi = 0; spi < _dim; spi++) {
+	int*	mat_Classify= FuzzyResult_Classify.ptr<int>(0);
 
-		const int Classify_t = GetFuzzyClassify_VG(_mat_V[spi], _mat_G[spi]);
-		_mat_Classify[spi] = Classify_t;
+	float*	fuzzy_s_ptr = FuzzyResult_S.ptr<float>(0);
+	float*	fuzzy_v_ptr = FuzzyResult_V.ptr<float>(0);
+	float*	fuzzy_g_ptr = FuzzyResult_G.ptr<float>(0);
+	const int		dim = FuzzyResult_G.size().width;
+
+	Fuzzy_Classify(
+		mat_Classify,
+		fuzzy_s_ptr,
+		fuzzy_v_ptr,
+		fuzzy_g_ptr,
+		dim);
+
+}
+/*--------------------------------------------------------------------*/
+/**
+*
+*
+*/
+/*--------------------------------------------------------------------*/
+void Fuzzy::Fuzzy_Classify_VG()
+{
+	int* fuzzy_classify=FuzzyResult_Classify.ptr<int>(0);
+	const int sp_num = FuzzyResult_Classify.size().width;
+
+	const float*	fuzzy_v_ptr = FuzzyResult_V.ptr<float>(0);
+	const float*	fuzzy_g_ptr = FuzzyResult_G.ptr<float>(0);
+
+	for (int spi = 0; spi < sp_num; spi++) {
+
+		const int Classify_t = GetFuzzyClassify_VG(fuzzy_v_ptr[spi], fuzzy_g_ptr[spi]);
+		fuzzy_classify[spi] = Classify_t;
 
 	}
 
@@ -302,17 +396,40 @@ void Fuzzy::Fuzzy_Label(
 	const int _h)
 {
 
-	for (int wi = 0; wi < _w; wi++){
-		for (int hi = 0; hi < _h; hi++){
-			 
-			const int IDX = wi + hi*_w;
-			const int SP_IDX = _label[IDX];
+	const int SZ=_w*_h;
+	for (int pi = 0; pi < SZ; pi++){
+			const int SP_IDX = _label[pi];
 			assert(SP_IDX<=_dim);
 			const int SVG_IDX = _mat_Classify[SP_IDX];
 			assert(SVG_IDX==FUZZY_SKY || SVG_IDX == FUZZY_V || SVG_IDX == FUZZY_GND);
-			_label_svg[IDX]=SVG_IDX;
-		}
+			_label_svg[pi]=SVG_IDX;
+		
 	}
+
+}
+/*--------------------------------------------------------------------*/
+/**
+*
+*
+*/
+/*--------------------------------------------------------------------*/
+void Fuzzy::Fuzzy_Label_Ex(
+	const int _dim,
+	int * _label_svg,
+	const int * _label,
+	const int _w,
+	const int _h)
+{
+
+	const int * mat_Classify = FuzzyResult_Classify.ptr<int>(0);
+
+	Fuzzy::Fuzzy_Label(
+		mat_Classify,
+		_dim,
+		_label_svg,
+		_label,
+		_w,
+		_h);
 
 }
 /*--------------------------------------------------------------------*/
@@ -344,8 +461,8 @@ int Fuzzy::GetFuzzyClassify(
 */
 /*--------------------------------------------------------------------*/
 int Fuzzy::GetFuzzyClassify_VG(
-	const float _mat_V,
-	const float _mat_G)
+	const float& _mat_V,
+	const float& _mat_G)
 {
 
 	if (_mat_V >=  _mat_G) {
@@ -418,13 +535,6 @@ void   Fuzzy::FillWeightArrayS_InDoor20150603(const double _horizontal_line,cons
 	}
 	///////////////////////////////////////////////////////////////////////
 }
-/*--------------------------------------------------------------------*/
-/**
-*
-*
-*/
-/*--------------------------------------------------------------------*/
-
 /*--------------------------------------------------------------------*/
 /**
 *

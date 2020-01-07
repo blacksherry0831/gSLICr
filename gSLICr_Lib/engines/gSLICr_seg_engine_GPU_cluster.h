@@ -7,7 +7,8 @@
 #include "../objects/gSLICr_spixel_info.h"
 /*----------------------------------------------------------------*/
 #include "gSLICr_seg_engine_GPU.h"
-
+/*----------------------------------------------------------------*/
+#include <vector>
 /*----------------------------------------------------------------*/
 /**
 *
@@ -58,6 +59,7 @@ namespace gSLICr
 			const dim3 GetGrid2Dim(Vector2i _size) const;
 			const dim3 GetBlockDim() const;
 		public:
+			virtual void Find_Adjacency_Matrix_E_UpTri();
 			virtual void Find_Adjacency_Matrix_E();
 			virtual void Cvt_Spixel_Similar();
 			virtual void Cvt_Spixel_to_LThetaM();
@@ -96,8 +98,9 @@ namespace gSLICr
 			const float * _mat,
 			const int _wh);
 		
-		bool RemoveLine_Float(float * _mat, const int _wh, const int _li);
-		bool MergeNeighbor_Float(float * _mat, const int _wh, const int _i, const int _j);
+		bool MergeNeighbor_RemoveAnother(float * _mat, const int _wh, const int _i, const int _j);
+
+		void getSameClass(std::vector<int>& sameClass,const int _ci,const float * _mat, const int _wh);
 		
 	}
 }

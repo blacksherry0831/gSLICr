@@ -13,6 +13,8 @@
 /*----------------------------------------------------------------*/
 #include "gSLICr_Lib/gSLICr.h"
 /*----------------------------------------------------------------*/
+#include <SGV/SGV_GLOBAL.h>
+/*----------------------------------------------------------------*/
 /**
 *
 *
@@ -55,6 +57,15 @@ static void SVG_NAVIGATION_CAR_CLUSTER(
 						const std::string _saveLocation,
 						const int _K,
 						const float _HL_VP);
+
+static void SVG_NAVIGATION_CAR_CLUSTER_FAST(
+						const std::string _file_full_name,
+						const IplImage * _img,
+						const std::string _saveLocation);
+
+static void SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
+	const IplImage * _img,
+	cv::Mat& _svg_idx_frame);
 
 public:
 static	void METHOD_PATH_CFG();

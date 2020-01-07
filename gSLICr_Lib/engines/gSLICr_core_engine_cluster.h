@@ -32,8 +32,11 @@ namespace gSLICr
 
 			// Function to segment in_img
 			void Process_Frame(UChar4Image* in_img);
+			void Process_Frame(const char* _data,const size_t _size);
 
 			void Perform_Cluster();
+
+			void cudaThreadSync();
 
 			void MEM_GPU_to_CPU();
 			void MEM_CPU_to_GPU_Cluster_Idx();
@@ -55,6 +58,8 @@ namespace gSLICr
 
 			const SpixelMap*    Get_Spixel_Map_Cvt();
 			const SpixelMap*    Get_Spixel_Map();
+
+			const int  SpixelNum() const;
 	
 			static const std::vector<gSLICr::objects::spixel_info> Cvt_SpixelMap_to_Vector(const SpixelMap * _spixelMap);
 		

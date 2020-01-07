@@ -27,6 +27,14 @@ public:
 		const int _height,
 		int * _label_svg);
 
+	static void FuzzySuperPixel_VG_FAST(
+		const float _hl_vp,
+		const int * _label,
+		const int _spixelNum,
+		const int _width,
+		const int _height,
+		int * _label_svg);
+
 	static void FuzzySuperPixel_Method(
 		const std::string _method,
 		const float _hl_vp,

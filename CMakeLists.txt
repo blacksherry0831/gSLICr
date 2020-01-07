@@ -22,13 +22,13 @@ endif()
 INCLUDE(cmake/FindOpencv.cmake)
 INCLUDE(cmake/FindQT.cmake)
 INCLUDE(cmake/setCUDA.cmake)
-INCLUDE(cmake/SetMFC.cmake)
+#INCLUDE(cmake/SetMFC.cmake)
 INCLUDE(cmake/LinuxPrepare.cmake)
 ###############################################################################
 C11_Config()
 ConfigOpenCv()
 ConfigCUDA()
-ConfigMFC_2()
+
 ###############################################################################
 IF(MSVC_IDE)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)

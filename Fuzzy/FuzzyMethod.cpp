@@ -39,27 +39,15 @@ void FuzzyMethod::FuzzySuperPixel(
 
 	cv::Size fuzzy_size(_spixelNum, 1);
 
-	cv::Mat  fuzzy_Classify(fuzzy_size, CV_32SC1);
-	cv::Mat  fuzzy_S(fuzzy_size, CV_32FC1);
-	cv::Mat  fuzzy_V(fuzzy_size, CV_32FC1);
-	cv::Mat  fuzzy_G(fuzzy_size, CV_32FC1);
+	Fuzzy::MallocResultMemory(fuzzy_size);
+		
+	Fuzzy::Fuzzy_S(_spixelNum, _label, _width, _height);
+	Fuzzy::Fuzzy_V(_spixelNum, _label, _width, _height);
+	Fuzzy::Fuzzy_G(_spixelNum, _label, _width, _height);
 
-	int *fuzzy_Classify_Ptr = fuzzy_Classify.ptr<int>(0);
-
-	Fuzzy::Fuzzy_S(fuzzy_S.ptr<float>(0), _spixelNum, _label, _width, _height);
-	Fuzzy::Fuzzy_V(fuzzy_V.ptr<float>(0), _spixelNum, _label, _width, _height);
-	Fuzzy::Fuzzy_G(fuzzy_G.ptr<float>(0), _spixelNum, _label, _width, _height);
-
-	Fuzzy::Fuzzy_Classify(
-		fuzzy_Classify_Ptr,
-		fuzzy_S.ptr<float>(0),
-		fuzzy_V.ptr<float>(0),
-		fuzzy_G.ptr<float>(0),
-		_spixelNum);
-
-
-	Fuzzy::Fuzzy_Label(
-		fuzzy_Classify_Ptr,
+	Fuzzy::Fuzzy_Classify_SVG();
+	
+	Fuzzy::Fuzzy_Label_Ex(
 		_spixelNum,
 		_label_svg,
 		_label,
@@ -80,36 +68,55 @@ void FuzzyMethod::FuzzySuperPixel_VG(
 	const int _height,
 	int * _label_svg)
 {
-
 	Fuzzy::InitYweightTable_VG(_height, _hl_vp);
 
 	cv::Size fuzzy_size(_spixelNum, 1);
 
-	cv::Mat  fuzzy_Classify(fuzzy_size, CV_32SC1);
-	cv::Mat  fuzzy_V(fuzzy_size, CV_32FC1);
-	cv::Mat  fuzzy_G(fuzzy_size, CV_32FC1);
+	Fuzzy::MallocResultMemory(fuzzy_size);
+		
+	Fuzzy::Fuzzy_V(_spixelNum, _label, _width, _height);
+	Fuzzy::Fuzzy_G(_spixelNum, _label, _width, _height);
 
-	int *fuzzy_Classify_Ptr = fuzzy_Classify.ptr<int>(0);
-
+	Fuzzy::Fuzzy_Classify_VG();
 	
-	Fuzzy::Fuzzy_V(fuzzy_V.ptr<float>(0), _spixelNum, _label, _width, _height);
-	Fuzzy::Fuzzy_G(fuzzy_G.ptr<float>(0), _spixelNum, _label, _width, _height);
-
-	Fuzzy::Fuzzy_Classify_VG(
-		fuzzy_Classify_Ptr,
-		fuzzy_V.ptr<float>(0),
-		fuzzy_G.ptr<float>(0),
-		_spixelNum);
-
-
-	Fuzzy::Fuzzy_Label(
-		fuzzy_Classify_Ptr,
+	Fuzzy::Fuzzy_Label_Ex(
 		_spixelNum,
 		_label_svg,
 		_label,
 		_width,
 		_height);
 
+}
+/*-----------------------------------------*/
+/**
+*
+*
+*/
+/*-----------------------------------------*/
+void FuzzyMethod::FuzzySuperPixel_VG_FAST(
+	const float _hl_vp,
+	const int * _label,
+	const int _spixelNum,
+	const int _width,
+	const int _height,
+	int * _label_svg)
+{
+	Fuzzy::InitYweightTable_VG(_height, _hl_vp);
+
+	cv::Size fuzzy_size(_spixelNum, 1);
+
+	Fuzzy::MallocResultMemory(fuzzy_size);
+
+	Fuzzy::Fuzzy_VG_FAST(_spixelNum, _label, _width, _height);
+
+	Fuzzy::Fuzzy_Classify_VG();
+
+	Fuzzy::Fuzzy_Label_Ex(
+		_spixelNum,
+		_label_svg,
+		_label,
+		_width,
+		_height);
 }
 /*-----------------------------------------*/
 /**
@@ -139,7 +146,7 @@ void FuzzyMethod::FuzzySuperPixel_Method(
 
 	}else if (0 == _method.compare("vg")){
 
-		FuzzySuperPixel_VG(
+		FuzzySuperPixel_VG_FAST(
 			_hl_vp,
 			_label,
 			_spixelNum,

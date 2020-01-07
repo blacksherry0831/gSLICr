@@ -3,6 +3,8 @@
 #include "cpp_stl.h"
 #include "cpp_def.h"
 /*-----------------------------------------*/
+#include <cv.h>
+/*-----------------------------------------*/
 #define  WeightZoom (10000)
 #define  Y_HEIGHT_MAX	(3000)
 /*-----------------------------------------*/
@@ -42,10 +44,18 @@ public:
 	static  float pYweight_S[Y_HEIGHT_MAX];
 	static  float pYweight_V[Y_HEIGHT_MAX];
 	static  float pYweight_G[Y_HEIGHT_MAX];
+private:
+	static cv::Mat  FuzzyResult_Classify;
+	static cv::Mat  FuzzyResult_S;
+	static cv::Mat  FuzzyResult_V;
+	static cv::Mat  FuzzyResult_G;
+	static cv::Mat  FuzzyResult_Count;
 public:
 	static void InitYweightTable_SVG(const int _height, const float _HorizontalLinePosScale);
 	static void InitYweightTable_VG(const int _height, const float _HorizontalLinePosScale);
-			
+public:
+	static void MallocResultMemory(const cv::Size& _sp_num);
+public:
 	static void Fuzzy_Property(
 		const float* _p,
 		float * _mat,
@@ -55,21 +65,24 @@ public:
 		const int _h);
 
 	static void Fuzzy_S(
-		float * _mat,
 		const int _dim,
 		const int * _label,
 		const int _w,
 		const int _h);
 
 	static void Fuzzy_V(
-		float * _mat,
 		const int _dim,
 		const int * _label,
 		const int _w,
 		const int _h);
 
 	static void Fuzzy_G(
-		float * _mat,
+		const int _dim,
+		const int * _label,
+		const int _w,
+		const int _h);
+
+	static void Fuzzy_VG_FAST(
 		const int _dim,
 		const int * _label,
 		const int _w,
@@ -82,8 +95,10 @@ public:
 		const float * _mat_G,
 		const int _dim);
 
-	static void Fuzzy_Classify_VG(int * _mat_Classify, const float * _mat_V, const float * _mat_G, const int _dim);
+	static void Fuzzy_Classify_SVG();
 
+	static void Fuzzy_Classify_VG();
+	
 	static void Fuzzy_Label(
 		const int*		_mat_Classify,
 		const int		_dim,
@@ -91,14 +106,21 @@ public:
 		const int*		_label,
 		const int		_w,
 		const int		_h);
-	
+
+	static void Fuzzy_Label_Ex(
+		const int _dim,
+		int * _label_svg,
+		const int * _label,
+		const int _w,
+		const int _h);
+			
 	static int GetFuzzyClassify(		
 		const float  _mat_S,
 		const float  _mat_V,
 		const float  _mat_G);
 
 	static int GetFuzzyClassify_VG(
-		const float _mat_V,
-		const float _mat_G);
+		const float& _mat_V,
+		const float& _mat_G);
 
 };

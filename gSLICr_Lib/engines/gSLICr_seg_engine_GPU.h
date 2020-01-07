@@ -27,6 +27,8 @@ namespace gSLICr
 			void Find_Center_Association();
 			void Update_Cluster_Center();
 			void Enforce_Connectivity();
+			void Enforce_Connectivity_Grid3();
+			void Enforce_Connectivity_Table();
 		public:
 			const IntImage*		Get_Idx();
 			const IntImage*		Do_Idx_Cpy_Dev_to_Host();

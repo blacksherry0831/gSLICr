@@ -102,19 +102,20 @@ void SGV_Method::SVG_NAVIGATION_CAR(
 									const float _M,
 									const float _HL_VP)
 {
-
+	TimeMeasure::Config(1, 1);
 	TimeMeasure tm("##################### NAVIGATION CAR #####################");
 	{
 		
-		gSLICr::objects::settings my_settings;
-		initSetting(my_settings);
-		initSetting(my_settings, _img);
+		const int WIDTH = _img->width;
+		const int HEIGHT = _img->height;
+		gSLICr::Vector2i img_size(WIDTH, HEIGHT);
+		SGV_GLOBAL::InitCoreEngineCluster(WIDTH, HEIGHT);
 		
-		gSLICr::engines::core_engine* gSLICr_engine = new gSLICr::engines::core_engine(my_settings);
-		gSLICr::UChar4Image* in_img = new gSLICr::UChar4Image(my_settings.img_size, true, true);
-		gSLICr::UChar4Image* out_img = new gSLICr::UChar4Image(my_settings.img_size, true, true);
+		std::shared_ptr<gSLICr::engines::core_engine_cluster> gSLICr_engine = SGV_GLOBAL::GetCoreEngineCluster();
+		gSLICr::UChar4Image* in_img = new gSLICr::UChar4Image(img_size, true, true);
+		gSLICr::UChar4Image* out_img = new gSLICr::UChar4Image(img_size, true, true);
 		
-		cv::Size s(my_settings.img_size.x, my_settings.img_size.y);
+		cv::Size s(img_size.x, img_size.y);
 		cv::Mat boundry_draw_frame; 
 				boundry_draw_frame.create(s, CV_8UC4);
 
@@ -172,71 +173,33 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 	const int _K,
 	const float _HL_VP)
 {
-
-	SGV_CFG_ARITHMETIC cfg_arithmetic;
-	SGV_CFG_DBG cfg_dbg;
-
-	cfg_arithmetic.InitLoad();
+	
+	SGV_CFG_DBG cfg_dbg;	
 	cfg_dbg.InitLoad();
 
-	const float L_Color_th = cfg_arithmetic.GetCluster_LThetaM_L_COLOR_THRESHOLD();
-	const float M_Color_th = cfg_arithmetic.GetCluster_LThetaM_M_COLOR_THRESHOLD();
-	const float Theta_Color_th = cfg_arithmetic.GetCluster_LThetaM_Theta_COLOR_THRESHOLD();
-
-	const float L_Gray_th = cfg_arithmetic.GetCluster_LThetaM_L_GRAY_THRESHOLD();
-	const float M_Gray_th = cfg_arithmetic.GetCluster_LThetaM_M_GRAY_THRESHOLD();
-	const float Theta_Gray_th = cfg_arithmetic.GetCluster_LThetaM_Theta_GRAY_THRESHOLD();
-
-	const float M_Gray_Color_th = cfg_arithmetic.GetCluster_LThetaM_Gray_Color_THRESHOLD();
-
-	const float weight_xy=cfg_arithmetic.getSuperPixel_Weight_XY();
-
-
-	const std::string fuzzy_svg_t = cfg_arithmetic.getFuzzyMethod().toStdString();
-
 	const std::string file_name_t=Base::file_name_without_ext(_file_full_name);
-
-
-
+	
+	TimeMeasure::Config(1, 1);
 	TimeMeasure tm("##################### NAVIGATION CAR CLUSTER #####################");
 	{
-
-		gSLICr::objects::settings my_settings;
-		
-		initSetting(my_settings);
-		initSetting_no(my_settings, _K,weight_xy);
-		initSetting(my_settings, _img);
-
-		const int HEIGHT = _img->height;
 		const int WIDTH = _img->width;
-
-
-		std::shared_ptr<gSLICr::engines::core_engine_cluster>  gSLICr_engine_shared_ptr(new gSLICr::engines::core_engine_cluster(my_settings));
-
-		gSLICr::engines::core_engine_cluster* gSLICr_engine = gSLICr_engine_shared_ptr.get();
-
-		const gSLICr::engines::seg_engine_GPU_cluster* gSLICr_seg_engine = gSLICr_engine->GetSegEngineGPUCluster();
+		const int HEIGHT = _img->height;
 		
-		((gSLICr::engines::seg_engine_GPU_cluster* )gSLICr_seg_engine)->SetClusterLThetaM_Threshold(
-			L_Color_th,
-			M_Color_th,
-			Theta_Color_th,
-			L_Gray_th,
-			M_Gray_th,
-			Theta_Gray_th,
-			M_Gray_Color_th);
-
-		const int	SpixelDim = gSLICr_seg_engine->SpixelNum();
+		gSLICr::Vector2i img_size(WIDTH,HEIGHT);
+		cv::Size img_size_cv(WIDTH, HEIGHT);
+		
+		SGV_GLOBAL::InitCoreEngineCluster(WIDTH, HEIGHT);
+		/*-------------------------------------------------------------------------*/
+		std::shared_ptr<gSLICr::engines::core_engine_cluster>  gSLICr_engine = SGV_GLOBAL::GetCoreEngineCluster();
+		
+		const int	SpixelDim = gSLICr_engine->SpixelNum();
 				
-		std::shared_ptr<gSLICr::UChar4Image>  in_img(new gSLICr::UChar4Image(my_settings.img_size, true, true));
-		std::shared_ptr<gSLICr::UChar4Image>  out_img(new gSLICr::UChar4Image(my_settings.img_size, true, true));
+		std::shared_ptr<gSLICr::UChar4Image>  in_img(new gSLICr::UChar4Image(img_size, true, true));
+		std::shared_ptr<gSLICr::UChar4Image>  out_img(new gSLICr::UChar4Image(img_size, true, true));
 
-
-		cv::Size img_size_cv(my_settings.img_size.x, my_settings.img_size.y);
 		cv::Size cluster_map_size_cv(SpixelDim, 1);
 		cv::Size adjacency_size_cv(SpixelDim, SpixelDim);
 		
-
 		cv::Mat boundry_draw_frame(img_size_cv, CV_8UC4);
 		cv::Mat boundry_cluster_draw_frame(img_size_cv, CV_8UC4);
 		cv::Mat cluster_map_frame(cluster_map_size_cv, CV_32SC1);
@@ -321,7 +284,7 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 				spixel_info_cvt_t = gSLICr_engine->Get_Spixel_Map_Cvt_Vector();
 				spixel_info_org_t = gSLICr_engine->Get_Spixel_Map_Vector();
 
-				const ORUtils::Vector2<int> Spixel_Map_noDims_t =gSLICr_seg_engine->Get_Spixel_Map_noDims();
+				const ORUtils::Vector2<int> Spixel_Map_noDims_t =gSLICr_engine->GetSegEngineGPUCluster()->Get_Spixel_Map_noDims();
 
 #if 1
 
@@ -330,7 +293,7 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 					file_name_t,
 					"txt.idx.frame",
 					spixel_info_cvt_t,
-					M_Gray_Color_th);
+					SGV_GLOBAL::M_GRAY_COLOR_TH);
 
 				cfg_dbg.Save_Spixel_Map_And_Cvt_Vector(
 					Spixel_Map_noDims_t,
@@ -350,8 +313,8 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 #if TRUE
 				/*-------------------------------------------------------------------------*/
 				FuzzyMethod::FuzzySuperPixel_Method(
-					fuzzy_svg_t,
-					_HL_VP,
+					SGV_GLOBAL::FUZZY_METHOD_SVG,
+					SGV_GLOBAL::AH_VP,
 					idx_cluster_frame.ptr<int>(0),
 					SpixelDim,
 					WIDTH,
@@ -394,6 +357,92 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER(
 
 	}
 
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST(
+	const std::string _file_full_name,
+	const IplImage* _img,
+	const std::string _saveLocation)
+{
+	TimeMeasure::Config(1, 1);
+	{
+		
+		const int HEIGHT = _img->height;
+		const int WIDTH = _img->width;
+										
+		cv::Size img_size_cv(WIDTH, HEIGHT);
+		cv::Mat idx_svg_frame(img_size_cv, CV_8UC4);
+	
+		int do_count = 0;
+		const int COUNT_MAX = 10;
+		while (do_count++<COUNT_MAX)
+		{
+				TimeMeasure tm("1.frame.car.cluster");
+				SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(_img,idx_svg_frame);							
+		}
+
+	}
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
+	const IplImage * _img,
+	cv::Mat & _svg_idx_frame)
+{
+	
+	/*-------------------------------------------------------------------------*/
+	const int HEIGHT = _img->height;
+	const int WIDTH = _img->width;
+	/*-------------------------------------------------------------------------*/
+	SGV_GLOBAL::InitCoreEngineCluster(WIDTH, HEIGHT);
+	/*-------------------------------------------------------------------------*/
+	std::shared_ptr<gSLICr::engines::core_engine_cluster>  gSLICr_engine = SGV_GLOBAL::GetCoreEngineCluster();
+	/*-------------------------------------------------------------------------*/
+	const int	SpixelDim = gSLICr_engine->SpixelNum();
+	/*-------------------------------------------------------------------------*/
+	{
+		TimeMeasure tm("gSLICr");
+		gSLICr_engine->Process_Frame(_img->imageData, _img->imageSize);
+	}	
+	/*-------------------------------------------------------------------------*/
+	{
+		TimeMeasure tm("cluster gpu");
+		gSLICr_engine->Perform_Cluster();
+	}
+	/*-------------------------------------------------------------------------*/
+	{
+		TimeMeasure tm("memcpy GPU to CPU");
+		gSLICr_engine->MEM_GPU_to_CPU();
+	}
+	/*-------------------------------------------------------------------------*/
+	{
+		TimeMeasure tm("cluster cpu");
+		gSLICr_engine->Perform_Cluster_CPU();
+	}	
+	/*-------------------------------------------------------------------------*/
+	{
+		TimeMeasure tm("svg");
+		const gSLICr::IntImage * seg_cluster = gSLICr_engine->Get_Cluster_Idx_Seg();
+		const int* seg_cluster_ptr = seg_cluster->GetData(MEMORYDEVICE_CPU);
+
+		FuzzyMethod::FuzzySuperPixel_Method(
+			SGV_GLOBAL::FUZZY_METHOD_SVG,
+			SGV_GLOBAL::AH_VP,
+			seg_cluster_ptr,
+			SpixelDim,
+			WIDTH,
+			HEIGHT,
+			_svg_idx_frame.ptr<int>(0));
+	}	
+	/*-------------------------------------------------------------------------*/
+ 
 }
 /*-------------------------------------------------------------------------*/
 /**
@@ -481,8 +530,7 @@ void SGV_Method::METHOD_MEM(const std::string _f,IplImage* _img)
 		
 		
 
-	}
-	else if (method_t.compare(SGV_CFG_ARITHMETIC::NODE_METHOD_NAV_CAR) == 0) {
+	}else if (method_t.compare(SGV_CFG_ARITHMETIC::NODE_METHOD_NAV_CAR) == 0) {
 
 		SVG_NAVIGATION_CAR(_img,
 			saveLocation,
@@ -498,6 +546,13 @@ void SGV_Method::METHOD_MEM(const std::string _f,IplImage* _img)
 			saveLocation,
 			K,
 			AH_VP);
+
+	}else if (method_t.compare(SGV_CFG_ARITHMETIC::NODE_METHOD_NAV_CAR_CLUSTER_FAST) == 0){
+
+		SVG_NAVIGATION_CAR_CLUSTER_FAST(
+			_f,
+			_img,
+			saveLocation);
 
 	}else if (method_t.compare(SGV_CFG_ARITHMETIC::NODE_METHOD_OUT_DOOR_400_IMAGE_STABLE)==0){
 		

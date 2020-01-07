@@ -164,7 +164,28 @@ namespace ORUtils
 			default: break;
 			}
 		}
-
+		/** Copy data */
+		void SetFrom(const char* _sourceData,size_t _sourceSize, MemoryCopyDirection memoryCopyDirection)
+		{
+			switch (memoryCopyDirection)
+			{
+			case CPU_TO_CPU:
+				memcpy(this->data_cpu,_sourceData, _sourceSize);
+				break;
+#ifndef COMPILE_WITHOUT_CUDA
+			case CPU_TO_CUDA:
+				ORcudaSafeCall(cudaMemcpyAsync(this->data_cuda, _sourceData, _sourceSize, cudaMemcpyHostToDevice));
+				break;
+			case CUDA_TO_CPU:
+				ORcudaSafeCall(cudaMemcpy(this->data_cpu, _sourceData, _sourceSize, cudaMemcpyDeviceToHost));
+				break;
+			case CUDA_TO_CUDA:
+				ORcudaSafeCall(cudaMemcpyAsync(this->data_cuda, _sourceData, _sourceSize, cudaMemcpyDeviceToDevice));
+				break;
+#endif
+			default: break;
+			}
+		}
 		virtual ~MemoryBlock() { this->Free(); }
 
 		/** Allocate image data of the specified size. If the

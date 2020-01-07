@@ -4,18 +4,6 @@ C11_Config()
 ###############################################################################
  CONFIGQT()
 ###############################################################################
-
-
-
-IF (CMAKE_SYSTEM_NAME MATCHES "Linux")  
- 
-ELSEIF (CMAKE_SYSTEM_NAME MATCHES "Windows")
-	ConfigMFC_2()
-ELSEIF (CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
-   
-ELSE ()  
-   
-ENDIF ()  
 ###############################################################################
 
 SET(QT_SDK_SRCS

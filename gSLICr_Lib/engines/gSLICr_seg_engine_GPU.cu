@@ -18,6 +18,8 @@ using namespace gSLICr::engines;
 __global__ void Cvt_Img_Space_device(const Vector4u* inimg, Vector4f* outimg, Vector2i img_size, COLOR_SPACE color_space);
 
 __global__ void Enforce_Connectivity_device(const int* in_idx_img, int* out_idx_img, Vector2i img_size);
+__global__ void Enforce_Connectivity_device_table(const int* in_idx_img, int* out_idx_img, Vector2i img_size);
+__global__ void Enforce_Connectivity_device_grid3(const int* in_idx_img, int* out_idx_img, Vector2i img_size);
 
 __global__ void Init_Cluster_Centers_device(const Vector4f* inimg, spixel_info* out_spixel, Vector2i map_size, Vector2i img_size, int spixel_size);
 
@@ -193,8 +195,42 @@ void gSLICr::engines::seg_engine_GPU::Enforce_Connectivity()
 	const dim3 blockSize(BLOCK_DIM, BLOCK_DIM);
 	const dim3 gridSize((int)ceil((float)img_size.x / (float)blockSize.x), (int)ceil((float)img_size.y / (float)blockSize.y));
 
-	Enforce_Connectivity_device << <gridSize, blockSize >> >(idx_ptr, tmp_idx_ptr, img_size);
-	Enforce_Connectivity_device << <gridSize, blockSize >> >(tmp_idx_ptr, idx_ptr, img_size);
+	Enforce_Connectivity_device_grid3 << <gridSize, blockSize >> >(idx_ptr, tmp_idx_ptr, img_size);
+	Enforce_Connectivity_device<< <gridSize, blockSize >> >(tmp_idx_ptr, idx_ptr, img_size);
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void gSLICr::engines::seg_engine_GPU::Enforce_Connectivity_Grid3()
+{
+	int* idx_ptr = idx_img->GetData(MEMORYDEVICE_CUDA);
+	int* tmp_idx_ptr = tmp_idx_img->GetData(MEMORYDEVICE_CUDA);
+	const Vector2i img_size = idx_img->noDims;
+
+	const dim3 blockSize(BLOCK_DIM, BLOCK_DIM);
+	const dim3 gridSize((int)ceil((float)img_size.x / (float)blockSize.x), (int)ceil((float)img_size.y / (float)blockSize.y));
+
+	Enforce_Connectivity_device_grid3 << <gridSize, blockSize >> >(idx_ptr, tmp_idx_ptr, img_size);
+	Enforce_Connectivity_device_grid3 << <gridSize, blockSize >> >(tmp_idx_ptr, idx_ptr, img_size);
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void gSLICr::engines::seg_engine_GPU::Enforce_Connectivity_Table()
+{
+	int* idx_ptr = idx_img->GetData(MEMORYDEVICE_CUDA);
+	int* tmp_idx_ptr = tmp_idx_img->GetData(MEMORYDEVICE_CUDA);
+	const Vector2i img_size = idx_img->noDims;
+
+	const dim3 blockSize(BLOCK_DIM, BLOCK_DIM);
+	const dim3 gridSize((int)ceil((float)img_size.x / (float)blockSize.x), (int)ceil((float)img_size.y / (float)blockSize.y));
+
+	Enforce_Connectivity_device_table << <gridSize, blockSize >> >(idx_ptr, tmp_idx_ptr, img_size);
+	Enforce_Connectivity_device_table << <gridSize, blockSize >> >(tmp_idx_ptr, idx_ptr, img_size);
 }
 /*----------------------------------------------------------------*/
 /**
@@ -472,6 +508,30 @@ __global__ void Enforce_Connectivity_device(const int* in_idx_img, int* out_idx_
 	if (x > img_size.x - 1 || y > img_size.y - 1) return;
 
 	supress_local_lable(in_idx_img, out_idx_img, img_size, x, y);
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+__global__ void Enforce_Connectivity_device_grid3(const int* in_idx_img, int* out_idx_img, Vector2i img_size)
+{
+	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
+	if (x > img_size.x - 1 || y > img_size.y - 1) return;
+
+	supress_local_lable_grid3(in_idx_img, out_idx_img, img_size, x, y);
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+__global__ void Enforce_Connectivity_device_table(const int* in_idx_img, int* out_idx_img, Vector2i img_size)
+{
+	const int x = threadIdx.x + blockIdx.x * blockDim.x, y = threadIdx.y + blockIdx.y * blockDim.y;
+	if (x > img_size.x - 1 || y > img_size.y - 1) return;
+
+	supress_local_lable_table(in_idx_img, out_idx_img, img_size, x, y);
 }
 /*----------------------------------------------------------------*/
 /**
