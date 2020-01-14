@@ -1,0 +1,553 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>936</width>
+    <height>697</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1000,1">
+    <property name="spacing">
+     <number>0</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout" stretch="100,1">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_6" stretch="1,1">
+        <property name="spacing">
+         <number>1</number>
+        </property>
+        <property name="sizeConstraint">
+         <enum>QLayout::SetMaximumSize</enum>
+        </property>
+        <item>
+         <widget class="QLabel" name="label_Image">
+          <property name="minimumSize">
+           <size>
+            <width>480</width>
+            <height>270</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>1920</width>
+            <height>1080</height>
+           </size>
+          </property>
+          <property name="sizeIncrement">
+           <size>
+            <width>16</width>
+            <height>9</height>
+           </size>
+          </property>
+          <property name="baseSize">
+           <size>
+            <width>480</width>
+            <height>270</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>TextLabel_image</string>
+          </property>
+          <property name="scaledContents">
+           <bool>false</bool>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_Image_svg">
+          <property name="minimumSize">
+           <size>
+            <width>480</width>
+            <height>270</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>1920</width>
+            <height>1080</height>
+           </size>
+          </property>
+          <property name="sizeIncrement">
+           <size>
+            <width>16</width>
+            <height>9</height>
+           </size>
+          </property>
+          <property name="baseSize">
+           <size>
+            <width>480</width>
+            <height>270</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>TextLabel_image_svg</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <property name="spacing">
+         <number>1</number>
+        </property>
+        <property name="sizeConstraint">
+         <enum>QLayout::SetFixedSize</enum>
+        </property>
+        <item>
+         <widget class="QComboBox" name="comboBox">
+          <item>
+           <property name="text">
+            <string>mode1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>mode2</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
+         <widget class="QStackedWidget" name="stackedWidget">
+          <property name="minimumSize">
+           <size>
+            <width>450</width>
+            <height>300</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>500</width>
+            <height>500</height>
+           </size>
+          </property>
+          <property name="sizeIncrement">
+           <size>
+            <width>1</width>
+            <height>1</height>
+           </size>
+          </property>
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="page_3">
+           <widget class="RoundProgressBar" name="roundProgressBar" native="true">
+            <property name="geometry">
+             <rect>
+              <x>70</x>
+              <y>20</y>
+              <width>321</width>
+              <height>331</height>
+             </rect>
+            </property>
+            <widget class="QDial" name="dial">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>321</width>
+               <height>331</height>
+              </rect>
+             </property>
+            </widget>
+           </widget>
+           <widget class="QLabel" name="label_3">
+            <property name="geometry">
+             <rect>
+              <x>120</x>
+              <y>360</y>
+              <width>221</width>
+              <height>31</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string> 向前：W  向后：S  急刹停：X</string>
+            </property>
+           </widget>
+          </widget>
+          <widget class="QWidget" name="page">
+           <widget class="QWidget" name="layoutWidget">
+            <property name="geometry">
+             <rect>
+              <x>40</x>
+              <y>60</y>
+              <width>371</width>
+              <height>231</height>
+             </rect>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_2">
+               <item>
+                <widget class="QPushButton" name="UP_LEFT">
+                 <property name="text">
+                  <string>UP_LEFT</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="up">
+                 <property name="text">
+                  <string>UP</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="UP_RIGHT">
+                 <property name="text">
+                  <string>UP_RIGHT</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_3">
+               <item>
+                <widget class="QPushButton" name="LEFT">
+                 <property name="text">
+                  <string>LEFT</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="STOP">
+                 <property name="text">
+                  <string>STOP</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="RIGHT">
+                 <property name="text">
+                  <string>RIGHT</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_4">
+               <item>
+                <widget class="QPushButton" name="DOWN_LEFT">
+                 <property name="text">
+                  <string>DOWN_LEFT</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="DOWN">
+                 <property name="text">
+                  <string>DOWN</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="DOWN_RIGHT">
+                 <property name="text">
+                  <string>DOWN_RIGHT</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </widget>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_2">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_5">
+              <item>
+               <widget class="QLabel" name="label">
+                <property name="text">
+                 <string>线速度 </string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSlider" name="xian">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_7">
+              <item>
+               <widget class="QLabel" name="label_2">
+                <property name="text">
+                 <string>角速度 </string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSlider" name="jiao">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_7">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <property name="sizeConstraint">
+       <enum>QLayout::SetDefaultConstraint</enum>
+      </property>
+      <item>
+       <widget class="QPushButton" name="stim_button">
+        <property name="text">
+         <string>障碍物设置体</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="obs_box">
+        <item>
+         <property name="text">
+          <string>mask1</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>mask2</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>mask3</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>mask4</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>mask5</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>mask6</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_8">
+        <item>
+         <widget class="QPushButton" name="open_cam">
+          <property name="text">
+           <string>打开摄像头</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="close_cam">
+          <property name="text">
+           <string>关闭摄像头</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="safe_area">
+          <property name="text">
+           <string>安全区</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="start">
+          <property name="text">
+           <string>开始录制</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="stop">
+          <property name="text">
+           <string>停止录制</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="tu_startButton">
+          <property name="text">
+           <string>开始截图</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="tu_stopButton">
+          <property name="text">
+           <string>停止截图</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="moni_button">
+          <property name="text">
+           <string>开始模拟</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_6">
+        <item>
+         <widget class="QLabel" name="xieche">
+          <property name="text">
+           <string>未连接小车</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="shuaxin">
+          <property name="maximumSize">
+           <size>
+            <width>71</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>刷新</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>936</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuVideoDecoder">
+    <property name="title">
+     <string>VideoDecoder</string>
+    </property>
+    <widget class="QMenu" name="menuColorMode">
+     <property name="title">
+      <string>ColorMode</string>
+     </property>
+     <addaction name="actionBGRA"/>
+     <addaction name="actionYUV420P"/>
+    </widget>
+    <widget class="QMenu" name="menuSize">
+     <property name="title">
+      <string>Size</string>
+     </property>
+     <addaction name="action960X540"/>
+     <addaction name="action1920X1080"/>
+    </widget>
+    <addaction name="menuSize"/>
+    <addaction name="menuColorMode"/>
+   </widget>
+   <addaction name="menuVideoDecoder"/>
+  </widget>
+  <widget class="QToolBar" name="mainToolBar">
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionBGRA">
+   <property name="text">
+    <string>BGRA</string>
+   </property>
+  </action>
+  <action name="actionYUV420P">
+   <property name="text">
+    <string>YUV420P</string>
+   </property>
+  </action>
+  <action name="action960X540_2">
+   <property name="text">
+    <string>960X540</string>
+   </property>
+  </action>
+  <action name="action1920X1080">
+   <property name="text">
+    <string>1920X1080</string>
+   </property>
+  </action>
+  <action name="action960X540">
+   <property name="text">
+    <string>960X540</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>RoundProgressBar</class>
+   <extends>QWidget</extends>
+   <header>roundprogressbar.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

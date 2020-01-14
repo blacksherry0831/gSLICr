@@ -395,13 +395,61 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST(
 void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
 	const IplImage * _img,
 	cv::Mat & _svg_idx_frame)
+{	
+	
+	const char*		IMG_SRC = _img->imageData;
+	const int		ImageSize = _img->imageSize;
+	const int		WIDTH = _img->width;
+	const int		HEIGHT = _img->height;	
+	int*		IMG_SVG_DATA = _svg_idx_frame.ptr<int>(0);
+	
+	SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
+											IMG_SRC,
+											ImageSize,
+											WIDTH,
+											HEIGHT,
+											IMG_SVG_DATA);
+	
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
+	const QImage & _imgSrc,
+	const QImage & _imgSVG)
+{
+
+	const char*		IMG_SRC = (const char*) _imgSrc.bits();
+	const int		ImageSize = _imgSrc.byteCount();
+	const int		WIDTH =		_imgSrc.width();
+	const int		HEIGHT =	_imgSrc.height();
+	int*		IMG_SVG_DATA = (int*) _imgSVG.bits();
+
+	SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
+		IMG_SRC,
+		ImageSize,
+		WIDTH,
+		HEIGHT,
+		IMG_SVG_DATA);
+
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
+	const char*	_IMG_SRC,
+	const int	_ImageSize,
+	const int	_WIDTH,
+	const int	_HEIGHT,
+	int*		_IMG_SVG_DATA)
 {
 	
 	/*-------------------------------------------------------------------------*/
-	const int HEIGHT = _img->height;
-	const int WIDTH = _img->width;
-	/*-------------------------------------------------------------------------*/
-	SGV_GLOBAL::InitCoreEngineCluster(WIDTH, HEIGHT);
+	SGV_GLOBAL::InitCoreEngineCluster(_WIDTH, _HEIGHT);
 	/*-------------------------------------------------------------------------*/
 	std::shared_ptr<gSLICr::engines::core_engine_cluster>  gSLICr_engine = SGV_GLOBAL::GetCoreEngineCluster();
 	/*-------------------------------------------------------------------------*/
@@ -409,8 +457,8 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
 	/*-------------------------------------------------------------------------*/
 	{
 		TimeMeasure tm("gSLICr");
-		gSLICr_engine->Process_Frame(_img->imageData, _img->imageSize);
-	}	
+		gSLICr_engine->Process_Frame(_IMG_SRC, _ImageSize);
+	}
 	/*-------------------------------------------------------------------------*/
 	{
 		TimeMeasure tm("cluster gpu");
@@ -425,7 +473,7 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
 	{
 		TimeMeasure tm("cluster cpu");
 		gSLICr_engine->Perform_Cluster_CPU();
-	}	
+	}
 	/*-------------------------------------------------------------------------*/
 	{
 		TimeMeasure tm("svg");
@@ -437,12 +485,12 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
 			SGV_GLOBAL::AH_VP,
 			seg_cluster_ptr,
 			SpixelDim,
-			WIDTH,
-			HEIGHT,
-			_svg_idx_frame.ptr<int>(0));
-	}	
+			_WIDTH,
+			_HEIGHT,
+			_IMG_SVG_DATA);
+	}
 	/*-------------------------------------------------------------------------*/
- 
+
 }
 /*-------------------------------------------------------------------------*/
 /**

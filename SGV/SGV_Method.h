@@ -67,6 +67,19 @@ static void SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
 	const IplImage * _img,
 	cv::Mat& _svg_idx_frame);
 
+static void SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
+	const QImage& _imgSrc,
+	const QImage& _imgSVG);
+
+static void SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
+	const char * _IMG_SRC,
+	const int _ImageSize,
+	const int _WIDTH,
+	const int _HEIGHT,
+	int * _IMG_SVG_DATA);
+
+
+
 public:
 static	void METHOD_PATH_CFG();
 static	void METHOD_PATH(const std::string _path);

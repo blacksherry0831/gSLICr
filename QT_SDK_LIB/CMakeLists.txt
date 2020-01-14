@@ -15,6 +15,8 @@ SET(QT_SDK_SRCS
 		CMD_CTRL.cpp
 		CMD_CTRL_Q.cpp
 		
+		QImage_Q.cpp
+		
 		QtMsgCmdQ.cpp
 				
 		QtThreadBase.cpp

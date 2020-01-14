@@ -32,6 +32,7 @@ SET(QT_DONT_USE_QTGUI TRUE)
 	find_package(Qt5Widgets CONFIG REQUIRED)
 	FIND_PACKAGE(Qt5SerialPort)
 	FIND_PACKAGE(Qt5Network)
+	find_package(Qt5WebSockets REQUIRED)
 	
 	LINK_LIBRARIES(		
 					Qt5::Xml
@@ -39,7 +40,8 @@ SET(QT_DONT_USE_QTGUI TRUE)
 					Qt5::Core
 					Qt5::Gui
 					Qt5::SerialPort
-					Qt5::Network)
+					Qt5::Network
+					Qt5::WebSockets)
 	
 	INCLUDE_DIRECTORIES(	
 					${Qt5Xml_INCLUDES}
@@ -47,7 +49,8 @@ SET(QT_DONT_USE_QTGUI TRUE)
 					${Qt5Core_INCLUDES}
 					${Qt5Gui_INCLUDES}
 					${Qt5SerialPort_INCLUDES}
-					${Qt5Network_INCLUDES})
+					${Qt5Network_INCLUDES}
+					${WebSockets_INCLUDES})
   
 endmacro()
 ###############################################################################
