@@ -26,6 +26,8 @@
 #include "SvgProcImage.h"
 #include "DrivePolicy.h"
 /*-----------------------------------------*/
+
+/*-----------------------------------------*/
 /**
 *
 */
@@ -47,9 +49,13 @@ public:
 
     ~MainWindow();
 private:
-	bool mIsCarRun;
+	bool mIsCarRunAuto;
+	bool mShowDirection;
 private:
 	void initParam();
+	void initMenu();
+	void initMenuShow();
+	void initMenuRun();
 private slots:
     void on_shuaxin_clicked();  //刷新socket连接
 
@@ -98,6 +104,26 @@ private slots:
 
 	void run_policy(DrivePolicy::RunCmd _cmd, const QDateTime _time);
 
+	void drive_run_policy(const DrivePolicy::RunCmd& _cmd);
+
+	void up_once();
+
+	void down_once();
+
+	void left_once();
+
+	void right_once();
+
+	void up_left_once();
+
+	void up_right_once();
+
+	void down_left_once();
+
+	void down_right_once();
+
+	void stop_once();
+
 public slots:
     void onconnected();
 
@@ -113,6 +139,8 @@ public slots:
 
     void slotGetOneFrame(QImage img);   //获取图像
 
+	void DrawRunDirection(QImage& _img, DrivePolicy::RunCmd& _run_dir);
+
 	void ShowOneFrameBgraOrg(QImage _img,const QDateTime _time);
 	void ShowOneFrameBgraSvg(QImage _img,const QDateTime _time);
 
@@ -120,7 +148,10 @@ public slots:
 	void RcvOneFrameBgraSvg(QImage _img,const QDateTime _time);
 
     void timeouts();        //定时器超时函数
-
+	
+	void menu_show_run_direction(bool _v);
+	void menu_run_auto(bool _r);
+	void menu_run_current_once(bool _r);
 private:
     Ui::MainWindow *ui;
 
@@ -178,7 +209,7 @@ private:
     int obs_y;  //障碍物中心y坐标
     int obs_r;      //障碍物半径
 private:
-	DrivePolicy::RunCmd mRunCmd;
+		DrivePolicy::RunCmd mRunCmd;
  private:
 		PreProcImageOrg ppImageOrg;
 		PreProcImageSvg ppImageSvg;

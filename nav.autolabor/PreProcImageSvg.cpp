@@ -6,7 +6,7 @@
 /*-----------------------------------------*/
 PreProcImageSvg::PreProcImageSvg(QObject *parent) :QObject(parent)
 {
-
+	mSafeArea = false;
 }
 /*-----------------------------------------*/
 /**
@@ -25,6 +25,15 @@ PreProcImageSvg::~PreProcImageSvg()
 void PreProcImageSvg::SetResize(const int _w, const int _h)
 {
 	
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void PreProcImageSvg::DrawSafeArea(const bool _r)
+{
+	mSafeArea = _r;
 }
 /*-----------------------------------------*/
 /**

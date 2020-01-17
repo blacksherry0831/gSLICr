@@ -35,6 +35,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 	this->initParam();
     
+	this->initMenu();
+	
 	//socket连接
     url = QUrl("ws://192.168.0.10:9090");
     Quanju::websocket.open(url);
@@ -176,8 +178,42 @@ MainWindow::~MainWindow()
 /*----------------------------------------------------------------*/
 void MainWindow::initParam()
 {
-	this->mIsCarRun=false;
+	this->mShowDirection = false;
+	this->mIsCarRunAuto=false;
 	mRunCmd = DrivePolicy::RunCmd::GO_NONE;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initMenu()
+{
+	this->initMenuShow();
+	this->initMenuRun();
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initMenuShow()
+{
+	connect(ui->actionShowSafeArea, SIGNAL(triggered(bool)), &ppImageOrg, SLOT(DrawSafeArea(bool)));
+	connect(ui->actionShowSafeArea, SIGNAL(triggered(bool)), &ppImageSvg, SLOT(DrawSafeArea(bool)));
+	
+	connect(ui->actionShowRunDirection, SIGNAL(triggered(bool)),this, SLOT(menu_show_run_direction(bool)));
+
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initMenuRun()
+{
+	connect(ui->actionRunOnce, SIGNAL(triggered(bool)), this, SLOT(menu_run_current_once(bool)));
+	connect(ui->actionRun, SIGNAL(triggered(bool)), this, SLOT(menu_run_auto(bool)));
 }
 /*----------------------------------------------------------------*/
 /**
@@ -769,9 +805,21 @@ void MainWindow::slotGetOneFrame(QImage img)
 *
 */
 /*----------------------------------------------------------------*/
+void MainWindow::DrawRunDirection(QImage& _img, DrivePolicy::RunCmd& _run_dir)
+{
+	if (mShowDirection)
+	{
+		DriveAuto::DrawRunDirection(_img, mRunCmd);
+	}	
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 void MainWindow::ShowOneFrameBgraOrg(QImage _img,const QDateTime _time)
 {
-	DriveAuto::DrawRunDirection(_img,mRunCmd);
+	this->DrawRunDirection(_img, mRunCmd);
 	QBase::UI_Show_QImage_on_QLabel(ui->label_Image, &_img);
 }
 /*----------------------------------------------------------------*/
@@ -781,7 +829,7 @@ void MainWindow::ShowOneFrameBgraOrg(QImage _img,const QDateTime _time)
 /*----------------------------------------------------------------*/
 void MainWindow::ShowOneFrameBgraSvg(QImage _img, const QDateTime _time)
 {
-	DriveAuto::DrawRunDirection(_img, mRunCmd);
+	this->DrawRunDirection(_img, mRunCmd);
 	QBase::UI_Show_QImage_on_QLabel(ui->label_Image_svg, &_img);
 }
 /*----------------------------------------------------------------*/
@@ -901,16 +949,45 @@ void MainWindow::RcvOneFrameBgraSvg(QImage _img, const QDateTime _time)
 }
 /*----------------------------------------------------------------*/
 /**
-*
+*定时器超时的回调函数
 */
 /*----------------------------------------------------------------*/
-//定时器超时的回调函数
 void MainWindow::timeouts()
 {
      qDebug()<<"图片张数:"<<i;
 }
-
-//截图开始
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::menu_show_run_direction(bool _v)
+{
+	this->mShowDirection = _v;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::menu_run_auto(bool _r)
+{
+	this->mIsCarRunAuto = _r;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::menu_run_current_once(bool _r)
+{
+	drive_run_policy(mRunCmd);
+}
+/*----------------------------------------------------------------*/
+/**
+*截图开始
+*/
+/*----------------------------------------------------------------*/
 void MainWindow::on_tu_startButton_clicked()
 {
     tuflag=true;
@@ -918,16 +995,22 @@ void MainWindow::on_tu_startButton_clicked()
     ui->tu_stopButton->setEnabled(true);
 
 }
-
-//截图停止
+/*----------------------------------------------------------------*/
+/**
+*截图停止
+*/
+/*----------------------------------------------------------------*/
 void MainWindow::on_tu_stopButton_clicked()
 {
     tuflag=false;
     ui->tu_startButton->setEnabled(true);
     ui->tu_stopButton->setEnabled(false);
 }
-
-//打开摄像头
+/*----------------------------------------------------------------*/
+/**
+*打开摄像头
+*/
+/*----------------------------------------------------------------*/
 void MainWindow::on_open_cam_clicked()
 {
 
@@ -1189,38 +1272,167 @@ void MainWindow::run_policy(DrivePolicy::RunCmd _cmd, const QDateTime _time)
 {
 	this->mRunCmd = _cmd;
 
-		if (mIsCarRun) {
-								switch (_cmd)
-								{
-											case DrivePolicy::RunCmd::GO_DOWN:
-												break;
-											case DrivePolicy::RunCmd::GO_DOWN_LEFT:
-												on_DOWN_LEFT_clicked();
-												break;
-											case DrivePolicy::RunCmd::GO_DOWN_RIGHT:
-												on_DOWN_RIGHT_clicked();
-												break;
-											case DrivePolicy::RunCmd::GO_RIGHT:
-												on_RIGHT_clicked();
-												break;
-											case DrivePolicy::RunCmd::GO_LEFT:
-												on_LEFT_clicked();
-												break;
-											case DrivePolicy::RunCmd::GO_UP_RIGHT:
-												on_UP_RIGHT_clicked();
-												break;
-											case DrivePolicy::RunCmd::GO_UP_LEFT:
-												on_UP_LEFT_clicked();
-												break;
-											case DrivePolicy::RunCmd::GO_UP:
-												on_up_clicked();
-												break;
-											default:
-												break;
-								}
-
+		if (mIsCarRunAuto) {
+			drive_run_policy(_cmd);
 		}
 
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::drive_run_policy(const DrivePolicy::RunCmd & _cmd)
+{
+
+		switch (_cmd)
+		{
+				case DrivePolicy::RunCmd::GO_DOWN:
+					down_once();
+					break;
+				case DrivePolicy::RunCmd::GO_DOWN_LEFT:
+					down_left_once();
+					break;
+				case DrivePolicy::RunCmd::GO_DOWN_RIGHT:
+					down_right_once();
+					break;
+				case DrivePolicy::RunCmd::GO_RIGHT:
+					right_once();
+					break;
+				case DrivePolicy::RunCmd::GO_LEFT:
+					left_once();
+					break;
+				case DrivePolicy::RunCmd::GO_UP_RIGHT:
+					up_right_once();
+					break;
+				case DrivePolicy::RunCmd::GO_UP_LEFT:
+					up_left_once();
+					break;
+				case DrivePolicy::RunCmd::GO_UP:
+					up_once();
+					break;
+				case DrivePolicy::RunCmd::GO_NONE:
+					stop_once();
+					break;
+				default:
+					break;
+		}
+
+}
+
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+
+void MainWindow::up_once()
+{
+	Quanju::x = 1;
+	Quanju::y = 0;
+	send();
+}
+
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+
+void MainWindow::down_once()
+{
+	Quanju::x = -1;
+	Quanju::y = 0;
+	send();
+}
+
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+
+void MainWindow::left_once()
+{
+	Quanju::x = 0;
+	Quanju::y = 1;
+	send();
+}
+
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+
+void MainWindow::right_once()
+{
+	Quanju::x = 0;
+	Quanju::y = -1;
+	send();
+}
+
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+
+void MainWindow::up_left_once()
+{
+	Quanju::x = 1;
+	Quanju::y = 1;
+	send();
+}
+
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+
+void MainWindow::up_right_once()
+{
+	Quanju::x = 1;
+	Quanju::y = -1;
+	send();
+}
+
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+
+void MainWindow::down_left_once()
+{
+	Quanju::x = -1;
+	Quanju::y = -1;
+	send();
+}
+
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+
+void MainWindow::down_right_once()
+{
+	Quanju::x = -1;
+	Quanju::y = 1;
+	send();
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::stop_once()
+{
+	Quanju::x = 0;
+	Quanju::y = 0;
+	send();
 }
 /*----------------------------------------------------------------*/
 /**

@@ -6,7 +6,7 @@
 /*-----------------------------------------*/
 PreProcImageOrg::PreProcImageOrg(QObject *parent) :QObject(parent)
 {
-
+	mSafeArea = false;
 }
 /*-----------------------------------------*/
 /**
@@ -25,6 +25,15 @@ PreProcImageOrg::~PreProcImageOrg()
 void PreProcImageOrg::SetResize(const int _w, const int _h)
 {
 	
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void PreProcImageOrg::DrawSafeArea(const bool _r)
+{
+	this->mSafeArea=_r;
 }
 /*-----------------------------------------*/
 /**

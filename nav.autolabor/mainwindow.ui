@@ -401,13 +401,6 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="safe_area">
-          <property name="text">
-           <string>安全区</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QPushButton" name="start">
           <property name="text">
            <string>开始录制</string>
@@ -502,7 +495,23 @@
     <addaction name="menuSize"/>
     <addaction name="menuColorMode"/>
    </widget>
+   <widget class="QMenu" name="menuRun">
+    <property name="title">
+     <string>Run</string>
+    </property>
+    <addaction name="actionRunOnce"/>
+    <addaction name="actionRun"/>
+   </widget>
+   <widget class="QMenu" name="menuShow">
+    <property name="title">
+     <string>Show</string>
+    </property>
+    <addaction name="actionShowSafeArea"/>
+    <addaction name="actionShowRunDirection"/>
+   </widget>
    <addaction name="menuVideoDecoder"/>
+   <addaction name="menuRun"/>
+   <addaction name="menuShow"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -536,6 +545,38 @@
   <action name="action960X540">
    <property name="text">
     <string>960X540</string>
+   </property>
+  </action>
+  <action name="actionRunOnce">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>RunOnce</string>
+   </property>
+  </action>
+  <action name="actionRun">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Run</string>
+   </property>
+  </action>
+  <action name="actionShowSafeArea">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>ShowSafeArea</string>
+   </property>
+  </action>
+  <action name="actionShowRunDirection">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>ShowRunDirection</string>
    </property>
   </action>
  </widget>

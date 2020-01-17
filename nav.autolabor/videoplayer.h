@@ -19,6 +19,8 @@ extern "C"
 #include "libswscale/swscale.h"
 }
 /*----------------------------------------------------------------*/
+#include "QT_SDK_LIB/IPrintQ.hpp"
+/*----------------------------------------------------------------*/
 #include "SwsContexSafe.h"
 /*----------------------------------------------------------------*/
 /**
@@ -33,40 +35,61 @@ class VideoPlayer : public QThread
 public:
     explicit VideoPlayer();
     ~VideoPlayer();
-
+private:
+	int mWidth;
+	int mHeight;
+private:
+	AVFrame *pFrame;
+	AVFrame *pFrameRGB32;
+private:
+	AVFormatContext *pFormatCtx;	
+	AVPacket *pPacket;
+	AVDictionary *pAVDic;
+private:
+	AVCodecContext *pCodecCtx;
+	AVCodec *pCodec;
+private:
+	SwsContexSafe    mSwsContextSafe;
+private:
+	int videoStreamIdx;
+private:
+	const std::string rtsp_url = "rtsp://192.168.0.11/stream1";
+private:
+	int mThreadRun;
+	int mDecodeLoop;
+public:
     void startPlay();
-
-    void stopPaly();
-
-	void initPlayModule();
-	void freePlayModule();
+	void stopPaly();
+public:
+	static int Success2True(const int& _t);
+	static int PrintConsole(std::string _log);
+public:
+	void initFFMPEG();
 public:
 	void emit_RGB32_QImage();
 	int dbg_is_equal(const int _s1, const int _s2);
 private:
-	int mThreadRun;
-private:
-	int mWidth;
-	int mHeight;
+	int IsLoopRun();
 public:
 	void SetScale(const int _w,const int _h);
 private:
-	AVFormatContext *pFormatCtx;
-	AVCodecContext *pCodecCtx;
-	AVCodec *pCodec;
-	AVFrame *pFrame;
-	AVFrame *pFrameRGB32;
-	AVPacket *pPacket;
-	SwsContexSafe    mSwsContextSafe;
-	AVDictionary *pAVDic;
+	void AllocAvFrame();
+	void FreeAvFrame();
 private:
-	int videoStreamIdx;
-private:
-	 const std::string rtsp_url = "rtsp://192.168.0.11/stream1";
-private:
+	void initPacket();
 	void initAVDictionary();
+	void initAVFormatContext();
+private:
+	void openRtspStream();
+	void findRtspStream();
+	void findRtspCodec();
 protected:
 	void init_param();
+protected:
+	void initPlayModule();
+	void stopPlayModule();
+	void freePlayModule();
+	void releasePlayModule();
 protected:
 	int run_video_decode();
 protected:

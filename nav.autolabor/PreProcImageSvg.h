@@ -30,6 +30,7 @@ signals:
 	void sig_1_frame_bgra(QImage, QDateTime);
 public slots :
 	void ImageProc(QImage _img, const QDateTime _time);
+	void DrawSafeArea(const bool _r);
 
 };
 
