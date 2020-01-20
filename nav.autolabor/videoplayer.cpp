@@ -7,8 +7,6 @@
 static int interrupt_cb(void *ctx)
 {
 
-	AVFormatContext* formatContext = reinterpret_cast<AVFormatContext*>(ctx);
-
 	// do something 
 	return 0;
 }
@@ -39,6 +37,32 @@ VideoPlayer::~VideoPlayer()
 	freePlayModule();
 	mThreadRun = 0;
 	mDecodeLoop = 0;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+int VideoPlayer::Width()
+{
+	if (pCodecCtx == NULL){
+		return 0;			
+	}else{
+		return pCodecCtx->width;
+	}	
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+int VideoPlayer::Height()
+{
+	if (pCodecCtx == NULL) {
+		return 0;
+	}else {
+		return pCodecCtx->height;
+	}
 }
 /*----------------------------------------------------------------*/
 /**
@@ -81,7 +105,7 @@ void VideoPlayer::FreeAvFrame()
 void VideoPlayer::initPacket()
 {
 	pPacket = av_packet_alloc(); //分配一个packet
-	const int y_size = mWidth * mHeight;
+	const int y_size = Width() * Height();
 	av_new_packet(pPacket, y_size); //分配packet的数
 }
 /*----------------------------------------------------------------*/
@@ -91,14 +115,11 @@ void VideoPlayer::initPacket()
 /*----------------------------------------------------------------*/
 void VideoPlayer::initAVDictionary()
 {
-	Q_ASSERT(pAVDic == NULL);
-	char option_key[] = "rtsp_transport";
-	char option_value[] = "tcp";
-	av_dict_set(&pAVDic, option_key, option_value, 0);
-	char option_key2[] = "max_delay";
-	char option_value2[] = "100";
-	av_dict_set(&pAVDic, option_key2, option_value2, 0);
+	Q_ASSERT(pAVDic == NULL);	
+	av_dict_set(&pAVDic, "max_delay", "500000", 0);
 	av_dict_set(&pAVDic, "stimeout", "3000000", 0);//设置超时3秒
+	av_dict_set(&pAVDic, "rtsp_transport", "tcp", 0);
+
 }
 /*----------------------------------------------------------------*/
 /**
@@ -117,18 +138,21 @@ void VideoPlayer::initAVFormatContext()
 *
 */
 /*----------------------------------------------------------------*/
-void VideoPlayer::openRtspStream()
+int VideoPlayer::openRtspStream()
 {
-			while (mThreadRun){
+		while (mThreadRun){
 
-				const int result_t = avformat_open_input(&pFormatCtx, rtsp_url.data(), NULL, &pAVDic);
+				const int result_t = avformat_open_input(&pFormatCtx, rtsp_url.c_str(), NULL, &pAVDic);
 				this->mDecodeLoop = Success2True(result_t);
 				if (result_t!=0){
 					PrintConsole("can't open rtsp. ");
 				}else{
 					break;//success
 				}
-			}
+		}
+		
+		return this->mDecodeLoop;
+
 }
 /*----------------------------------------------------------------*/
 /**
@@ -137,26 +161,32 @@ void VideoPlayer::openRtspStream()
 /*----------------------------------------------------------------*/
 void VideoPlayer::findRtspStream()
 {
+	Q_ASSERT(pFormatCtx != NULL);
 	//查数据流
-	if (avformat_find_stream_info(pFormatCtx, NULL) < 0) {
+	const int stream_info_s=avformat_find_stream_info(pFormatCtx, NULL);
+
+	if (stream_info_s< 0) {
 		PrintConsole("Could't find stream infomation.\n");
 		mDecodeLoop = 0;
-	}
+	}else{
+			//循环查找视频中包含的流信息，直到找到视频类型的流
+			//便将其记录下来 保存到videoStream变量中
+			//这里我们现在只处理视频流  音频流先不管他
+			for (int i = 0; (unsigned)i < pFormatCtx->nb_streams; i++) {
+				if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+					videoStreamIdx = i;
+				}
+			}
 
-	//循环查找视频中包含的流信息，直到找到视频类型的流
-	//便将其记录下来 保存到videoStream变量中
-	//这里我们现在只处理视频流  音频流先不管他
-	for (int i = 0; (unsigned)i < pFormatCtx->nb_streams; i++) {
-		if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
-			videoStreamIdx = i;
-		}
-	}
+			//如果videoStream为-1 说明没有找到视频流
+			if (videoStreamIdx == -1) {
+				PrintConsole("Didn't find a video stream.\n");
+				mDecodeLoop = 0;
+			}
 
-	//如果videoStream为-1 说明没有找到视频流
-	if (videoStreamIdx == -1) {
-		PrintConsole("Didn't find a video stream.\n");
-		mDecodeLoop = 0;
+
 	}
+	
 }
 /*----------------------------------------------------------------*/
 /**
@@ -165,29 +195,38 @@ void VideoPlayer::findRtspStream()
 /*----------------------------------------------------------------*/
 void VideoPlayer::findRtspCodec()
 {
+	Q_ASSERT(videoStreamIdx != -1);
 	//查找解码器
 	pCodecCtx = pFormatCtx->streams[videoStreamIdx]->codec;
-	pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
+	
 	///2017.8.9---lizhen
 	pCodecCtx->bit_rate = 0;   //初始化为0
 	pCodecCtx->time_base.num = 1;  //下面两行：一秒钟25帧
 	pCodecCtx->time_base.den = 10;
 	pCodecCtx->frame_number = 1;  //每包一个视频帧
 	
-	mWidth = pCodecCtx->width;
-	mHeight = pCodecCtx->height;
-								  //未找到编码器
-	if (pCodec == NULL) {
-		PrintConsole("Codec not found.\n");
+	const  AVCodecID CODEC_ID = pCodecCtx->codec_id;
+	
+	if (AV_CODEC_ID_NONE != CODEC_ID) {
+	
+				pCodec = avcodec_find_decoder(CODEC_ID);
+								  
+				if (pCodec == NULL) {
+					PrintConsole("Codec not found.\n");
+					mDecodeLoop = 0;
+				}else{
+					//打开解码器
+					if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0) {
+						PrintConsole("Could not open codec.\n");
+						mDecodeLoop = 0;
+					}
+				}
+	
+	}else{
+		Q_ASSERT(0);
 		mDecodeLoop = 0;
 	}
-
-	//打开解码器
-	if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0) {
-		PrintConsole("Could not open codec.\n");
-		mDecodeLoop = 0;
-	}
-
+	
 }
 /*----------------------------------------------------------------*/
 /**
@@ -223,15 +262,18 @@ void VideoPlayer::stopPlayModule()
 /*----------------------------------------------------------------*/
 void VideoPlayer::initPlayModule()
 {
+
 	this->initAVDictionary();
 	this->initAVFormatContext();
-	this->openRtspStream();
-	this->findRtspStream();
-	this->findRtspCodec();
-	this->initPacket();
-
+	const int status_t =this->openRtspStream() ;
+	if (status_t) {
+		this->findRtspStream();
+		this->findRtspCodec();
+		this->initPacket();
+		mSwsContextSafe.SetSwsContextSrc(Width(), Height());
+	}
 	this->AllocAvFrame();
-	mSwsContextSafe.SetSwsContextSrc(mWidth, mHeight);
+		
 }
 /*----------------------------------------------------------------*/
 /**
@@ -382,7 +424,7 @@ void VideoPlayer::emit_RGB32_QImage()
 		
 		avpicture_fill((AVPicture *)pFrameRGB32, q_img.bits(), AV_PIX_FMT_RGB32, WidthScale, HeightScale);
 			
-		mSwsContextSafe.SwsContextScale(pFrame, pFrameRGB32);
+		mSwsContextSafe.SwsContextScaleEx(pFrame, pFrameRGB32);
 
 		//把这个RGB数据 用QImage加载
 		

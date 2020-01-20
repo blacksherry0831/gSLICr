@@ -19,7 +19,6 @@
 #include <QT_SDK_LIB/QBase.h>
 /*-----------------------------------------*/
 #include <savepicture.h>
-#include "SVG_PROC.h"
 /*-----------------------------------------*/
 #include "PreProcImageOrg.h"
 #include "PreProcImageSvg.h"
@@ -51,6 +50,8 @@ public:
 private:
 	bool mIsCarRunAuto;
 	bool mShowDirection;
+private:
+	QDateTime mRumCmdTime;
 private:
 	void initParam();
 	void initMenu();
@@ -102,9 +103,23 @@ private slots:
     void s_timeout();
 
 
-	void run_policy(DrivePolicy::RunCmd _cmd, const QDateTime _time);
+	void run_policy(
+		DrivePolicy::RunCmd _cmd,
+		double _speed_v1,
+		double _speed_v2,
+		const QDateTime _time);
 
-	void drive_run_policy(const DrivePolicy::RunCmd& _cmd);
+	void run_policy_interval(
+		const DrivePolicy::RunCmd _cmd,
+		const double _speed_v1,
+		const double _speed_v2,
+		const QDateTime _time,
+		const int _ms);
+
+	void drive_run_policy(
+		const DrivePolicy::RunCmd& _cmd,
+		const double _speed_v1,
+		const double _speed_v2);
 
 	void up_once();
 
@@ -188,13 +203,9 @@ private:
     SavePicture *savePicture2;   //截图保存 进程2
     SavePicture *savePicture3;   //截图保存 进程3
     int savePictureCount;        //用于保存图片计数
-
-    cv::VideoCapture cap;  //摄像头标志符
-	
-   
+	   
     bool moni_flag;     //模拟运动标志
-
-    
+	   
 
     //最近点坐标
     int point1_x;
@@ -226,6 +237,8 @@ public:
 	void initThreadWorkObject();
 	void initThreadWorkConnect();
 	void ThreadWork_Start();
+	void ThreadWork_Stop();
+	void ThreadWork_Wait();
 public:
     QRect *m_rect;            //录频区域
 

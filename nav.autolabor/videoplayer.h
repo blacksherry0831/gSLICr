@@ -36,8 +36,8 @@ public:
     explicit VideoPlayer();
     ~VideoPlayer();
 private:
-	int mWidth;
-	int mHeight;
+	int Width();
+	int Height();
 private:
 	AVFrame *pFrame;
 	AVFrame *pFrameRGB32;
@@ -80,7 +80,7 @@ private:
 	void initAVDictionary();
 	void initAVFormatContext();
 private:
-	void openRtspStream();
+	int openRtspStream();
 	void findRtspStream();
 	void findRtspCodec();
 protected:

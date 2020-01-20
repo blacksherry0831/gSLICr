@@ -24,7 +24,7 @@ public:
 public:
 	bool IsValidQImage(const QImage& _img);
 public:
-	static bool IsLatestImage(const QDateTime& _time, const int64 _ms=40);
+	static bool IsLatestImage(const QDateTime& _time, const int64 _ms=100);
 	void ProcImageSVG(const QImage& _img, const QDateTime& _time);
 signals:
 void sig_1_frame_bgra(QImage, QDateTime);

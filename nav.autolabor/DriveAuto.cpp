@@ -80,18 +80,18 @@ void DriveAuto::DrawSafeArea_960_540(QImage& _img)
 #if 0
 		painter.drawEllipse(0, 0, 100 / SCALE, 100 / SCALE);
 #endif // 0
-		painter.drawLine(240 / SCALE, 1075 / SCALE, 1680 / SCALE, 1075 / SCALE);
-		painter.drawLine(280 / SCALE, 1045 / SCALE, 1640 / SCALE, 1045 / SCALE);
-		painter.drawLine(540 / SCALE, 850 / SCALE, 1380 / SCALE, 850 / SCALE);
-		painter.drawLine(847 / SCALE, 620 / SCALE, 1073 / SCALE, 620 / SCALE);
-		painter.drawLine(847 / SCALE, 620 / SCALE, 240 / SCALE, 1075 / SCALE);
-		painter.drawLine(1073 / SCALE, 620 / SCALE, 1680 / SCALE, 1075 / SCALE);
-		painter.drawLine(960 / SCALE, 1075 / SCALE, 960 / SCALE, 620 / SCALE);
+		painter.drawLine(0 / SCALE, 1080 / SCALE, 1920 / SCALE, 1080 / SCALE);
+		painter.drawLine(57 / SCALE, 1045 / SCALE, 1863 / SCALE, 1045 / SCALE);
+		painter.drawLine(220 / SCALE, 945 / SCALE, 1700 / SCALE, 945 / SCALE);
+		painter.drawLine(750 / SCALE, 620 / SCALE, 1170 / SCALE, 620 / SCALE);
+		painter.drawLine(750 / SCALE, 620 / SCALE, 0 / SCALE, 1080 / SCALE);
+		painter.drawLine(1170 / SCALE, 620 / SCALE, 1920 / SCALE, 1080 / SCALE);
+		painter.drawLine(960 / SCALE, 1080 / SCALE, 960 / SCALE, 620 / SCALE);
 
 		QFont font("宋体", 26 / SCALE, QFont::Bold, false);
 		painter.setFont(font);
 		painter.drawText(900/ SCALE, 620/ SCALE, "252cm");
-		painter.drawText(900/ SCALE, 850/ SCALE, "61cm");
+		painter.drawText(900/ SCALE, 950/ SCALE, "48cm");
 		painter.drawText(900/ SCALE, 1050/ SCALE, "23cm");
 			
 		

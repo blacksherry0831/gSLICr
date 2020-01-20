@@ -168,8 +168,13 @@ MainWindow::~MainWindow()
 {
     Quanju::websocket.close();
     Quanju::websocket.deleteLater();
-	      
+	
+	this->ThreadWork_Stop();
+	this->ThreadWork_Wait();
+
     delete ui;
+	ui = NULL;
+
 }
 /*----------------------------------------------------------------*/
 /**
@@ -180,7 +185,8 @@ void MainWindow::initParam()
 {
 	this->mShowDirection = false;
 	this->mIsCarRunAuto=false;
-	mRunCmd = DrivePolicy::RunCmd::GO_NONE;
+	this->mRunCmd = DrivePolicy::RunCmd::GO_NONE;
+	this->mRumCmdTime = QDateTime::currentDateTime();
 }
 /*----------------------------------------------------------------*/
 /**
@@ -819,8 +825,10 @@ void MainWindow::DrawRunDirection(QImage& _img, DrivePolicy::RunCmd& _run_dir)
 /*----------------------------------------------------------------*/
 void MainWindow::ShowOneFrameBgraOrg(QImage _img,const QDateTime _time)
 {
-	this->DrawRunDirection(_img, mRunCmd);
-	QBase::UI_Show_QImage_on_QLabel(ui->label_Image, &_img);
+	if (ui!=NULL){
+		this->DrawRunDirection(_img, mRunCmd);
+		QBase::UI_Show_QImage_on_QLabel(ui->label_Image, &_img);
+	}	
 }
 /*----------------------------------------------------------------*/
 /**
@@ -829,8 +837,10 @@ void MainWindow::ShowOneFrameBgraOrg(QImage _img,const QDateTime _time)
 /*----------------------------------------------------------------*/
 void MainWindow::ShowOneFrameBgraSvg(QImage _img, const QDateTime _time)
 {
-	this->DrawRunDirection(_img, mRunCmd);
-	QBase::UI_Show_QImage_on_QLabel(ui->label_Image_svg, &_img);
+	if (ui != NULL){
+		this->DrawRunDirection(_img, mRunCmd);
+		QBase::UI_Show_QImage_on_QLabel(ui->label_Image_svg, &_img);
+	}
 }
 /*----------------------------------------------------------------*/
 /**
@@ -981,7 +991,7 @@ void MainWindow::menu_run_auto(bool _r)
 /*----------------------------------------------------------------*/
 void MainWindow::menu_run_current_once(bool _r)
 {
-	drive_run_policy(mRunCmd);
+	drive_run_policy(mRunCmd,1,1);
 }
 /*----------------------------------------------------------------*/
 /**
@@ -1013,51 +1023,16 @@ void MainWindow::on_tu_stopButton_clicked()
 /*----------------------------------------------------------------*/
 void MainWindow::on_open_cam_clicked()
 {
-
-#if 0
-    //用opencv打开摄像头
-    std::string str = "rtsp://192.168.0.11/stream1";
-
-    cap.set(CV_CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 640);
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, 480);
-    cap.set(CV_CAP_PROP_FPS,25);
-
-    cap.open(str);
-
-    if(!cap.isOpened())
-    {
-        qDebug()<<"fail to open";
-    }
-    else
-    {
-        qDebug()<<"success to open";
-    }
-
-    cv::Mat frame;
-
-    //视频展示
-    while(true)
-    {
-        cap>>frame;
-
-        if(frame.rows<=0)
-            continue;
-
-        cv::imshow("input image", frame);
-
-        if (27 == cv::waitKey(30))
-            break;
-    }
-#endif
     if(!mPlayer->isRunning())
     {
         mPlayer->startPlay();
     }
 }
-
-
-
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 void MainWindow::on_close_cam_clicked()
 {
     if(mPlayer->isRunning())
@@ -1097,10 +1072,17 @@ void MainWindow::initThreadWorkConnect()
 	connect(&svgProcImage, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), &drivePolicy, SLOT(CalSafeArea(QImage, QDateTime)));
 
 	connect(&drivePolicy, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), &ppImageSvg, SLOT(ImageProc(QImage, QDateTime)));
-	connect(&drivePolicy, SIGNAL(sig_run_cmd(DrivePolicy::RunCmd, QDateTime)),this, SLOT(run_policy(DrivePolicy::RunCmd, QDateTime)));
+	
+	connect(&drivePolicy,
+		SIGNAL(sig_run_cmd(DrivePolicy::RunCmd,double,double, QDateTime)),
+		this,
+		SLOT(run_policy(DrivePolicy::RunCmd,double,double, QDateTime)));
 	
 	connect(&ppImageOrg, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), this, SLOT(ShowOneFrameBgraOrg(QImage, QDateTime)));
 	connect(&ppImageSvg, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), this, SLOT(ShowOneFrameBgraSvg(QImage, QDateTime)));
+
+	this->drivePolicy.emitMask_960_540();
+
 }
 /*----------------------------------------------------------------*/
 /**
@@ -1115,6 +1097,34 @@ void MainWindow::ThreadWork_Start()
 	mThreadPreShowBgraSvg.start();
 	mThreadProcSvg.start();
 	mThreadRunPolicy.start();
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::ThreadWork_Stop()
+{
+	mPlayer->stopPaly();
+	
+	mThreadPreShowBgraOrg.quit();
+	mThreadPreShowBgraSvg.quit();
+	mThreadProcSvg.quit();
+	mThreadRunPolicy.quit();
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::ThreadWork_Wait()
+{
+	mPlayer->wait();
+
+	mThreadPreShowBgraOrg.wait();
+	mThreadPreShowBgraSvg.wait();
+	mThreadProcSvg.wait();
+	mThreadRunPolicy.wait();
 }
 /*----------------------------------------------------------------*/
 /**
@@ -1268,12 +1278,20 @@ void MainWindow::s_timeout()
 *
 */
 /*----------------------------------------------------------------*/
-void MainWindow::run_policy(DrivePolicy::RunCmd _cmd, const QDateTime _time)
+void MainWindow::run_policy(
+	DrivePolicy::RunCmd _cmd,
+	double _speed_v1,
+	double _speed_v2,
+	QDateTime _time)
 {
 	this->mRunCmd = _cmd;
-
 		if (mIsCarRunAuto) {
-			drive_run_policy(_cmd);
+			run_policy_interval(
+				_cmd,
+				_speed_v1,
+				_speed_v2,
+				_time,
+				1000);
 		}
 
 }
@@ -1282,8 +1300,33 @@ void MainWindow::run_policy(DrivePolicy::RunCmd _cmd, const QDateTime _time)
 *
 */
 /*----------------------------------------------------------------*/
-void MainWindow::drive_run_policy(const DrivePolicy::RunCmd & _cmd)
+void MainWindow::run_policy_interval(
+	const DrivePolicy::RunCmd _cmd,
+	const double _speed_v1,
+	const double _speed_v2,
+	const QDateTime _time,
+	const int _ms)
 {
+	const int ms_diff = mRumCmdTime.msecsTo(_time);
+	Q_ASSERT(ms_diff > 0);
+	if (ms_diff>_ms)
+	{
+		drive_run_policy(_cmd,_speed_v1,_speed_v2);
+		this->mRumCmdTime = _time;
+	}
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::drive_run_policy(
+	const DrivePolicy::RunCmd & _cmd,
+	const double _speed_v1,
+	const double _speed_v2)
+{
+	Quanju::v1 = 0.125*_speed_v1;
+	Quanju::v2 = 0.8*_speed_v2;
 
 		switch (_cmd)
 		{
