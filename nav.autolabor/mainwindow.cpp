@@ -118,7 +118,7 @@ MainWindow::MainWindow(QWidget *parent) :
    
     //模拟障碍物标志初始化
 
-    moni_flag = false;  //模拟标志
+
     point1_x=0;
     point1_y=0;
     point2_x=0;
@@ -197,6 +197,7 @@ void MainWindow::initMenu()
 {
 	this->initMenuShow();
 	this->initMenuRun();
+	this->initMenuCollect();
 }
 /*----------------------------------------------------------------*/
 /**
@@ -220,6 +221,15 @@ void MainWindow::initMenuRun()
 {
 	connect(ui->actionRunOnce, SIGNAL(triggered(bool)), this, SLOT(menu_run_current_once(bool)));
 	connect(ui->actionRun, SIGNAL(triggered(bool)), this, SLOT(menu_run_auto(bool)));
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initMenuCollect()
+{
+	connect(ui->actionCollectAlways, SIGNAL(triggered(bool)), &ppImageOrg, SLOT(SetSaveImage(bool)));
 }
 /*----------------------------------------------------------------*/
 /**
@@ -1211,21 +1221,6 @@ float MainWindow::convert2dist(int y)
 *
 */
 /*----------------------------------------------------------------*/
-
-//模拟驾驶
-void MainWindow::on_moni_button_clicked()
-{
-    moni_flag = !moni_flag;
-
-    if(moni_flag)
-        ui->moni_button->setText("结束模拟");
-    else
-    {
-        ui->moni_button->setText("开始模拟");
-        on_STOP_clicked();
-    }
-}
-
 void MainWindow::on_obs_box_activated(const QString &arg1)
 {
     if(arg1=="mask1")

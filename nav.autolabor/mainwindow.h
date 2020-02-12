@@ -57,6 +57,7 @@ private:
 	void initMenu();
 	void initMenuShow();
 	void initMenuRun();
+	void initMenuCollect();
 private slots:
     void on_shuaxin_clicked();  //刷新socket连接
 
@@ -96,7 +97,7 @@ private slots:
 
     void on_close_cam_clicked();
 	    
-    void on_moni_button_clicked();
+    
 
     void on_obs_box_activated(const QString &arg1);
 
@@ -203,10 +204,7 @@ private:
     SavePicture *savePicture2;   //截图保存 进程2
     SavePicture *savePicture3;   //截图保存 进程3
     int savePictureCount;        //用于保存图片计数
-	   
-    bool moni_flag;     //模拟运动标志
-	   
-
+	
     //最近点坐标
     int point1_x;
     int point1_y;

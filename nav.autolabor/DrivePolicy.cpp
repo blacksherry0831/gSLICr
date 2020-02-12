@@ -401,19 +401,36 @@ void DrivePolicy::policy_past_present_speed(
 
 	Q_ASSERT(_now == now_cmd);
 
+	_v1 = 1;
+	_v2 = 1;
+	
 	if (
 		((now_cmd==RunCmd::GO_LEFT) ||(now_cmd==RunCmd::GO_RIGHT) )&&
 		((past_cmd==RunCmd::GO_LEFT) ||	(past_cmd==RunCmd::GO_RIGHT))
 		){
 
 		if (_now == now_cmd) {
-			_v1 = 1;
-			_v2 = 1;
-		}else {
 			_v1 = 2;
 			_v2 = 2;
+		}else {
+			_v1 = 4;
+			_v2 = 4;
 		}
 
+	}
+
+	if (now_cmd==RunCmd::GO_DOWN){
+		_v1 = 2;
+		_v2 = 2;
+	}else if (now_cmd == RunCmd::GO_DOWN_LEFT){
+		_v1 = 3;
+		_v2 = 3;
+	}else if (now_cmd == RunCmd::GO_DOWN_RIGHT){
+		_v1 = 3;
+		_v2 = 3;
+	}else{
+		_v1 = 1;
+		_v2 = 1;
 	}
 
 	Q_ASSERT(_v1>0 && _v2>0);

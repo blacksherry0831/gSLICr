@@ -2,8 +2,13 @@
 <config>
     <cfg.data>
         <property>debug</property>
-        <save.image>1</save.image>
-        <save.debug>1</save.debug>
+        <save.image>0</save.image>
+        <save.debug>0</save.debug>
         <output.path>E:\OutPutImg\</output.path>
+       <!--  <source.path>X:\ImageDataBase\400img\img-math2-p-220t0.jpg</source.path> -->
+		<!-- <source.path>X:\ImageDataBase\1920.1080\r.jpeg</source.path> -->
+		 <source.path>X:\ImageDataBase\960.540\1579593937929.png</source.path>
+      <!--   <source.path>G:\TEST-PROJECT\SLIC_MATLAB\SLIC.MATLAB\road.jpg</source.path> -->
+	  	  
     </cfg.data>
 </config>

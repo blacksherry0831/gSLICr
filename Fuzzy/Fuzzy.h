@@ -25,6 +25,12 @@ public:
 	Fuzzy(void);
 	~Fuzzy(void);
 public:
+	static float PgOffset;
+	static float PsOffset;
+public:
+	static double Gx_Pn_c(const int n);
+	static double Gx_Pn_v(const int n);
+
 	static double Gx_InDoor20150603(int y, int n, float H0, float Hg, int H);
 	static double Sx_InDoor20150603(int y, int n, float H0, float Hc, int H);
 

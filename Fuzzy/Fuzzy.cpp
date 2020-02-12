@@ -1,6 +1,8 @@
 #include "Fuzzy.h"
 /*-----------------------------------------*/
  int	Fuzzy::HEIGHT=0;
+ float  Fuzzy::PgOffset=0;
+ float  Fuzzy::PsOffset=0;
  float  Fuzzy::Seg_HorizontalLinePosScale=0;
 /*-----------------------------------------*/
  float  Fuzzy::pYweight_V[Y_HEIGHT_MAX];
@@ -38,18 +40,41 @@ Fuzzy::~Fuzzy(void)
 *
 */
 /*-----------------------------------------*/
+double Fuzzy::Gx_Pn_c(const int n)
+{
+	const double Pn = 1.0*(2 * n + 2) / (2 * n + 1);
+	return Pn;
+}
+/*-----------------------------------------*/
+/**
+*
+*
+*/
+/*-----------------------------------------*/
+double Fuzzy::Gx_Pn_v(const int n)
+{
+	const double Pn = 1.0 / (2 * n + 1);
+	return Pn;
+}
+/*-----------------------------------------*/
+/**
+*
+*
+*/
+/*-----------------------------------------*/
 inline double Fuzzy::Gx_InDoor20150603(int y, int n, float H0, float Hg, int H)
 {
-	double Pn = 1.0*(2 * n + 2) / (2 * n + 1);
+	const double PnC = Gx_Pn_c(n);
 	double Gy = 0;
-	double C_g = Pn / powl(H - Hg - H0, Pn);
+	double C_g = PnC / powl(H - Hg - H0, PnC);
 	double yHg = 0;
 
 	if (y >= Hg) {
-		yHg = powl(y - Hg, 1.0 / (2 * n + 1));
-	}
-	else if (y<Hg) {
-		yHg = -1 * powl(Hg - y, 1.0 / (2 * n + 1));
+		yHg = powl(y - Hg, Gx_Pn_v(n));
+	}else if (y<Hg) {
+		yHg = -1 * powl(Hg - y, Gx_Pn_v(n));
+	}else{
+
 	}
 	Gy = C_g*yHg;
 	return Gy;
@@ -62,16 +87,17 @@ inline double Fuzzy::Gx_InDoor20150603(int y, int n, float H0, float Hg, int H)
 /*--------------------------------------------------------------------*/
 inline double Fuzzy::Sx_InDoor20150603(int y, int n, float H0, float Hc, int H)
 {
-	double Pn = 1.0*(2 * n + 2) / (2 * n + 1);
+	const double PnC = Gx_Pn_c(n);
 	double Gy = 0;
-	double C_g = Pn / powl(H0 - Hc, Pn);
+	double C_g = PnC / powl(H0 - Hc, PnC);
 	double yHg = 0;
 
 	if (y <= -1 * Hc) {
-		yHg = powl(-1 * y - Hc, 1.0 / (2 * n + 1));
-	}
-	else if (y>-1 * Hc) {
-		yHg = -1 * powl(y + Hc, 1.0 / (2 * n + 1));
+		yHg = powl(-1 * y - Hc, Gx_Pn_v(n));
+	}else if (y>-1 * Hc) {
+		yHg = -1 * powl(y + Hc, Gx_Pn_v(n));
+	}else{
+
 	}
 	Gy = C_g*yHg;
 	return Gy;
@@ -101,7 +127,8 @@ void Fuzzy::FillWeightArrayV_Gaussian(double horizontal_line, double n, double S
 				double constant_t = (1 / (sqrt(2 * M_PI)*sigma))*WeightZoom*WeightScale;
 				double variable_t = exp(-powl(i, 2) / powl(sigma, 2));
 				double result = constant_t*variable_t;
-				pYweight_V[(int)horizontal_line - i] += constant_t*variable_t;
+				assert(pYweight_V[(int)horizontal_line - i]==0);
+				pYweight_V[(int)horizontal_line - i] = constant_t*variable_t;
 			}
 		}
 #endif
@@ -491,10 +518,7 @@ int Fuzzy::GetFuzzyClassify_VG(
 void  Fuzzy::FillWeightArrayG_InDoor20150603(const double _horizontal_line,const double n)
 {
 	TRACE_FUNC();
-
-	const float PgOffset = 0;
-	const float PsOffset = 0;
-		
+			
 	const float HgPos = _horizontal_line + PgOffset*HEIGHT;
 	const float HsPos = _horizontal_line - PsOffset*HEIGHT;
 	const float Hg = HgPos - _horizontal_line;
@@ -518,10 +542,7 @@ void  Fuzzy::FillWeightArrayG_InDoor20150603(const double _horizontal_line,const
 void   Fuzzy::FillWeightArrayS_InDoor20150603(const double _horizontal_line,const  double _n)
 {
 	TRACE_FUNC();
-
-	const float PgOffset = 0;
-	const float PsOffset = 0;
-	
+		
 	float HgPos = _horizontal_line + PgOffset*HEIGHT;
 	float HsPos = _horizontal_line - PsOffset*HEIGHT;
 	float Hg = HgPos - _horizontal_line;

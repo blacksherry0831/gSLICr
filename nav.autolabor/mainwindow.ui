@@ -344,13 +344,6 @@
        <enum>QLayout::SetDefaultConstraint</enum>
       </property>
       <item>
-       <widget class="QPushButton" name="stim_button">
-        <property name="text">
-         <string>障碍物设置体</string>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QComboBox" name="obs_box">
         <item>
          <property name="text">
@@ -428,13 +421,6 @@
           </property>
          </widget>
         </item>
-        <item>
-         <widget class="QPushButton" name="moni_button">
-          <property name="text">
-           <string>开始模拟</string>
-          </property>
-         </widget>
-        </item>
        </layout>
       </item>
       <item>
@@ -509,9 +495,17 @@
     <addaction name="actionShowSafeArea"/>
     <addaction name="actionShowRunDirection"/>
    </widget>
+   <widget class="QMenu" name="menuCollect">
+    <property name="title">
+     <string>Collect</string>
+    </property>
+    <addaction name="actionCollectOnce"/>
+    <addaction name="actionCollectAlways"/>
+   </widget>
    <addaction name="menuVideoDecoder"/>
    <addaction name="menuRun"/>
    <addaction name="menuShow"/>
+   <addaction name="menuCollect"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -577,6 +571,19 @@
    </property>
    <property name="text">
     <string>ShowRunDirection</string>
+   </property>
+  </action>
+  <action name="actionCollectOnce">
+   <property name="text">
+    <string>CollectOnce</string>
+   </property>
+  </action>
+  <action name="actionCollectAlways">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>CollectAlways</string>
    </property>
   </action>
  </widget>
