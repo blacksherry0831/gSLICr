@@ -30,6 +30,9 @@ $$
 $$
 
 $$
-V(x)=W\frac{1}{\sqrt{2\pi}\delta}e^{-\frac{x^2}{\delta^{2}}}	\\\delta= \frac{ H_{0}}{D}	\\W=2		\\D=6		\\
+V(x)=W\frac{1}{\sqrt{2\pi}\delta}e^{-\frac{x^2}{\delta^{2}}}	\\
+\delta= \frac{ H_{0}}{D}	\\
+W=2	\quad \mbox{权重参数}	\\
+D=6	\quad \mbox{权重参数}	\\
 $$
 
