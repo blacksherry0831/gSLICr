@@ -92,15 +92,34 @@ namespace gSLICr
 		};
 
 		static void getMatTriangular_Float(float * _mat, const int _wh);
+
+		static void MergeNeighbor_Line(
+			const int * _DATA,
+			const int _SZ,
+			float * _mat,
+			const int _wh);
+
 		static void getMatCluster_Float(float * _mat, const int _wh);
 		static void getMapCluster_Idx(
 			int* _map,
 			const float * _mat,
 			const int _wh);
 		
+		bool CompareArray(
+			const std::vector<int>& _v,
+			const int * _DATA,
+			const int _SZ);
+
 		bool MergeNeighbor_RemoveAnother(float * _mat, const int _wh, const int _i, const int _j);
 
 		void getSameClass(std::vector<int>& sameClass,const int _ci,const float * _mat, const int _wh);
+
+		void getSameClass(
+			int * _sameClass,
+			int * _sameNum,
+			const int _ci,
+			const float * _mat,
+			const int _wh);
 		
 	}
 }

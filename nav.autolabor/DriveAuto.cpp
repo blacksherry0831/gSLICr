@@ -49,7 +49,7 @@ void DriveAuto::DrawSafeArea_1920_1080(QImage& _img)
 		Q_ASSERT(1920 == _img.width() && 1080 == _img.height());
 
 		QPainter painter(&_img);
-		painter.setPen(QPen(QColor(0, 255, 0), 3));
+		painter.setPen(QPen(QColor(255, 255, 0), 3));
 		painter.drawEllipse(0, 0, 100, 100);
 		painter.drawLine(240, 1075, 1680, 1075);
 		painter.drawLine(280, 1045, 1640, 1045);
@@ -76,7 +76,7 @@ void DriveAuto::DrawSafeArea_960_540(QImage& _img)
 		Q_ASSERT(960 == _img.width() &&	540 == _img.height());
 		const int SCALE = 2;
 		QPainter painter(&_img);
-		painter.setPen(QPen(QColor(0, 255, 0), 4 / SCALE));
+		painter.setPen(QPen(QColor(255, 255, 0), 4 / SCALE));
 #if 0
 		painter.drawEllipse(0, 0, 100 / SCALE, 100 / SCALE);
 #endif // 0
@@ -101,7 +101,7 @@ void DriveAuto::DrawSafeArea_960_540(QImage& _img)
 *
 */
 /*-----------------------------------------*/
-void DriveAuto::DrawRunDirection(QImage & _img, DrivePolicy::RunCmd _run_dir)
+void DriveAuto::DrawRunDirection(QImage & _img, RunCmd _run_dir)
 {
 	const int LSZ = 4;
 	QPainter painter(&_img);
@@ -129,28 +129,28 @@ void DriveAuto::DrawRunDirection(QImage & _img, DrivePolicy::RunCmd _run_dir)
 	
 	switch (_run_dir)
 	{
-	case DrivePolicy::RunCmd::GO_DOWN:
+	case RunCmd::GO_DOWN:
 		c_x = c_d;
 		break;
-	case DrivePolicy::RunCmd::GO_DOWN_LEFT:
+	case RunCmd::GO_DOWN_LEFT:
 		c_x = c_d_l;
 		break;
-	case DrivePolicy::RunCmd::GO_DOWN_RIGHT:
+	case RunCmd::GO_DOWN_RIGHT:
 		c_x = c_d_r;
 		break;
-	case DrivePolicy::RunCmd::GO_RIGHT:
+	case RunCmd::GO_RIGHT:
 		c_x = c_r;
 		break;
-	case DrivePolicy::RunCmd::GO_LEFT:
+	case RunCmd::GO_LEFT:
 		c_x = c_l;
 		break;
-	case DrivePolicy::RunCmd::GO_UP_RIGHT:
+	case RunCmd::GO_UP_RIGHT:
 		c_x = c_u_r;
 		break;
-	case DrivePolicy::RunCmd::GO_UP_LEFT:
+	case RunCmd::GO_UP_LEFT:
 		c_x = c_u_l;
 		break;
-	case DrivePolicy::RunCmd::GO_UP:
+	case RunCmd::GO_UP:
 		c_x = c_u;
 		break;
 	default:
@@ -160,6 +160,78 @@ void DriveAuto::DrawRunDirection(QImage & _img, DrivePolicy::RunCmd _run_dir)
 
 	painter.drawLine(c,c_x);
 
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void DriveAuto::DrawRunDirection(QImage & _img, bool _run, RunCmd _run_dir)
+{
+	const int LSZ = 4;
+	QPainter painter(&_img);
+
+	QPen red(QColor(255, 0, 0),LSZ);
+	QPen green(QColor(0, 255, 0),LSZ);
+
+	if (_run) {
+		painter.setPen(green);
+	}else{
+		painter.setPen(red);
+	}
+
+	const int W = _img.width();
+	const int H = _img.height();
+	const int R = ((W > H) ? H : W) / 4;
+	const QPoint c(W / 2, H / 2);
+
+	const QPoint c_u(c.x(), c.y() - R);
+	const QPoint c_u_l(c.x() - R / 2, c.y() - R);
+	const QPoint c_u_r(c.x() + R, c.y() - R);
+
+	const QPoint c_l(c.x() - R, c.y());
+	const QPoint c_r(c.x() + R, c.y());
+
+	const QPoint c_d(c.x(), c.y() + R);
+	const QPoint c_d_l(c.x() - R, c.y() + R);
+	const QPoint c_d_r(c.x() + R, c.y() + R);
+
+	QPoint   c_x = c;
+
+	painter.drawEllipse(c, R, R);
+
+	switch (_run_dir)
+	{
+	case RunCmd::GO_DOWN:
+		c_x = c_d;
+		break;
+	case RunCmd::GO_DOWN_LEFT:
+		c_x = c_d_l;
+		break;
+	case RunCmd::GO_DOWN_RIGHT:
+		c_x = c_d_r;
+		break;
+	case RunCmd::GO_RIGHT:
+		c_x = c_r;
+		break;
+	case RunCmd::GO_LEFT:
+		c_x = c_l;
+		break;
+	case RunCmd::GO_UP_RIGHT:
+		c_x = c_u_r;
+		break;
+	case RunCmd::GO_UP_LEFT:
+		c_x = c_u_l;
+		break;
+	case RunCmd::GO_UP:
+		c_x = c_u;
+		break;
+	default:
+
+		break;
+	}
+
+	painter.drawLine(c, c_x);
 }
 /*-----------------------------------------*/
 /**

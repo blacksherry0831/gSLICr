@@ -6,8 +6,10 @@
 /*-----------------------------------------*/
 DrivePolicy::DrivePolicy(QObject *parent) :QObject(parent)
 {
-	qRegisterMetaType<DrivePolicy::RunCmd>("DrivePolicy::RunCmd");
+	qRegisterMetaType<RunCmd>("RunCmd");
 	this->InitArea_960_540();
+	this->mEnable = true;
+	mRunCmd = RunCmd::GO_NONE;
 }
 /*-----------------------------------------*/
 /**
@@ -23,14 +25,94 @@ DrivePolicy::~DrivePolicy()
 *
 */
 /*-----------------------------------------*/
-void DrivePolicy::CollectRunCmd(const DrivePolicy::RunCmd _rc)
+void DrivePolicy::CLearRunCmd()
 {
+	mRunCmdQ.clear();
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void DrivePolicy::EnqueueRunCmd(const RunCmd _rc)
+{
+
 	mRunCmdQ.enqueue(_rc);
 
 	if (mRunCmdQ.size()>100) {
 		mRunCmdQ.dequeue();
 	}
 
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void DrivePolicy::EnqueueExecCmd(const RunCmd _rc)
+{
+
+	mExecCmdQ.enqueue(_rc);
+
+	if (mExecCmdQ.size()>100) {
+		mExecCmdQ.dequeue();
+	}
+
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void DrivePolicy::CollectRunCmd(const RunCmd _rc)
+{
+
+	if (IsEnable()){
+		EnqueueRunCmd(_rc);
+	}else{
+		CLearRunCmd();
+	}
+	
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+RunCmd DrivePolicy::policy_dir_weight_avg()
+{
+	const float W[] = { 0.1F,0.2F, 0.3F, 0.4F, 0.5F, 0.6F, 0.7F, 0.8F,0.9F };
+	const int RunDirCount = RunCmd::GO_UP_LEFT;
+	const int RunCmdSize = 9;
+	const int QSZ = mRunCmdQ.size();
+	const int StartCmd = QSZ - RunCmdSize;
+
+	std::vector<float> statistics(RunDirCount, 0);
+
+	RunCmd rc_wa_t = RunCmd::GO_NONE;
+	if (StartCmd>0) {
+
+		for (size_t i = 0; i <RunCmdSize; i++) {
+			const RunCmd cmd_t = mRunCmdQ.at(StartCmd + i);
+			Q_ASSERT(cmd_t >= 0 && cmd_t <= 8);
+			statistics[cmd_t] += W[i];
+		}
+
+		const int pos = FindMaxPos(statistics);
+		rc_wa_t = (RunCmd) pos;
+	}
+
+	return rc_wa_t;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+int DrivePolicy::FindMaxPos(std::vector<float> _vec)
+{
+	std::vector<float>::iterator biggest = std::max_element(_vec.begin(), _vec.end()); 	
+	return std::distance(_vec.begin(), biggest);
 }
 /*-----------------------------------------*/
 /**
@@ -316,16 +398,13 @@ int DrivePolicy::Qimage2cvMat(QImage& _img)
 /*-----------------------------------------*/
 void DrivePolicy::policy(const QImage & _img,const QDateTime& _time)
 {
-	const RunCmd rc_t= policy_normal(_img,_time);
+		
+	this->policy_img_normal();
 
-	CollectRunCmd(rc_t);
+	if (IsEnable()){
+		policy_dir(_img,_time);
+	}
 	
-	double speed_v1=1.0F;
-	double speed_v2=1.0F;
-
-	policy_past_present_speed(rc_t,speed_v1,speed_v2);
-
-	emit sig_run_cmd(rc_t, speed_v1, speed_v2,_time);
 	emit sig_1_frame_bgra(_img, _time);
 
 }
@@ -334,7 +413,65 @@ void DrivePolicy::policy(const QImage & _img,const QDateTime& _time)
 *
 */
 /*-----------------------------------------*/
-DrivePolicy::RunCmd DrivePolicy::policy_normal(const QImage & _img, const QDateTime & _time)
+void DrivePolicy::policy_dir_speed(
+	const QImage & _img,
+	const QDateTime & _time)
+{
+	double speed_v1 = 1.0F;
+	double speed_v2 = 1.0F;
+		
+	const RunCmd cmd_t = policy_dir_weight_avg();
+
+	EnqueueExecCmd(cmd_t);
+
+	policy_speed(mExecCmdQ,speed_v1, speed_v2);
+
+	emit_sig_run_cmd(cmd_t, speed_v1, speed_v2, _time);
+
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void DrivePolicy::policy_dir(const QImage & _img, const QDateTime & _time)
+{
+	double speed_v1 = 1.0F;
+	double speed_v2 = 1.0F;
+
+	const RunCmd cmd_t = policy_dir_weight_avg();
+
+	EnqueueExecCmd(cmd_t);
+
+	emit_sig_run_cmd(cmd_t, speed_v1, speed_v2, _time);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void DrivePolicy::policy_img_normal()
+{
+	const RunCmd rc_t = policy_normal();
+
+	CollectRunCmd(rc_t);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void DrivePolicy::emit_sig_run_cmd(RunCmd _cmd,double _v1,double _v2,QDateTime _time)
+{
+	mRunCmd = _cmd;
+	emit sig_run_cmd(mRunCmd,_v1,_v2,_time);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+RunCmd DrivePolicy::policy_normal()
 {
 	RunCmd rc_t = GO_NONE;
 
@@ -372,62 +509,35 @@ DrivePolicy::RunCmd DrivePolicy::policy_normal(const QImage & _img, const QDateT
 *
 */
 /*-----------------------------------------*/
-DrivePolicy::RunCmd DrivePolicy::policy_past_present(const DrivePolicy::RunCmd _now)
-{
-	
-	const DrivePolicy::RunCmd past_cmd = mRunCmdQ.at(1);
-	const DrivePolicy::RunCmd now_cmd = mRunCmdQ.at(0);
-	Q_ASSERT(_now == now_cmd);	
-	return _now;
-
-}
-/*-----------------------------------------*/
-/**
-*
-*/
-/*-----------------------------------------*/
-void DrivePolicy::policy_past_present_speed(
-	const DrivePolicy::RunCmd _now,
+void DrivePolicy::policy_speed(
+	QQueue<RunCmd> _RunCmdQ,
 	double& _v1,
 	double& _v2)
 {
-	if (mRunCmdQ.size()<2) {
+	if (_RunCmdQ.size()<2) {
 		return;
 	}
-	Q_ASSERT(mRunCmdQ.size()>=2);
-	const int QSZ = mRunCmdQ.size();
-	const DrivePolicy::RunCmd past_cmd = mRunCmdQ.at(QSZ-2);
-	const DrivePolicy::RunCmd now_cmd = mRunCmdQ.at(QSZ-1);
-
-	Q_ASSERT(_now == now_cmd);
+	Q_ASSERT(_RunCmdQ.size()>=2);
+	const int QSZ = _RunCmdQ.size();
+	const RunCmd past_cmd = _RunCmdQ.at(QSZ-2);
+	const RunCmd now_cmd = _RunCmdQ.at(QSZ-1);
 
 	_v1 = 1;
 	_v2 = 1;
 	
-	if (
-		((now_cmd==RunCmd::GO_LEFT) ||(now_cmd==RunCmd::GO_RIGHT) )&&
-		((past_cmd==RunCmd::GO_LEFT) ||	(past_cmd==RunCmd::GO_RIGHT))
-		){
-
-		if (_now == now_cmd) {
+	if (((now_cmd==RunCmd::GO_LEFT) ||(now_cmd==RunCmd::GO_RIGHT) )&&
+		((past_cmd==RunCmd::GO_LEFT) ||	(past_cmd==RunCmd::GO_RIGHT))){
 			_v1 = 2;
 			_v2 = 2;
-		}else {
-			_v1 = 4;
-			_v2 = 4;
-		}
-
-	}
-
-	if (now_cmd==RunCmd::GO_DOWN){
-		_v1 = 2;
-		_v2 = 2;
+	}else	if (now_cmd==RunCmd::GO_DOWN){
+			_v1 = 2;
+			_v2 = 2;
 	}else if (now_cmd == RunCmd::GO_DOWN_LEFT){
-		_v1 = 3;
-		_v2 = 3;
+			_v1 = 3;
+			_v2 = 3;
 	}else if (now_cmd == RunCmd::GO_DOWN_RIGHT){
-		_v1 = 3;
-		_v2 = 3;
+			_v1 = 3;
+			_v2 = 3;
 	}else{
 		_v1 = 1;
 		_v2 = 1;
@@ -435,6 +545,43 @@ void DrivePolicy::policy_past_present_speed(
 
 	Q_ASSERT(_v1>0 && _v2>0);
 		
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void DrivePolicy::SetEnable(bool _en)
+{
+	this->mEnable = _en;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+bool DrivePolicy::IsEnable()
+{
+	return mEnable;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void DrivePolicy::EnablePolicy(bool _en)
+{
+	SetEnable(_en);
+	CLearRunCmd();
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+RunCmd DrivePolicy::PolicyRunCmd()
+{
+	return mRunCmd;
 }
 /*-----------------------------------------*/
 /**

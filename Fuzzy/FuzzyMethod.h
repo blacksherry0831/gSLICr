@@ -29,6 +29,8 @@ public:
 
 	static void FuzzySuperPixel_VG_FAST(
 		const float _hl_vp,
+		const float	_sigma_force_scale,
+		const float	_sigma_scale,
 		const int * _label,
 		const int _spixelNum,
 		const int _width,

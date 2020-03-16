@@ -78,7 +78,9 @@ void FuzzyMethod::FuzzySuperPixel_VG(
 	Fuzzy::Fuzzy_G(_spixelNum, _label, _width, _height);
 
 	Fuzzy::Fuzzy_Classify_VG();
+
 	
+		
 	Fuzzy::Fuzzy_Label_Ex(
 		_spixelNum,
 		_label_svg,
@@ -95,12 +97,18 @@ void FuzzyMethod::FuzzySuperPixel_VG(
 /*-----------------------------------------*/
 void FuzzyMethod::FuzzySuperPixel_VG_FAST(
 	const float _hl_vp,
+	const float	_sigma_force_scale,
+	const float	_sigma_scale,
 	const int * _label,
 	const int _spixelNum,
 	const int _width,
 	const int _height,
 	int * _label_svg)
 {
+	assert(_hl_vp>0 && _hl_vp<1.0F);
+
+	Fuzzy::SetSigmaScale(_sigma_scale);
+
 	Fuzzy::InitYweightTable_VG(_height, _hl_vp);
 
 	cv::Size fuzzy_size(_spixelNum, 1);
@@ -110,6 +118,17 @@ void FuzzyMethod::FuzzySuperPixel_VG_FAST(
 	Fuzzy::Fuzzy_VG_FAST(_spixelNum, _label, _width, _height);
 
 	Fuzzy::Fuzzy_Classify_VG();
+			
+	const double LineForce=Fuzzy::CalVerticalForceLine(
+		_height,
+		_hl_vp,
+		_sigma_force_scale);
+
+	Fuzzy::Fuzzy_Classify_V_Force(
+		LineForce,
+		_label,
+		_width,
+		_height);
 
 	Fuzzy::Fuzzy_Label_Ex(
 		_spixelNum,
@@ -117,6 +136,7 @@ void FuzzyMethod::FuzzySuperPixel_VG_FAST(
 		_label,
 		_width,
 		_height);
+
 }
 /*-----------------------------------------*/
 /**
@@ -148,6 +168,8 @@ void FuzzyMethod::FuzzySuperPixel_Method(
 
 		FuzzySuperPixel_VG_FAST(
 			_hl_vp,
+			1,
+			6,
 			_label,
 			_spixelNum,
 			_width,

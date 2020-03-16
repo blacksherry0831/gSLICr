@@ -338,6 +338,25 @@ void gSLICr::engines::getMatTriangular_Float(float* _mat, const int _wh)
 *
 */
 /*-----------------------------------------*/
+void gSLICr::engines::MergeNeighbor_Line(
+	const int* _DATA,
+	const int _SZ,
+	float * _mat,
+	const int _wh)
+{
+	if (_SZ > 0) {
+		const int ri_min = _DATA[0];
+		for (int ri = 1; ri < _SZ; ri++) {
+			const int ri_current = _DATA[ri];
+			MergeNeighbor_RemoveAnother(_mat, _wh, ri_current, ri_min);
+		}
+	}
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
 bool gSLICr::engines::MergeNeighbor_RemoveAnother(
 	float * _mat,
 	const int _wh,
@@ -384,25 +403,41 @@ void gSLICr::engines::getSameClass(std::vector<int>& sameClass ,const int _ci,co
 *
 */
 /*-----------------------------------------*/
-void gSLICr::engines::getMatCluster_Float(float * _mat, const int _wh)
+void gSLICr::engines::getSameClass(
+	int* _sameClass,
+	int* _sameNum,
+	const int _ci,
+	const float * _mat,
+	const int _wh)
 {
-	for (int ci = _wh - 1; ci >= 0; ci--) {
-
-		std::vector<int> sameClass;
-
-		getSameClass(sameClass,ci,_mat,_wh);
-
-		const int SZ= sameClass.size();
-		const int* DATA = sameClass.data();
-
-		if (SZ > 0) {
-			const int ri_min = DATA[0];
-			for (int ri = 1; ri < SZ; ri++) {
-				const int ri_current = DATA[ri];
-				MergeNeighbor_RemoveAnother(_mat, _wh, ri_current, ri_min);
-			}
+	const int ROW_MAX = _ci;
+	int	ii = 0;
+	for (int ri = 0; ri <= ROW_MAX; ri++) {
+		const int IDX = _ci + ri*_wh;
+		const int W = _mat[IDX];
+		if (W) {
+			_sameClass[ii++]=ri;
 		}
 	}
+	*_sameNum = ii;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void gSLICr::engines::getMatCluster_Float(float * _mat, const int _wh)
+{
+
+	std::vector<int> sameClass(_wh);
+	int SZ=-1;
+	int* DATA = sameClass.data();	
+	
+	for (int ci = _wh - 1; ci >= 0; ci--) {
+		getSameClass(DATA,&SZ,ci,_mat,_wh);
+		MergeNeighbor_Line(DATA,SZ,_mat,_wh);
+	}
+
 }
 /*-------------------------------------------------------------------------*/
 /**
@@ -473,6 +508,20 @@ void gSLICr::engines::getMapCluster_Idx(int* _map, const float * _mat, const int
 
 	}
 	
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+bool gSLICr::engines::CompareArray(const std::vector<int>& _v, const int * _DATA, const int _SZ)
+{
+	for (int i = 0; i < _SZ; i++){
+		if (_DATA[i]!=_v[i]){
+			return	false;
+		}
+	}
+	return true;
 }
 /*-------------------------------------------------------------------------*/
 /**

@@ -24,6 +24,7 @@
 #include "PreProcImageSvg.h"
 #include "SvgProcImage.h"
 #include "DrivePolicy.h"
+#include "DriveHardware.h"
 /*-----------------------------------------*/
 
 /*-----------------------------------------*/
@@ -105,41 +106,23 @@ private slots:
 
 
 	void run_policy(
-		DrivePolicy::RunCmd _cmd,
+		RunCmd _cmd,
 		double _speed_v1,
 		double _speed_v2,
 		const QDateTime _time);
 
 	void run_policy_interval(
-		const DrivePolicy::RunCmd _cmd,
+		const RunCmd _cmd,
 		const double _speed_v1,
 		const double _speed_v2,
 		const QDateTime _time,
 		const int _ms);
 
 	void drive_run_policy(
-		const DrivePolicy::RunCmd& _cmd,
+		const RunCmd& _cmd,
 		const double _speed_v1,
 		const double _speed_v2);
-
-	void up_once();
-
-	void down_once();
-
-	void left_once();
-
-	void right_once();
-
-	void up_left_once();
-
-	void up_right_once();
-
-	void down_left_once();
-
-	void down_right_once();
-
-	void stop_once();
-
+	
 public slots:
     void onconnected();
 
@@ -155,7 +138,7 @@ public slots:
 
     void slotGetOneFrame(QImage img);   //获取图像
 
-	void DrawRunDirection(QImage& _img, DrivePolicy::RunCmd& _run_dir);
+	void DrawRunDirection(QImage& _img, RunCmd _run_dir);
 
 	void ShowOneFrameBgraOrg(QImage _img,const QDateTime _time);
 	void ShowOneFrameBgraSvg(QImage _img,const QDateTime _time);
@@ -168,6 +151,11 @@ public slots:
 	void menu_show_run_direction(bool _v);
 	void menu_run_auto(bool _r);
 	void menu_run_current_once(bool _r);
+
+	void run_status_car(bool _s);
+
+	bool IsCurrentRunCmdStable();
+				
 private:
     Ui::MainWindow *ui;
 
@@ -218,13 +206,14 @@ private:
     int obs_y;  //障碍物中心y坐标
     int obs_r;      //障碍物半径
 private:
-		DrivePolicy::RunCmd mRunCmd;
+		//RunCmd mExecRunCmd;
  private:
 		PreProcImageOrg ppImageOrg;
 		PreProcImageSvg ppImageSvg;
 private:
-		SVG_PROC_IMAGE     svgProcImage;
-		DrivePolicy		   drivePolicy;
+		SVG_PROC_IMAGE		svgProcImage;
+		DrivePolicy			drivePolicy;
+		DriveHardware		driveHardware;
 private:
 		QThread mThreadPreShowBgraOrg;
 		QThread mThreadPreShowBgraSvg;

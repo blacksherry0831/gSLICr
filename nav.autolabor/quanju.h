@@ -22,6 +22,8 @@ public:
     static QQueue<QImage> igs;
     static QQueue<QString> msgs;
     static QMutex mutex;
+public:
+	static void WebSocketSendMessage(QString _msg);
 };
 
 #endif // QUANJU_H

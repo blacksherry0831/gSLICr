@@ -33,7 +33,8 @@ public:
 	static void DrawSafeArea_1920_1080(QImage& _img);
 	static void DrawSafeArea_960_540(QImage& _img);
 
-	static void DrawRunDirection(QImage& _img,DrivePolicy::RunCmd _run_dir);
+	static void DrawRunDirection(QImage& _img,RunCmd _run_dir);
+	static void DrawRunDirection(QImage& _img,bool _run, RunCmd _run_dir);
 
 	static void CalSafeArea(QImage& _img);
 	static void CalSafeArea_1920_1080(QImage& _img);

@@ -3,6 +3,7 @@
  int	Fuzzy::HEIGHT=0;
  float  Fuzzy::PgOffset=0;
  float  Fuzzy::PsOffset=0;
+ float  Fuzzy::gSigmaScale = 0;
  float  Fuzzy::Seg_HorizontalLinePosScale=0;
 /*-----------------------------------------*/
  float  Fuzzy::pYweight_V[Y_HEIGHT_MAX];
@@ -27,12 +28,20 @@ Fuzzy::Fuzzy(void)
 /*-----------------------------------------*/
 /**
 *
-*
 */
 /*-----------------------------------------*/
 Fuzzy::~Fuzzy(void)
 {
 
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void Fuzzy::SetSigmaScale(const float _sigma_scale)
+{
+	gSigmaScale = _sigma_scale;
 }
 /*-----------------------------------------*/
 /**
@@ -105,23 +114,48 @@ inline double Fuzzy::Sx_InDoor20150603(int y, int n, float H0, float Hc, int H)
 /*--------------------------------------------------------------------*/
 /**
 *
+*/
+/*--------------------------------------------------------------------*/
+double Fuzzy::GetGaussSigmaLen(
+	const double L,
+	double SigmaScale)
+{
+	const double sigma = L / SigmaScale;
+	return sigma;
+}
+/*--------------------------------------------------------------------*/
+/**
 *
 */
 /*--------------------------------------------------------------------*/
-void Fuzzy::FillWeightArrayV_Gaussian(double horizontal_line, double n, double SigmaScale, double WeightScale)
+double Fuzzy::GetGaussSigmaLenX3(const double horizontal_line)
+{
+	//室外原始和室内叠加
+	
+	double L, L_1, L_2;
+	L_1 = horizontal_line;
+	L_2 = HEIGHT - horizontal_line;
+	L = (L_1>L_2) ? L_2 : L_1;
+	return L;
+}
+/*--------------------------------------------------------------------*/
+/**
+*
+*/
+/*--------------------------------------------------------------------*/
+void Fuzzy::FillWeightArrayV_Gaussian(
+	double horizontal_line,
+	double n,
+	double SigmaScale,
+	double WeightScale)
 {
 	TRACE_FUNC();
 	{
 #if 1
-		//室外原始和室内叠加
-		double sigma;
-		double L, L_1, L_2;
-		L_1 = horizontal_line;
-		L_2 = HEIGHT - horizontal_line;
-		L = (L_1>L_2) ? L_2 : L_1;
-		sigma = L / SigmaScale;
+		const double L = GetGaussSigmaLenX3(horizontal_line);
+		const double sigma = GetGaussSigmaLen(L, SigmaScale);
 
-		for (register int i = -L; i<L; i++) {
+		for (int i = -L; i<L; i++) {
 			if ((horizontal_line - i) >= 0 && (horizontal_line - i)< HEIGHT) {
 
 				double constant_t = (1 / (sqrt(2 * M_PI)*sigma))*WeightZoom*WeightScale;
@@ -160,10 +194,40 @@ void Fuzzy::InitYweightTable_SVG(const int _height,const float _HorizontalLinePo
 /*--------------------------------------------------------------------*/
 /**
 *
+*/
+/*--------------------------------------------------------------------*/
+float Fuzzy::CalHorizontalLine(
+	const int _height,
+	const float _HorizontalLinePosScale)
+{
+	assert(_HorizontalLinePosScale>=0 && _HorizontalLinePosScale<=1);
+	return _height*_HorizontalLinePosScale;
+}
+/*--------------------------------------------------------------------*/
+/**
 *
 */
 /*--------------------------------------------------------------------*/
-void Fuzzy::InitYweightTable_VG(const int _height, const float _HorizontalLinePosScale)
+float Fuzzy::CalVerticalForceLine(
+	const int	_height,
+	const float _hl_vp,
+	const float	_sigma_force_scale)
+{
+	const float horizontal_line = Fuzzy::CalHorizontalLine(_height, _hl_vp);
+	const double L = Fuzzy::GetGaussSigmaLenX3(horizontal_line);
+	const double sigma = Fuzzy::GetGaussSigmaLen(L, gSigmaScale);
+	const double LineForce = L - _sigma_force_scale*sigma;
+
+	return LineForce;
+}
+/*--------------------------------------------------------------------*/
+/**
+*
+*/
+/*--------------------------------------------------------------------*/
+void Fuzzy::InitYweightTable_VG(
+	const int _height,
+	const float _HorizontalLinePosScale)
 {
 
 	if (HEIGHT != _height) {
@@ -171,9 +235,9 @@ void Fuzzy::InitYweightTable_VG(const int _height, const float _HorizontalLinePo
 		HEIGHT = _height;
 		Seg_HorizontalLinePosScale = _HorizontalLinePosScale;
 
-		const float horizontal_line = Seg_HorizontalLinePosScale*HEIGHT;
+		const float horizontal_line = CalHorizontalLine(_height, _HorizontalLinePosScale);
 
-		FillWeightArrayV_Gaussian(horizontal_line, 1, 6, 2);
+		FillWeightArrayV_Gaussian(horizontal_line, 1, gSigmaScale, 2);
 		FillWeightArrayG_InDoor20150603(horizontal_line, 1);
 
 	}
@@ -187,11 +251,17 @@ void Fuzzy::InitYweightTable_VG(const int _height, const float _HorizontalLinePo
 /*--------------------------------------------------------------------*/
 void Fuzzy::MallocResultMemory(const cv::Size & _sp_num)
 {
-	FuzzyResult_Classify.create(_sp_num, CV_32SC1);
-	FuzzyResult_S.create(_sp_num, CV_32FC1);
-	FuzzyResult_V.create(_sp_num, CV_32FC1);
-	FuzzyResult_G.create(_sp_num, CV_32FC1);
-	FuzzyResult_Count.create(_sp_num, CV_32SC1);
+	const int w = FuzzyResult_Classify.size().width;
+	const int h = FuzzyResult_Classify.size().height;
+	if (h!=_sp_num.height || w!=_sp_num.width)
+	{	
+		FuzzyResult_Classify.create(_sp_num, CV_32SC1);
+		FuzzyResult_S.create(_sp_num, CV_32FC1);
+		FuzzyResult_V.create(_sp_num, CV_32FC1);
+		FuzzyResult_G.create(_sp_num, CV_32FC1);
+		FuzzyResult_Count.create(_sp_num, CV_32SC1);
+	}
+	
 }
 /*--------------------------------------------------------------------*/
 /**
@@ -411,26 +481,72 @@ void Fuzzy::Fuzzy_Classify_VG()
 /*--------------------------------------------------------------------*/
 /**
 *
+*/
+/*--------------------------------------------------------------------*/
+void Fuzzy::Fuzzy_Classify_V_Force(
+	const int _v_pos,
+	const int * _label,
+	const int _label_w,
+	const int _label_h)
+{
+	int* mat_classify = FuzzyResult_Classify.ptr<int>(0);
+	const int mat_dim = FuzzyResult_Classify.size().width;
+
+	Fuzzy_Force_V(
+		_v_pos,
+		mat_classify,
+		mat_dim,
+		_label,
+		_label_w,
+		_label_h);
+}
+/*--------------------------------------------------------------------*/
+/**
+*
+*/
+/*--------------------------------------------------------------------*/
+void Fuzzy::Fuzzy_Force_V(
+	const int	_v_pos,
+	int*		_mat_Classify,
+	const int	_mat_dim,
+	const int*	_label,
+	const int	_label_w,
+	const int	_label_h)
+{
+	assert(_v_pos > 0 && _v_pos<_label_h );
+
+	const int LINE_START = _v_pos*_label_w;
+	for (size_t ci = 0; ci < _label_w; ci++){
+		const int idx = ci + LINE_START;
+		const int SP_IDX = _label[idx];
+		assert(SP_IDX>=0 && SP_IDX <= _mat_dim);
+		_mat_Classify[SP_IDX]= FUZZY_V;
+	}
+
+}
+/*--------------------------------------------------------------------*/
+/**
 *
 */
 /*--------------------------------------------------------------------*/
 void Fuzzy::Fuzzy_Label(
-	const int * _mat_Classify,
-	const int _dim,
-	int * _label_svg,
-	const int * _label,
-	const int _w,
-	const int _h)
+	const int *		_mat_Classify,
+	const int		_dim,
+	int *			_label_svg,
+	const int *		_label,
+	const int		_label_w,
+	const int		_label_h)
 {
 
-	const int SZ=_w*_h;
+	const int SZ= _label_w*_label_h;
 	for (int pi = 0; pi < SZ; pi++){
-			const int SP_IDX = _label[pi];
-			assert(SP_IDX<=_dim);
+			const int SP_IDX = _label[pi];			
 			const int SVG_IDX = _mat_Classify[SP_IDX];
-			assert(SVG_IDX==FUZZY_SKY || SVG_IDX == FUZZY_V || SVG_IDX == FUZZY_GND);
 			_label_svg[pi]=SVG_IDX;
-		
+#if _DEBUG
+			assert(SP_IDX<=_dim);
+			assert(SVG_IDX==FUZZY_SKY || SVG_IDX == FUZZY_V || SVG_IDX == FUZZY_GND);
+#endif // _DEBUG
 	}
 
 }

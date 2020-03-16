@@ -24,15 +24,26 @@ class Fuzzy
 public:
 	Fuzzy(void);
 	~Fuzzy(void);
+private:
+	static  float gSigmaScale;
+public:
+	static void SetSigmaScale(const float _sigma_scale);
 public:
 	static float PgOffset;
 	static float PsOffset;
+
 public:
 	static double Gx_Pn_c(const int n);
 	static double Gx_Pn_v(const int n);
 
 	static double Gx_InDoor20150603(int y, int n, float H0, float Hg, int H);
 	static double Sx_InDoor20150603(int y, int n, float H0, float Hc, int H);
+
+	static double GetGaussSigmaLen(
+		const double L,
+		const double SigmaScale);
+
+	static double GetGaussSigmaLenX3(const double horizontal_line);
 
 	static void FillWeightArrayV_Gaussian(
 		const double _horizontal_line,
@@ -46,6 +57,7 @@ public:
 public:
 	static  int HEIGHT;
 	static	float Seg_HorizontalLinePosScale;
+	
 public:
 	static  float pYweight_S[Y_HEIGHT_MAX];
 	static  float pYweight_V[Y_HEIGHT_MAX];
@@ -57,8 +69,15 @@ private:
 	static cv::Mat  FuzzyResult_G;
 	static cv::Mat  FuzzyResult_Count;
 public:
-	static void InitYweightTable_SVG(const int _height, const float _HorizontalLinePosScale);
-	static void InitYweightTable_VG(const int _height, const float _HorizontalLinePosScale);
+	static	void	InitYweightTable_SVG(const int _height, const float _HorizontalLinePosScale);
+	static  float	CalHorizontalLine(const int _height, const float _HorizontalLinePosScale);
+	
+	static	float	CalVerticalForceLine(
+		const int		_height,
+		const float		_hl_vp,
+		const float		_sigma_force_scale);
+
+	static	void	InitYweightTable_VG(const int _height, const float _HorizontalLinePosScale);
 public:
 	static void MallocResultMemory(const cv::Size& _sp_num);
 public:
@@ -104,14 +123,28 @@ public:
 	static void Fuzzy_Classify_SVG();
 
 	static void Fuzzy_Classify_VG();
-	
+		
+	static void Fuzzy_Classify_V_Force(
+		const int	_v_pos,
+		const int*	_label,
+		const int	_label_w,
+		const int	_label_h);
+
+	static void Fuzzy_Force_V(
+		const int	_v_pos,
+		int*		_mat_Classify,
+		const int	_mat_dim,
+		const int*	_label,
+		const int	_label_w,
+		const int	_label_h);
+		
 	static void Fuzzy_Label(
 		const int*		_mat_Classify,
 		const int		_dim,
 		int*			_label_svg,
 		const int*		_label,
-		const int		_w,
-		const int		_h);
+		const int		_label_w,
+		const int		_label_h);
 
 	static void Fuzzy_Label_Ex(
 		const int _dim,
