@@ -303,12 +303,11 @@ void DriveHardware::sendRunCmd(
 		const QString msgss = GetJsonCmd(_x,_y,_v1,_v2);
 
 		emit_running_status(true);
-		Quanju::WebSocketSendMessage(msgss);
+		//Quanju::WebSocketSendMessage(msgss);
 		qDebug() << msgss << endl;
 		SaveJsonCmd(msgss);
 		mTimer->setSingleShot(true);
 		mTimer->start(_ms);
-
 	
 }
 /*----------------------------------------------------------------*/

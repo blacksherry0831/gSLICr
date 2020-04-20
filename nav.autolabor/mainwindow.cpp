@@ -37,16 +37,16 @@ MainWindow::MainWindow(QWidget *parent) :
     
 	this->initMenu();
 	
-	//socket连接
-    url = QUrl("ws://192.168.0.10:9090");
-    Quanju::websocket.open(url);
-    connect(&Quanju::websocket,SIGNAL(connected()),this,SLOT(onconnected()));
-    connect(&Quanju::websocket,SIGNAL(disconnected()),this,SLOT(disconnected()));
-    connect(&Quanju::websocket,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(errorconnected(QAbstractSocket::SocketError)));
+	
+	mCarHardware.initConnect();
+	mCarHardware.open();
+	const QWebSocket* p_ws = mCarHardware.GetWebSocket();
+    connect(p_ws,SIGNAL(connected()),this,SLOT(onconnected()));
+    connect(p_ws,SIGNAL(disconnected()),this,SLOT(disconnected()));
+    connect(p_ws,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(errorconnected(QAbstractSocket::SocketError)));
 
-    connectFlag=false;   //连接成功标志初始化
-    ui->shuaxin->setText("打开连接");  //连接按钮初始化
-
+ 
+   
     //转盘进度条设置 此为控件
     ui->roundProgressBar->setStartAngle(RoundProgressBar::PositionTop);   //起始角度  正上方
     ui->roundProgressBar->setBarStyle(RoundProgressBar::StyleLine);       //风格
@@ -166,9 +166,7 @@ MainWindow::MainWindow(QWidget *parent) :
 /*----------------------------------------------------------------*/
 MainWindow::~MainWindow()
 {
-    Quanju::websocket.close();
-    Quanju::websocket.deleteLater();
-	
+   	
 	this->ThreadWork_Stop();
 	this->ThreadWork_Wait();
 
@@ -238,9 +236,7 @@ void MainWindow::initMenuCollect()
 /*----------------------------------------------------------------*/
 void MainWindow::onconnected()
 {
-    connectFlag=true;
-    ui->shuaxin->setText("断开连接");
-    ui->xieche->setText("小车连接成功！");
+   ui->xieche->setText("小车连接成功！");
 }
 /*----------------------------------------------------------------*/
 /**
@@ -249,36 +245,14 @@ void MainWindow::onconnected()
 /*----------------------------------------------------------------*/
 void MainWindow::disconnected()
 {
-    connectFlag=false;
-    ui->shuaxin->setText("打开连接");
     ui->xieche->setText("小车失去连接！");
 }
 
 //小车连接失败
 void MainWindow::errorconnected(QAbstractSocket::SocketError error)
 {
-    connectFlag=false;
-    ui->shuaxin->setText("打开连接");
     ui->xieche->setText("小车连接失败！");
     qDebug()<<tr("小车连接失败，失败原因：")<<error<<endl;
-}
-/*----------------------------------------------------------------*/
-/**
-*“刷新”按钮点击事业
-*/
-/*----------------------------------------------------------------*/
-void MainWindow::on_shuaxin_clicked()
-{
-    if(connectFlag==true)
-    {
-        ui->xieche->setText("小车断开连接中... ");
-        Quanju::websocket.close();
-    }
-    else if(connectFlag==false)
-    {
-        ui->xieche->setText("小车建立连接中... ");
-        Quanju::websocket.open(url);
-    }
 }
 
 //停止按钮事件
@@ -639,11 +613,9 @@ void MainWindow::send()
     QJsonDocument json_doc;
     json_doc.setObject(json);
     QString msgss=json_doc.toJson(QJsonDocument::Compact);
+	
+ 	mCarHardware.WebSocketSendMessageEx(msgss);
 
-
-
-    Quanju::websocket.sendTextMessage(msgss);
-    Quanju::websocket.flush();
     qDebug()<<msgss<<endl;
 
     s_flag = 0;
@@ -783,14 +755,6 @@ void MainWindow::jietu()
     savePictureCount = 0;
 
 }
-
-//线程调用的发消息的槽函数
-void MainWindow::sendmsg(QString msg)
-{
-    Quanju::websocket.sendTextMessage(msg);
-    Quanju::websocket.flush();
-    qDebug()<<msg<<endl;
-}
 /*----------------------------------------------------------------*/
 /**
 *
@@ -835,10 +799,7 @@ void MainWindow::DrawRunDirection(QImage & _img, RunCmd _run_dir)
 /*----------------------------------------------------------------*/
 void MainWindow::ShowOneFrameBgraOrg(QImage _img,const QDateTime _time)
 {
-	if (ui!=NULL){
-		this->DrawRunDirection(_img, drivePolicy.PolicyRunCmd());
-		QBase::UI_Show_QImage_on_QLabel(ui->label_Image, &_img);
-	}	
+	ShowOneFrameOnLabel(&_img, &_time, ui->label_Image);
 }
 /*----------------------------------------------------------------*/
 /**
@@ -847,9 +808,18 @@ void MainWindow::ShowOneFrameBgraOrg(QImage _img,const QDateTime _time)
 /*----------------------------------------------------------------*/
 void MainWindow::ShowOneFrameBgraSvg(QImage _img, const QDateTime _time)
 {
-	if (ui != NULL){
-		this->DrawRunDirection(_img, drivePolicy.PolicyRunCmd());
-		QBase::UI_Show_QImage_on_QLabel(ui->label_Image_svg, &_img);
+	ShowOneFrameOnLabel(&_img, &_time, ui->label_Image_svg);
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::ShowOneFrameOnLabel(QImage* _img, const QDateTime* _time, QLabel * _qlab)
+{
+	if (ui != NULL) {
+		this->DrawRunDirection(*_img, drivePolicy.PolicyRunCmd());
+		QBase::UI_Show_QImage_on_QLabel(_qlab, _img);
 	}
 }
 /*----------------------------------------------------------------*/
@@ -1114,26 +1084,38 @@ void MainWindow::initThreadWorkObject()
 /*----------------------------------------------------------------*/
 void MainWindow::initThreadWorkConnect()
 {
+	this->initThreadWorkConnect_ImageShow();
+	this->initThreadWorkConnect_RunPolicy();
+	this->drivePolicy.emitMask_960_540();
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initThreadWorkConnect_ImageShow()
+{
 	connect(mPlayer.data(), SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), &ppImageOrg, SLOT(ImageProc(QImage, QDateTime)));
-	connect(mPlayer.data(), SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), &svgProcImage, SLOT(ImageProc(QImage, QDateTime)));
-		
-	connect(&svgProcImage, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), &drivePolicy, SLOT(CalSafeArea(QImage, QDateTime)));
-
-	connect(&drivePolicy, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), &ppImageSvg, SLOT(ImageProc(QImage, QDateTime)));
-	
-	connect(&drivePolicy,
-		SIGNAL(sig_run_cmd(RunCmd,double,double, QDateTime)),
-		this,
-		SLOT(run_policy(RunCmd,double,double, QDateTime)));
-	
 	connect(&ppImageOrg, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), this, SLOT(ShowOneFrameBgraOrg(QImage, QDateTime)));
 	connect(&ppImageSvg, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), this, SLOT(ShowOneFrameBgraSvg(QImage, QDateTime)));
+	connect(&drivePolicy, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), &ppImageSvg, SLOT(ImageProc(QImage, QDateTime)));
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initThreadWorkConnect_RunPolicy()
+{
+	connect(mPlayer.data(), SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), &svgProcImage, SLOT(ImageProc(QImage, QDateTime)));
+	connect(&svgProcImage, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), &drivePolicy, SLOT(CalSafeArea(QImage, QDateTime)));
 
-	this->drivePolicy.emitMask_960_540();
-
-
-	connect(&driveHardware,SIGNAL(running_status(bool)),this,SLOT(run_status_car(bool)));
-
+	connect(&drivePolicy,
+		SIGNAL(sig_run_cmd(RunCmd, double, double, QDateTime)),
+		this,
+		SLOT(run_policy(RunCmd, double, double, QDateTime)));
+	
+	connect(&driveHardware, SIGNAL(running_status(bool)), this, SLOT(run_status_car(bool)));
 }
 /*----------------------------------------------------------------*/
 /**

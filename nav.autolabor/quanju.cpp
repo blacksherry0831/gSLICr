@@ -3,7 +3,7 @@
 #include <QImage>
 
 //全局变量
-QWebSocket Quanju::websocket;      //socket连接
+//QWebSocket Quanju::websocket;      //socket连接
 double volatile Quanju::v1=0.125;
 double volatile Quanju::v2=0.8;
 double Quanju::x=0;
@@ -30,16 +30,6 @@ Quanju::Quanju()
 Quanju::~Quanju()
 {
 
-}
-/*----------------------------------------------------------------*/
-/**
-*
-*/
-/*----------------------------------------------------------------*/
-void Quanju::WebSocketSendMessage(QString _msg)
-{
-	Quanju::websocket.sendTextMessage(_msg);
-	Quanju::websocket.flush();
 }
 /*----------------------------------------------------------------*/
 /**

@@ -25,6 +25,7 @@
 #include "SvgProcImage.h"
 #include "DrivePolicy.h"
 #include "DriveHardware.h"
+#include "CarHardware.h"
 /*-----------------------------------------*/
 
 /*-----------------------------------------*/
@@ -60,9 +61,8 @@ private:
 	void initMenuRun();
 	void initMenuCollect();
 private slots:
-    void on_shuaxin_clicked();  //刷新socket连接
-
-    void on_up_clicked();
+  
+	void on_up_clicked();
 
     void on_STOP_clicked();
 
@@ -133,15 +133,17 @@ public slots:
     void changeDial(int i);  //转盘值改变事件
 
     void release();  //转盘释放事件
-
-    void sendmsg(QString msg);   //多线程调用的发送消息函数
-
+	   
     void slotGetOneFrame(QImage img);   //获取图像
 
 	void DrawRunDirection(QImage& _img, RunCmd _run_dir);
 
 	void ShowOneFrameBgraOrg(QImage _img,const QDateTime _time);
 	void ShowOneFrameBgraSvg(QImage _img,const QDateTime _time);
+
+	void ShowOneFrameOnLabel(QImage * _img, const QDateTime * _time, QLabel * _qlab);
+
+	
 
 	void RcvOneFrameBgraOrg(QImage _img,const QDateTime _time);
 	void RcvOneFrameBgraSvg(QImage _img,const QDateTime _time);
@@ -159,10 +161,8 @@ public slots:
 private:
     Ui::MainWindow *ui;
 
-    QUrl url;          //socket连接的url
-
-    bool connectFlag;  //socket连接成功与否的标志
-
+    //QUrl url;          //socket连接的url
+	 
     Service service;   //线程
 
     QString path;      //数据文件路径
@@ -205,8 +205,6 @@ private:
     int obs_x;  //障碍物中心x坐标
     int obs_y;  //障碍物中心y坐标
     int obs_r;      //障碍物半径
-private:
-		//RunCmd mExecRunCmd;
  private:
 		PreProcImageOrg ppImageOrg;
 		PreProcImageSvg ppImageSvg;
@@ -214,6 +212,7 @@ private:
 		SVG_PROC_IMAGE		svgProcImage;
 		DrivePolicy			drivePolicy;
 		DriveHardware		driveHardware;
+		CarHardware			mCarHardware;
 private:
 		QThread mThreadPreShowBgraOrg;
 		QThread mThreadPreShowBgraSvg;
@@ -223,6 +222,10 @@ private:
 public:
 	void initThreadWorkObject();
 	void initThreadWorkConnect();
+
+	void initThreadWorkConnect_ImageShow();
+	void initThreadWorkConnect_RunPolicy();
+
 	void ThreadWork_Start();
 	void ThreadWork_Stop();
 	void ThreadWork_Wait();

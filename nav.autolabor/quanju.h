@@ -11,7 +11,7 @@ class Quanju
 public:
     Quanju();
     ~Quanju();
-    static QWebSocket websocket;
+   
     static double volatile v1;       //线速度
     static double volatile v2;       //角速度
     static double x;                 //线速度方向
@@ -23,7 +23,7 @@ public:
     static QQueue<QString> msgs;
     static QMutex mutex;
 public:
-	static void WebSocketSendMessage(QString _msg);
+	
 };
 
 #endif // QUANJU_H
