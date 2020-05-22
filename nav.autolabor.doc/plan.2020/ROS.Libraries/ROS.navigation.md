@@ -66,6 +66,8 @@ The following documentation assumes familiarity with the Robot Operating System.
 
 ​		ROS gmapping地图格式为pgm，另外有一个配套的yaml文件。GM 是便携式灰度图像格式(portable graymap file format)。
 
+​		地图采用三元占用：free(0), occupied(100), unknown(-1)。
+
 ```xml
  1<!--
  2  Copyright: 2016-2019 ROS小课堂 www.corvin.cn

@@ -1,7 +1,3 @@
----
-
----
-
 # 室内小车巡航算法B
 
 ## 一、导航目标
@@ -12,15 +8,42 @@
 
 ### 1. 硬件模块
 
-| 功能模块         | 硬件支持                   | 型号             | 详细                 |
-| ---------------- | -------------------------- | ---------------- | -------------------- |
-| 空间定位         | 无线定位                   | 蓝牙、LoRa、Wifi | 无线三点定位         |
-| 姿态反馈         | Motor&Encoder+三维电子罗盘 |                  | 电子罗盘作为反馈信号 |
-| 行驶方向路况采集 | Camera                     | Howell-Hi3516    | 摄像机               |
-| 四周行车路况采集 | radar                      |                  | 测距雷达             |
-| 车轮驱动系统     | Motor&Encoder              | Mega2560         | 驱动马达和电机编码器 |
+#### 1.1机器人结构
 
-#### 1.1 空间定位
+| 功能模块 | 硬件支持                         |
+| -------- | -------------------------------- |
+| 控制主板 | Raspberry Pi 2 Model B           |
+| 底盘结构 | Differential Drive (两轮差速)    |
+| 传感器   | UWB，IMU，Camera，radar，Encoder |
+| 电源     | 锂电池                           |
+
+##### 树莓派
+
+​		树莓派外设接口包括GPIO、PWM、UART、I²C、SPI等。使用这些外设接口。可以方便的与其他传感器通讯。
+
+#### 1.2硬件及电气特性
+
+| module                 | interface  | voltage（V） | **current**（mA） | SIZE（mm）  |
+| ---------------------- | ---------- | ------------ | ----------------- | ----------- |
+| power                  |            | 12.0         |                   |             |
+| Raspberry Pi 2 Model B | MicroUSB   | 5.0          |                   | 85x56x17    |
+| Arduino Mega 2560      | USB        | 5.0          |                   | 53.3x101.52 |
+| Motor                  |            | 12.0         |                   |             |
+| TFminiPlus             |            | 5.0          |                   | 35x19x21    |
+| LinkTrack P            | USB Type-C | 5.0          |                   | 60x29x10    |
+|                        |            |              |                   |             |
+
+#### 1.2传感器模块
+
+| 功能模块         | 硬件支持                 | 型号          | 详细                     |
+| ---------------- | ------------------------ | ------------- | ------------------------ |
+| 空间定位         | UWB，IMU（惯性测量单元） | LinkTrack UWB | 集成UWB定位与IMU测量单元 |
+| 姿态反馈         | Motor&Encoder，UWB，IMU  |               | 综合计算得出             |
+| 行驶方向路况采集 | Camera                   | Howell-Hi3516 | 摄像机                   |
+| 四周行车路况采集 | 激光雷达传感器           | TFminiPlus    | 测距雷达                 |
+| 车轮驱动系统     | Motor&Encoder            | Mega2560      | 驱动马达和电机编码器     |
+
+#### 1.2.1 空间定位
 
 ##### 功能简介
 
@@ -28,15 +51,39 @@
 
 ​		本项目为室内平面小车。小车行驶在二维[笛卡尔坐标系](https://baike.baidu.com/item/笛卡尔坐标系)中。
 
+##### 定位技术原理
+
+| 测量方法 | 英文全称                  | 中文             |
+| -------- | ------------------------- | ---------------- |
+| AOA      | Angle of Arriva           | 到达角度定位     |
+| TOA      | Time of Arriva            | 到达时间定位     |
+| TDOA     | Time Difference of Arriva | 到达时间差分法   |
+| TOF      | Time of flight            | 飞行时间测距法   |
+| RSS      | Received Signal Strength  | 接收信号强度定位 |
+|          |                           |                  |
+
+##### 几种定位比较
+
+| 技术                                                         | 精度          | 优点     | 缺点   | 场景 |
+| ------------------------------------------------------------ | ------------- | -------- | ------ | ---- |
+| GPS([全球卫星定位系统](https://www.baidu.com/s?wd=全球卫星定位系统&tn=SE_PcZhidaonwhc_ngpagmjz&rsv_dl=gh_pc_zhidao)) | 10米          |          |        |      |
+| GNSS(全球导航卫星系度统)                                     | 厘米          |          |        |      |
+| 基站定位                                                     | 500米到2000米 |          |        |      |
+| 蓝牙                                                         | 3米-5米       |          |        |      |
+| WIFI                                                         | 2米           |          |        |      |
+| 地磁定位                                                     | 0.1 米到 2 米 |          | 米级   |      |
+| RFID                                                         |               |          |        |      |
+| UWB                                                          | 1厘米-10厘米  | 实时性好 | 怕干扰 | 工厂 |
+
 ##### 传感器
 
-​		蓝牙、LoRa、Wifi。
+​	LinkTrack P。采用TOF技术 三边定位。
 
 ##### ROS
 
 
 
-#### 1.2姿态反馈
+#### 1.2.2姿态反馈
 
 ##### 功能简介
 
@@ -44,13 +91,15 @@
 
 ##### 传感器
 
-​		本项目为室内平面小车。没有俯仰（pitch）、滚转（roll）。车姿态由电子罗盘计算得出。
+​		本项目为室内平面小车。没有俯仰（pitch）、滚转（roll）。
+
+​		使用惯性测量单元（IMU）计算出偏航角（yaw）即可。
 
 ##### ROS
 
 ##### 	
 
-#### 1.3行驶方向路况采集
+#### 1.2.3行驶方向路况采集
 
 ##### 功能简介
 
@@ -58,9 +107,9 @@
 
 ##### 传感器
 
-​		本项目使用摄像机分析路况。采用空间识别相机识别路面及路面障碍物。摄像机为极坐标原点，小车前进方向为极轴，障碍物坐标为极坐标（ρ，θ）；
+​		本项目使用摄像机分析路况。采用空间识别相机识别路面及路面障碍物。摄像机为极坐标原点，小车前进方向为极轴，障碍物坐标为极坐标（ρ，θ）；也可以绘制出障碍物的3D点云。
 
-#### 1.4四周行车路况采集
+#### 1.2.4四周行车路况采集
 
 ##### 功能简介
 
@@ -68,9 +117,9 @@
 
 ##### 传感器
 
-​		雷达测距。
+​		TFminiPlus激光雷达传感器。量程 0.1-12m，只有10cm的盲区。支持UART 、IC接口。可以通过IIC与树莓派连接。
 
-#### 1.5车轮驱动系统
+#### 1.2.5车轮驱动系统
 
 功能简介
 
@@ -82,18 +131,20 @@
 
 模块
 
-​		本项目使用[Mega2560](https://baike.baidu.com/item/Mega2560/973064?fr=aladdin)驱动小车运动。并结合小车轴距、轮胎大小动态计算小车位姿。
+​		本项目使用[Mega2560](https://baike.baidu.com/item/Mega2560/973064?fr=aladdin)驱动两轮差速车运动。并结合小车轴距、轮胎大小动态计算小车位姿。
+
+
 
 ### 2. 软件模块
 
-| 功能模块     | 软件包                                                       |
-| ------------ | ------------------------------------------------------------ |
-| 位置姿态控制 | /                                                            |
-| 视觉图像分析 | /                                                            |
-| 运动控制     | ROS Package [ros_arduino_bridge](https://wiki.ros.org/ros_arduino_bridge) |
-| 雷达测距     | /                                                            |
-| 构建地图     | ROS Package [gmapping](http://wiki.ros.org/action/fullsearch/gmapping?action=fullsearch&context=180&value=linkto%3A"gmapping") |
-| 路径规划     | ROS Package [move_base](http://wiki.ros.org/action/fullsearch/move_base?action=fullsearch&context=180&value=linkto%3A"move_base") |
+| 功能模块     | 库          | 软件包                                                       |
+| ------------ | ----------- | ------------------------------------------------------------ |
+| 位置姿态控制 |             | /                                                            |
+| 视觉图像分析 |             | /                                                            |
+| 运动控制     | ROS Package | [ros_arduino_bridge](https://wiki.ros.org/ros_arduino_bridge) |
+| 雷达测距     |             | /                                                            |
+| 构建地图     | ROS Package | [map_server](http://wiki.ros.org/action/fullsearch/map_server?action=fullsearch&context=180&value=linkto%3A"map_server") |
+| 路径规划     | ROS Package | [move_base](http://wiki.ros.org/action/fullsearch/move_base?action=fullsearch&context=180&value=linkto%3A"move_base") |
 
 #### 2.1位置姿态控制
 
@@ -139,7 +190,9 @@ This stack includes a ROS driver and base controller for Arduino-compatible micr
 
 ##### 2.5.1静态地图
 
-​		静态地图是指那些静止车辆驶入的河流、山川、建筑，墙体，草坪等。静态地图获取方式主要是测绘。
+​		室内静态地图是指墙体、桌椅、静止驶入区域等。
+
+​		静态地图获取方式主要是测绘。
 
 | 地图类型           | 地图坐标系                                                   | 来源     |
 | ------------------ | ------------------------------------------------------------ | -------- |
