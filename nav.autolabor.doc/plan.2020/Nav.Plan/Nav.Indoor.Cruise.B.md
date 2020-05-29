@@ -10,30 +10,60 @@
 
 #### 1.1机器人结构
 
-| 功能模块 | 硬件支持                         |
-| -------- | -------------------------------- |
-| 控制主板 | Raspberry Pi 2 Model B           |
-| 底盘结构 | Differential Drive (两轮差速)    |
-| 传感器   | UWB，IMU，Camera，radar，Encoder |
-| 电源     | 锂电池                           |
+| 功能模块 | 硬件支持                                                     |
+| -------- | ------------------------------------------------------------ |
+| 控制主板 | Raspberry Pi 2 Model B                                       |
+| 底盘结构 | Differential Drive (两轮差速)                                |
+| 传感器   | [UWB](https://baike.baidu.com/item/UWB/184309?fr=aladdin)，IMU，Camera，radar，Encoder |
+| 电源     | 锂电池                                                       |
 
 ##### 树莓派
 
 ​		树莓派外设接口包括GPIO、PWM、UART、I²C、SPI等。使用这些外设接口。可以方便的与其他传感器通讯。
 
-#### 1.2硬件及电气特性
+#### 1.2 硬件及电气特性
 
-| module                 | interface  | voltage（V） | **current**（mA） | SIZE（mm）  |
-| ---------------------- | ---------- | ------------ | ----------------- | ----------- |
-| power                  |            | 12.0         |                   |             |
-| Raspberry Pi 2 Model B | MicroUSB   | 5.0          |                   | 85x56x17    |
-| Arduino Mega 2560      | USB        | 5.0          |                   | 53.3x101.52 |
-| Motor                  |            | 12.0         |                   |             |
-| TFminiPlus             |            | 5.0          |                   | 35x19x21    |
-| LinkTrack P            | USB Type-C | 5.0          |                   | 60x29x10    |
-|                        |            |              |                   |             |
+| module                 | power interface | data interface       | voltage（V） | **current**（mA） | power(W) | SIZE（mm）  |
+| ---------------------- | --------------- | -------------------- | ------------ | ----------------- | -------- | ----------- |
+| power                  | DC 2.1mm        | /                    | 12.0         |                   |          |             |
+| Raspberry Pi 2 Model B | MicroUSB        | /                    | 5.1          | 350               | 1.75     | 85x56x17    |
+| Raspberry Pi 4 Model B | USB Type-C      | /                    | 5.1          | 600               | 3        | 85x56x17    |
+| Arduino Mega 2560      | DC 2.1mm        | USB Type B           | 5.0          |                   |          | 53.3x101.52 |
+| Motor                  | /               | IO-1                 | 12.0         | ?                 | ?        | ?           |
+| TFminiPlus             | GH1.25 4P       | GH1.25 4P            | 5.0          | 110mA             | 0.55     | 35x19x21    |
+| LinkTrack P            | USB Type-C      | USB Type C/GH1.25 4P | 5.0          | 270               | 1.35     | 60x29x10    |
+|                        |                 |                      |              |                   |          |             |
 
-#### 1.2传感器模块
+##### 1.2.1 Raspberry Pi 驱动能力
+
+​	Raspberry Pi 电源建议使用5V 3A 以上电源供电
+
+| **Product**            | 供电                                                         | 裸板耗电(mA) | USB 总功率 |
+| ---------------------- | ------------------------------------------------------------ | ------------ | ---------- |
+| Raspberry Pi 2 Model B | [2.5A micro USB](https://www.raspberrypi.org/products/raspberry-pi-universal-power-supply/) | 350          | 600mA      |
+| Raspberry Pi 4 Model B | [3A USB-C Supply](https://www.raspberrypi.org/products/type-c-power-supply/) | 600          | 1.2A       |
+|                        |                                                              |              |            |
+
+​		USB外设建议使用自供电带隔离的USB HUB来连接外设。
+
+##### 1.2.2 单点激光雷达模组
+
+​		八路单点激光，在正常模式下，同时工作瞬时电流可达到1.12A。建议工作在低功耗模式下。
+
+| module        | 平均电流(mA) | 瞬时电流(mA) | 低功耗模式(mA) |
+| ------------- | ------------ | ------------ | -------------- |
+| TFminiPlus    | 110          | 140          | 20             |
+| TFminiPlus x8 | 880          | 1120         | 160            |
+|               |              |              |                |
+
+##### 1.2.3 LinkTrack定位惯性导航模块
+
+​		LinkTrack P 供电接口USB Type-C。耗电270mA。Raspberry Pi 4 Model B的USB总功耗1.2A。LinkTrack P可直接由Raspberry Pi 4 供电。
+
+​		LinkTrack P 另一个接口为GH1.25 4P。UART：接口线序简写为“V G R T”，对应VCC、GND、RX、TX（TTL 3.3V 电平），图示中线序从上到下
+（从左到右）与接口一一对应；LTS、LTP 存在一个UART 接口，LTSS、LTPS 存在两个电气连接完全一致的UART 接口。
+
+#### 1.3传感器模块
 
 | 功能模块         | 硬件支持                 | 型号          | 详细                     |
 | ---------------- | ------------------------ | ------------- | ------------------------ |
@@ -43,7 +73,7 @@
 | 四周行车路况采集 | 激光雷达传感器           | TFminiPlus    | 测距雷达                 |
 | 车轮驱动系统     | Motor&Encoder            | Mega2560      | 驱动马达和电机编码器     |
 
-#### 1.2.1 空间定位
+#### 1.3.1 空间定位
 
 ##### 功能简介
 
@@ -83,7 +113,7 @@
 
 
 
-#### 1.2.2姿态反馈
+#### 1.3.2姿态反馈
 
 ##### 功能简介
 
@@ -99,7 +129,7 @@
 
 ##### 	
 
-#### 1.2.3行驶方向路况采集
+#### 1.3.3行驶方向路况采集
 
 ##### 功能简介
 
@@ -109,7 +139,7 @@
 
 ​		本项目使用摄像机分析路况。采用空间识别相机识别路面及路面障碍物。摄像机为极坐标原点，小车前进方向为极轴，障碍物坐标为极坐标（ρ，θ）；也可以绘制出障碍物的3D点云。
 
-#### 1.2.4四周行车路况采集
+#### 1.3.4四周行车路况采集
 
 ##### 功能简介
 
@@ -119,7 +149,7 @@
 
 ​		TFminiPlus激光雷达传感器。量程 0.1-12m，只有10cm的盲区。支持UART 、IC接口。可以通过IIC与树莓派连接。
 
-#### 1.2.5车轮驱动系统
+#### 1.3.5车轮驱动系统
 
 功能简介
 
