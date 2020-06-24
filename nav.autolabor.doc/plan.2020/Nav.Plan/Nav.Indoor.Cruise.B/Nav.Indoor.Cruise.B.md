@@ -30,7 +30,7 @@
 | Raspberry Pi 4 Model B | USB Type-C      | /                    | 5.1          | 600               | 3        | 85x56x17    |
 | Arduino Mega 2560      | DC 2.1mm        | USB Type B           | 5.0          |                   |          | 53.3x101.52 |
 | Motor                  | /               | IO-1                 | 12.0         | ?                 | ?        | ?           |
-| TFminiPlus             | GH1.25 4P       | GH1.25 4P            | 5.0          | 110mA             | 0.55     | 35x19x21    |
+| TFminiPlus             | GH1.25 4P       | MX1.25 4P            | 5.0          | 110mA             | 0.55     | 35x19x21    |
 | LinkTrack P            | USB Type-C      | USB Type C/GH1.25 4P | 5.0          | 270               | 1.35     | 60x29x10    |
 |                        |                 |                      |              |                   |          |             |
 

@@ -251,8 +251,10 @@ void MainWindow::disconnected()
 //小车连接失败
 void MainWindow::errorconnected(QAbstractSocket::SocketError error)
 {
-    ui->xieche->setText("小车连接失败！");
-    qDebug()<<tr("小车连接失败，失败原因：")<<error<<endl;
+	if (ui!=nullptr){
+		ui->xieche->setText("小车连接失败！");
+		qDebug()<<tr("小车连接失败，失败原因：")<<error<<endl;
+	}   
 }
 
 //停止按钮事件
