@@ -1,4 +1,4 @@
-# RaspberryPi2b  Upgrade to 4b
+# RaspberryPi 3b  Upgrade to 4b
 
 [TOC]
 
@@ -51,7 +51,7 @@
 
 | item     | old                                                          | new                                                          | confirm |
 | -------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------- |
-| hardware | [Raspberry Pi 2 Model B](https://www.raspberrypi.org/products/raspberry-pi-2-model-b/) | [Raspberry Pi 4 Model B](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/) | Y       |
+| hardware | [Raspberry Pi 3 Model B](https://www.raspberrypi.org/products/raspberry-pi-3-model-b/) | [Raspberry Pi 4 Model B](https://www.raspberrypi.org/products/raspberry-pi-4-model-b/) | Y       |
 | os       | Ubuntu 16.04 LTS                                             | Ubuntu 20.04 LTS                                             | Y       |
 
 ### 4.2 软件库
@@ -78,11 +78,16 @@
 
 # 五、物品清单
 
-| 物品                               | 数量 | confirm |
-| ---------------------------------- | ---- | ------- |
-| Raspberry Pi 4B 主板               | 1    | Y       |
-| Micro HDMI 线                      | 1    | Y       |
-| 电源适配器 5V 3A Type-C带开关      | 1    | Y       |
-| 闪迪（SanDisk）16GB TF（MicroSD）  | 1    | Y       |
-| Raspberry Pi 4B 主板+风扇+塑料外壳 | 1    | Y       |
+| 物品                              | 数量 | confirm |
+| --------------------------------- | ---- | ------- |
+| Raspberry Pi 4B 主板              | 2    | Y       |
+|                                   |      |         |
+| Raspberry Pi 3B 主板              |      |         |
+| Micro HDMI 线                     | 1    | Y       |
+| micro USB 线                      | 1    | Y       |
+| 电源适配器 5V 3A Type-C带开关     | 1    | Y       |
+| 闪迪（SanDisk）16GB TF（MicroSD） | 2    | Y       |
+| 风扇+4B塑料外壳                   | 1    | Y       |
+| 风扇+2B金属外壳                   | 1    | Y       |
+|                                   |      |         |
 
