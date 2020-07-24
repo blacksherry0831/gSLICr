@@ -7,9 +7,21 @@
 #include <QtWebSockets/QtWebSockets>
 #include <QEvent>
 #include <QTimer>
-#include <service.h>
+#include <QtWebSockets/QtWebSockets>
+#include <QDebug>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QKeyEvent>
+#include <QFile>
+#include <QDir>
+#include <QTextStream>
+#include <QDateTime>
+#include <QDir>
+#include <QScreen>
+#include <QPixmap>
+#include <QPainter>
+#include <QRect>
 #include <QGraphicsScene>
-#include <videoplayer.h>
 #include <QList>
 #include <QPoint>
 #include <QPolygonF>
@@ -17,8 +29,10 @@
 #include <opencv2\opencv.hpp>
 /*-----------------------------------------*/
 #include <QT_SDK_LIB/QBase.h>
+#include <OPENCV_QT_SDK_LIB\OpencvQtBase.h>
 /*-----------------------------------------*/
 #include <savepicture.h>
+#include <videoplayer.h>
 /*-----------------------------------------*/
 #include "PreProcImageOrg.h"
 #include "PreProcImageSvg.h"
@@ -27,7 +41,12 @@
 #include "DriveHardware.h"
 #include "CarHardware.h"
 /*-----------------------------------------*/
-
+#include "ImageProcCalibration.hpp"
+#include "ImageProcTopDown.hpp"
+/*-----------------------------------------*/
+#include "ROS_LIB/sensor_msgs_PointCloud.hpp"
+#include "ROS_LIB/tf_tfMessage.hpp"
+#include "ROS_LIB/advertise_a_topic.hpp"
 /*-----------------------------------------*/
 /**
 *
@@ -52,14 +71,17 @@ public:
 private:
 	bool mIsCarRunAuto;
 	bool mShowDirection;
+	bool mIsAdvertiseTopic;
 private:
-	QDateTime mRumCmdTime;
+	void advertiseTopic();
 private:
 	void initParam();
 	void initMenu();
 	void initMenuShow();
 	void initMenuRun();
 	void initMenuCollect();
+	void initMenuConnect();
+	void initMainWindowUI();
 private slots:
   
 	void on_up_clicked();
@@ -89,22 +111,13 @@ private slots:
     void on_start_clicked();
 
     void on_stop_clicked();
-
-    void on_tu_startButton_clicked();
-
-    void on_tu_stopButton_clicked();
-
+	   
     void on_open_cam_clicked();
 
     void on_close_cam_clicked();
-	    
-    
-
+	  
     void on_obs_box_activated(const QString &arg1);
-
-    void s_timeout();
-
-
+	
 	void run_policy(
 		RunCmd _cmd,
 		double _speed_v1,
@@ -134,12 +147,10 @@ public slots:
 
     void release();  //转盘释放事件
 	   
-    void slotGetOneFrame(QImage img);   //获取图像
-
-	void DrawRunDirection(QImage& _img, RunCmd _run_dir);
-
 	void ShowOneFrameBgraOrg(QImage _img,const QDateTime _time);
 	void ShowOneFrameBgraSvg(QImage _img,const QDateTime _time);
+	void ShowOneFrameCalibrate(QImage _img, const QDateTime _time);
+	void ShowOneFrameTopDown(QImage _img, const QDateTime _time);
 
 	void ShowOneFrameOnLabel(QImage * _img, const QDateTime * _time, QLabel * _qlab);
 
@@ -147,53 +158,26 @@ public slots:
 
 	void RcvOneFrameBgraOrg(QImage _img,const QDateTime _time);
 	void RcvOneFrameBgraSvg(QImage _img,const QDateTime _time);
-
-    void timeouts();        //定时器超时函数
-	
+	   	
 	void menu_show_run_direction(bool _v);
 	void menu_run_auto(bool _r);
 	void menu_run_current_once(bool _r);
+					
+	void menu_toggle_calibration_SVG_SRC(bool _f);
 
-	void run_status_car(bool _s);
 
-	bool IsCurrentRunCmdStable();
-				
+	void PublishPointCloud(QVector<QVector3D> _ptc);
 private:
     Ui::MainWindow *ui;
-
-    //QUrl url;          //socket连接的url
-	 
-    Service service;   //线程
-
+	   
     QString path;      //数据文件路径
 
     int last_key;     //上一次按键的值
 
 	QSharedPointer<VideoPlayer>		mPlayer;    //ffpmeg编解码
 		
-
     QImage mImage;           //记录当前图像 用于展示
-    QImage mImage2;          //记录当前图像 用于保存
-    QImage mImage3;          //记录当前图像 用于模拟
-
-//    ScreenRecorder *m_screenRecorder; //录频对象
-//    bool m_recordeState;   //录频状态
-//    QString m_recordPath;    //录频文件路径
-
-    QTimer *m_timer;   //定时器 用来测试1秒多少张图
-    int i;              //记录图片张数
-
-    QTimer *s_timer;    //定时器 用于控制相同指令发送的时间间隔
-    bool s_flag;        //相同指令发送许可标志；   1为可发生 0为不可发送
-    bool d_flag;        //不同指令发送许可标志；   1为可发生 0为不可发送
-
-    bool tuflag;        //开始截图标志
-    SavePicture *savePicture1;   //截图保存 进程1
-    SavePicture *savePicture2;   //截图保存 进程2
-    SavePicture *savePicture3;   //截图保存 进程3
-    int savePictureCount;        //用于保存图片计数
-	
-    //最近点坐标
+               
     int point1_x;
     int point1_y;
     int point2_x;
@@ -209,26 +193,33 @@ private:
 		PreProcImageOrg ppImageOrg;
 		PreProcImageSvg ppImageSvg;
 private:
-		SVG_PROC_IMAGE		svgProcImage;
-		DrivePolicy			drivePolicy;
-		DriveHardware		driveHardware;
-		CarHardware			mCarHardware;
+		SVG_PROC_IMAGE			svgProcImage;
+		ImageProcCalibration	ImageProcCal;
+		ImageProcTopDown		ImageProcTopDown;
+		DriveHardware			driveHardware;
+		CarHardware				mCarHardware;
 private:
 		QThread mThreadPreShowBgraOrg;
 		QThread mThreadPreShowBgraSvg;
 private:
 		QThread mThreadProcSvg;
-		QThread mThreadRunPolicy;
+private:
+	QVector<QObject*> m_thread_obj;
+	QVector<QSharedPointer<QThread>> m_thread_pool;
+public:
+	void ThreadWork_Init();
+	void ThreadWork_Start();
+	void ThreadWork_Stop();
+	void ThreadWork_Wait();
 public:
 	void initThreadWorkObject();
 	void initThreadWorkConnect();
 
 	void initThreadWorkConnect_ImageShow();
-	void initThreadWorkConnect_RunPolicy();
+	void initThreadWorkConnect_Calibration();
+	void initThreadWorkConnect_SVG();
+	void initThreadWorkConnect_TopDown();
 
-	void ThreadWork_Start();
-	void ThreadWork_Stop();
-	void ThreadWork_Wait();
 public:
     QRect *m_rect;            //录频区域
 
@@ -244,8 +235,7 @@ protected:
     void send();           //socket发送消息  按键消息实时发送
 
     void barChange();      //转盘进度条的显示
-
-    void jietu();          //视频截图
+	  
 
 };
 

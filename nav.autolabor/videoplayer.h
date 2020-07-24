@@ -53,7 +53,7 @@ private:
 private:
 	int videoStreamIdx;
 private:
-	const std::string rtsp_url = "rtsp://192.168.0.11/stream1";
+	const std::string rtsp_url = "rtsp://192.168.99.201/stream1";
 private:
 	int mThreadRun;
 	int mDecodeLoop;

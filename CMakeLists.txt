@@ -46,7 +46,9 @@ ADD_SUBDIRECTORY(gSLICr_Lib)
 ###############################################################################
 ADD_SUBDIRECTORY(ORUtils)
 ADD_SUBDIRECTORY(MY_SDK_LIB)
+ADD_SUBDIRECTORY(ROS_LIB)
 ADD_SUBDIRECTORY(QT_SDK_LIB)
+ADD_SUBDIRECTORY(OPENCV_QT_SDK_LIB)
 ADD_SUBDIRECTORY(SGVBaseCode)
 ADD_SUBDIRECTORY(MemcpyCv_gSLICr)
 ###############################################################################

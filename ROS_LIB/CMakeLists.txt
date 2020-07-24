@@ -2,25 +2,32 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.8.1)
 ###############################################################################
 C11_Config()  
-ConfigOpenCv()
 ###############################################################################
-
+ CONFIGQT()
 ###############################################################################
-SET(MY_SDK_SRCS
+SET(ROS_LIB_SRCS
+		
+	ROSBasic.cpp
+	
+	rosbridge_v2_0_protocol.cpp
+	
+	std_msgs_Header.cpp
+	
+	sensor_msgs_ChannelFloat32.cpp
+	sensor_msgs_PointCloud.cpp
 
-	Base.cpp	
-	
-	ImgProcCluster.cpp
-	ImgProcBase.cpp
-	
-	TimeMeasure.cpp
+	geometry_msgs_Transform.cpp
+	geometry_msgs_TransformStamped.cpp
+	tf_tfMessage.cpp
 
-	ImgProcCalibrate.cpp
-	ImgProcAirview.cpp
+	advertise_a_topic.cpp
 	
+	
+
+
 	)
 	
-ADD_LIBRARY(MY_SDK_LIB   STATIC    ${MY_SDK_SRCS})
+ADD_LIBRARY(ROS_LIB   STATIC    ${ROS_LIB_SRCS})
 ###############################################################################
 	
 ##############################################################################

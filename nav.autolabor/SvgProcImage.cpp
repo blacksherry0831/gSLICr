@@ -47,7 +47,10 @@ void SVG_PROC_IMAGE::ImageProc(QImage _img, const QDateTime _time)
 	if(this->IsValidQImage(_img)) {
 
 		if (this->IsLatestImage(_time)) {
-			ProcImageSVG(_img, _time);
+
+		ProcImageSVG(_img, _time);
+
+					
 		}
 		else
 		{
@@ -85,8 +88,12 @@ void SVG_PROC_IMAGE::ProcImageSVG(const QImage& _img, const QDateTime& _time)
 {
 	QImage img_svg(_img.width(), _img.height(), _img.format());
 
-	SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(_img, img_svg);
-
+	if (1) {
+		SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(_img, img_svg);
+	}else{
+		img_svg = _img.copy();
+	}
+		
 	emit sig_1_frame_bgra(img_svg,_time);
 }
 /*-----------------------------------------*/

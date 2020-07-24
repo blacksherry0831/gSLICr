@@ -57,5 +57,7 @@ add_executable(EXE_NAV_AUTOLABOR ${SRC_FILES} ${HEAD_FILES} ${RCC_FILES} ${WRAP_
 target_link_libraries(EXE_NAV_AUTOLABOR
 						${FFMPEG_LIB}
 						QT_SDK_LIB
+						OPENCV_QT_SDK_LIB
 						SGV
+						ROS_LIB
 						)

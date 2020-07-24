@@ -39,10 +39,15 @@ public:
 public:
 	bool IsRunning();
 public:
+	static QString Json2Str(const QJsonObject _q_jo);
+public:
 	void	WebSocketSendMessage(QString _msg);
 	int		WebSocketSendMessageEx(QString _msg);
 	QString GetJsonCmd(const float _x, const float _y, const float _v1, const float _v2);
 	void sendRunCmdMsg(const float _x, const float _y, const float _v1, const float _v2, const int _ms);
+
+	static QString getRosPointCloudJson(QVector<QPoint> _pt);
+
 public:
 	void up_once(
 		const float _v1,

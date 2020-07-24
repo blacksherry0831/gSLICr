@@ -8,7 +8,7 @@ CarHardware::CarHardware(QObject *parent) :QObject(parent)
 {
 	this->mReconnect = true;
 	this->mIsConnected = false;
-	this->mUrl = "ws://192.168.0.10:9090";
+	this->mUrl = "ws://192.168.99.200:9090";
 }
 /*----------------------------------------------------------------*/
 /**
@@ -107,10 +107,8 @@ QString CarHardware::GetJsonCmd(
 	json.insert("op", "publish");
 	json.insert("topic", "/cmd_vel");
 	json.insert("msg", msg);
-	QJsonDocument json_doc;
-	json_doc.setObject(json);
-	QString msgss = json_doc.toJson(QJsonDocument::Compact);
-	return msgss;
+
+	return Json2Str(json);
 }
 /*----------------------------------------------------------------*/
 /**
@@ -126,6 +124,31 @@ void CarHardware::sendRunCmdMsg(
 {
 	const QString msgss = GetJsonCmd(_x, _y, _v1, _v2);
 	this->WebSocketSendMessageEx(msgss);
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+QString CarHardware::getRosPointCloudJson(QVector<QPoint> _pt)
+{
+	QJsonObject PointCloud;
+	
+	QJsonObject header;
+	QJsonObject points;		
+	QJsonObject channels;
+	QJsonObject msg;
+	
+	msg.insert("header", header);
+	msg.insert("points", points);
+	msg.insert("channels", channels);
+	
+	PointCloud.insert("op", "publish");
+	PointCloud.insert("topic", "/camera_depth_front");
+	PointCloud.insert("msg", msg);
+	
+	
+	return Json2Str(PointCloud);
 }
 /*----------------------------------------------------------------*/
 /**
@@ -300,6 +323,20 @@ void CarHardware::OnWebSocketDisconnected()
 bool CarHardware::IsRunning()
 {
 	return mRunning;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+QString CarHardware::Json2Str(const QJsonObject _q_jo)
+{
+
+	QJsonDocument json_doc;
+	json_doc.setObject(_q_jo);
+	const QString msgss = json_doc.toJson(QJsonDocument::Compact);
+	return msgss;
+
 }
 /*----------------------------------------------------------------*/
 /**
