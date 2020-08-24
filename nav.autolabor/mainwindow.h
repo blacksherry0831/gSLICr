@@ -76,12 +76,29 @@ private:
 	void advertiseTopic();
 private:
 	void initParam();
+	void initObject();
+private:
 	void initMenu();
 	void initMenuShow();
 	void initMenuRun();
 	void initMenuCollect();
 	void initMenuConnect();
+	void initMenuImageProcessing();
+private:
+
+private:
 	void initMainWindowUI();
+	void initMainWindowUI_Connect();
+private:
+	void initTabCfg();
+	void initTabCfgGroundPlane();
+	void initTabCfgCameraCalibration();
+private:
+	void connectTabCfg();
+	void connectTabCfgGroundPlane();
+	void connectTabCfgCameraCalibration();
+private:
+	void InitWebSocket();
 private slots:
   
 	void on_up_clicked();
@@ -174,7 +191,7 @@ private:
 
     int last_key;     //上一次按键的值
 
-	QSharedPointer<VideoPlayer>		mPlayer;    //ffpmeg编解码
+
 		
     QImage mImage;           //记录当前图像 用于展示
                
@@ -193,26 +210,27 @@ private:
 		PreProcImageOrg ppImageOrg;
 		PreProcImageSvg ppImageSvg;
 private:
-		SVG_PROC_IMAGE			svgProcImage;
-		ImageProcCalibration	ImageProcCal;
-		ImageProcTopDown		ImageProcTopDown;
-		DriveHardware			driveHardware;
-		CarHardware				mCarHardware;
+		QSharedPointer<VideoPlayer>				mImagePlayer;    //ffpmeg编解码
 private:
-		QThread mThreadPreShowBgraOrg;
-		QThread mThreadPreShowBgraSvg;
+		QSharedPointer<SVG_PROC_IMAGE>			mImageProcSVG;
+		QSharedPointer<ImageProcCalibration>	mImageProcCal;
+		QSharedPointer<ImageProcTopDown>		mImageProcTopDown;
+		
 private:
-		QThread mThreadProcSvg;
+		QSharedPointer<CarHardware>				mCarHardware;
 private:
-	QVector<QObject*> m_thread_obj;
+	QVector<QSharedPointer<QObject>> m_thread_obj;
 	QVector<QSharedPointer<QThread>> m_thread_pool;
 public:
 	void ThreadWork_Init();
+	void ThreadWork_Init_thread();
+	void ThreadWork_Init_obj();
+
 	void ThreadWork_Start();
 	void ThreadWork_Stop();
 	void ThreadWork_Wait();
 public:
-	void initThreadWorkObject();
+	
 	void initThreadWorkConnect();
 
 	void initThreadWorkConnect_ImageShow();

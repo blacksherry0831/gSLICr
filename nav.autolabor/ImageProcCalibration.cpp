@@ -6,7 +6,7 @@
 /*-----------------------------------------*/
 ImageProcCalibration::ImageProcCalibration()
 {
-
+	this->mIsImageProc = false;
 }
 /*-----------------------------------------*/
 /**
@@ -48,7 +48,7 @@ void ImageProcCalibration::ImageProc(QImage _img, const QDateTime _time)
 		}
 		else
 		{
-			qDebug() << "Calibration time out" << endl;
+			//qDebug() << "Calibration time out" << endl;
 		}
 
 	}
@@ -66,7 +66,7 @@ bool ImageProcCalibration::IsLatestImage(const QDateTime & _time,const int64 _ms
 	if (ms_diff<_ms){
 		return true;
 	}else{
-		qDebug() << ms_diff<<"ms";
+		//qDebug() << ms_diff<<"ms";
 	}
 	
 	return false;
@@ -88,30 +88,46 @@ void ImageProcCalibration::ProcImageFrame(const QImage& _img, const QDateTime& _
 /*-----------------------------------------*/
 void ImageProcCalibration::ProcImageFrame01(const QImage & _img, const QDateTime & _time)
 {
-	QImage  qimg=_img.copy();
-	CvSize img_sz_t = cvSize(qimg.width(), qimg.height());
-	const uchar* data_t = qimg.bits();
-	const int step_t = qimg.bytesPerLine();
-	IplImage* img_t = cvCreateImageHeader(img_sz_t, IPL_DEPTH_8U, 4);
-	cvSetData(img_t,(void*) data_t, step_t);
-	{
-		m_imgProcCal.IncFrame();
-		if (m_imgProcCal.IsDetectFrame()) {
-			int find;
-			m_imgProcCal.Init_Intrinsics_Distortion(img_t);
-			m_imgProcCal.Calculate_Intrinsics_Distortion(img_t,find);
-			m_imgProcCal.DrawProgressBar(img_t);
 
-			m_imgProcCal.calibration_image(img_t);
+	if (this->mIsImageProc){
 
-			emit sig_1_frame_bgra(qimg, _time);
-						
+		QImage  qimg = _img.copy();
+		CvSize img_sz_t = cvSize(qimg.width(), qimg.height());
+		const uchar* data_t = qimg.bits();
+		const int step_t = qimg.bytesPerLine();
+		IplImage* img_t = cvCreateImageHeader(img_sz_t, IPL_DEPTH_8U, 4);
+		cvSetData(img_t, (void*)data_t, step_t);
+		{
+			m_imgProcCal.IncFrame();
+			if (m_imgProcCal.IsDetectFrame()) {
+				int find;
+				m_imgProcCal.Init_Intrinsics_Distortion(img_t);
+				m_imgProcCal.Calculate_Intrinsics_Distortion(img_t, find);
+				m_imgProcCal.DrawProgressBar(img_t);
+
+				m_imgProcCal.calibration_image(img_t);
+
+				emit sig_1_frame_bgra(qimg, _time);
+
+			}
+
 		}
+		cvReleaseImageHeader(&img_t);
 
-		
-
+	}else{
+		emit sig_1_frame_bgra(_img, _time);
 	}
-	cvReleaseImageHeader(&img_t);
+
+	
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcCalibration::setImageProc(bool _f)
+{
+	this->mIsImageProc = _f;
 }
 /*-----------------------------------------*/
 /**

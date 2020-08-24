@@ -350,6 +350,33 @@ int ImgProcAirView::BirdsImage(IplImage * _img)
 *
 */
 /*-----------------------------------------*/
+void ImgProcAirView::setDstBoard2Camera(const double _dst)
+{
+	this->m_real_board_2_camera = _dst;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::setBoardSize_W(const int _w)
+{
+	this->SetBoard(_w, board_h);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::setBoardSize_H(const int _h)
+{
+	this->SetBoard(board_w, _h);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
 void ImgProcAirView::AllocateStorage(const IplImage *_img)
 {
 	corners = new CvPoint2D32f[board_n];
@@ -394,6 +421,24 @@ float  ImgProcAirView::MetersPerPixel()
 {
 	const float   meters_per_pixel = m_board_cell_meters / m_board_cell_pixels;
 	return meters_per_pixel;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::setCellSize(const double _sz)
+{
+	this->m_board_cell_meters = _sz;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::setCellPixel(const double _sz)
+{
+	this->m_board_cell_pixels = _sz;
 }
 /*-----------------------------------------*/
 /**

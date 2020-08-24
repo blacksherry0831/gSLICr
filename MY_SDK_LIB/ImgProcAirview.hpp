@@ -22,9 +22,9 @@ private:
 	CvSize board_sz;
 	int  black;
 private:
-	float m_real_board_2_camera;
-	float m_board_cell_meters;
-	float m_board_cell_pixels;
+	double m_real_board_2_camera;//The distance between  board center to camera center
+	double m_board_cell_meters;
+	double m_board_cell_pixels;
 private:
 	std::string m_xml_homography;
 	CvMat *H;
@@ -63,6 +63,9 @@ public:
 	int FindChessBoard(IplImage *_img);
 	int BirdsImage(IplImage *_img);
 public:
-
-
+	void setDstBoard2Camera(const double _dst);
+	void setBoardSize_W(const int _w);
+	void setBoardSize_H(const int _h);
+	void setCellSize(const double _sz);
+	void setCellPixel(const double _sz);
 };

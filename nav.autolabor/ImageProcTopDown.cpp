@@ -88,7 +88,7 @@ void ImageProcTopDown::PushPointAddAxisZ(
 	const float Y = _pt.y();
 	const float Z = _pt.z();
 	const float Z_b  = Z_range / 2;
-	const float STEP = 0.1;
+	const float STEP = 0.1F;
 
 	for (float zi =0; zi < Z_b; zi+=STEP){
 		const QVector3D pt(X,Y,Z+zi);
@@ -176,6 +176,87 @@ void ImageProcTopDown::ProcImageFrame(const QImage& _img, const QDateTime& _time
 	}
 	cvReleaseImageHeader(&img_t);
 	
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::setBoardSize_W(const int _w)
+{
+	this->m_imgProcAirV.setBoardSize_W(_w);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::setBoardSize_H(const int _h)
+{
+	this->m_imgProcAirV.setBoardSize_H(_h);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::setDstBoard2Camera(const double _dst)
+{
+	this->m_imgProcAirV.setDstBoard2Camera(_dst);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::setSquareSize(const double _sz)
+{
+	this->m_imgProcAirV.setCellSize(_sz);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::setMapSize(const double _sz)
+{
+	this->m_imgProcAirV.setCellPixel(_sz);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::setMapSize(const QString _sz)
+{
+	this->setMapSize(_sz.toDouble());
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::setCalGndMode(bool _m)
+{
+	this->mCalGndMode=_m;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::setReCalGndPlane(bool _m)
+{
+	this->mReCalGndPlane = _m;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::reCalGndPlane()
+{
+	this->setReCalGndPlane(true);
 }
 /*-----------------------------------------*/
 /**

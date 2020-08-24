@@ -17,96 +17,32 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+
     ui->setupUi(this);
+
 	this->initParam();
-    
+	this->initObject();
+		
 	this->initMenu();
-	
-	
-	mCarHardware.initConnect();
-	mCarHardware.open();
-	const QWebSocket* p_ws = mCarHardware.GetWebSocket();
-    connect(p_ws,SIGNAL(connected()),this,SLOT(onconnected()));
-    connect(p_ws,SIGNAL(disconnected()),this,SLOT(disconnected()));
-    connect(p_ws,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(errorconnected(QAbstractSocket::SocketError)));
 
- 
+	this->initTabCfg();
+	this->connectTabCfg();
+
 	this->initMainWindowUI();
-   
-    
-
-    //转盘设置
-    ui->dial->setMaximum(300);  //最大值
-    ui->dial->setMinimum(0);    //最小值
-    ui->dial->setValue(150);    //当前值
-    connect(ui->dial,SIGNAL(valueChanged(int)),this,SLOT(changeDial(int)));  //转动的角度值改变的话 调用相应函数
-    connect(ui->dial,SIGNAL(sliderReleased()),this,SLOT(release()));         //释放
-
-    path="D://shuju";
-    
-	QDir dir;
-    if(!dir.exists(path))  // 检查目录是否存在，若不存在则新建
-    {
-        bool res = dir.mkpath(path);
-        qDebug() << "新建目录是否成功" << res;
-    }
-
-    last_key=1000;   //初始化上一次按键的值
-
-    ui->stackedWidget->setCurrentIndex(0);  //初始化模式
-
-    //线速度的刻条显示
-    ui->xian->setMinimum(0);
-    ui->xian->setMaximum(250);
-    ui->xian->setValue(125);
-    //角速度的刻条显示
-    ui->jiao->setMinimum(0);
-    ui->jiao->setMaximum(1600);
-    ui->jiao->setValue(800);
-
-    //全局变量初始化
-    Quanju::x=1;
-    Quanju::y=0;
-    Quanju::v1=0.125;
-    Quanju::v2=0.8;
-    Quanju::change=0;
-
-	this->initThreadWorkObject();
+	this->initMainWindowUI_Connect();
+			
+	this->InitWebSocket();
+		
 	this->initThreadWorkConnect();
 	this->ThreadWork_Start();
 
-    ui->start->setEnabled(true);  //开始录屏 按钮
-    ui->stop->setEnabled(false);  //结束录屏 按钮
-	    
-  
-    ui->tu_startButton->setEnabled(true);
-    ui->tu_stopButton->setEnabled(false);
-
-   
-    //模拟障碍物标志初始化
-
-
-    point1_x=0;
-    point1_y=0;
-    point2_x=0;
-    point2_y=0;
-    k=0;
-	
-
-
-    //障碍物 参数初始化
-    obs_x = 900;  //障碍物中心x坐标
-    obs_y = 600;  //障碍物中心y坐标
-    obs_r = 50;      //障碍物半径
-    ui->obs_box->setEnabled(false);
 
 #if 0
 	TimeMeasure::Config(1, 1);
 #else
 	TimeMeasure::Config(0, 0);
 #endif // 0
-
-	
+		
 }
 /*----------------------------------------------------------------*/
 /**
@@ -135,7 +71,7 @@ void MainWindow::advertiseTopic()
 	advertise_a_topic a_topic(this, topic_front_camera, type);
 	
 	if (!mIsAdvertiseTopic){
-				mIsAdvertiseTopic = mCarHardware.WebSocketSendMessageEx(a_topic.toJsonStr());
+				mIsAdvertiseTopic = mCarHardware->WebSocketSendMessageEx(a_topic.toJsonStr());
 	}
 	
 
@@ -151,6 +87,23 @@ void MainWindow::initParam()
 	this->mIsCarRunAuto=false;
 
 	this->mIsAdvertiseTopic = false;
+
+	//全局变量初始化
+	Quanju::x = 1;
+	Quanju::y = 0;
+	Quanju::v1 = 0.125;
+	Quanju::v2 = 0.8;
+	Quanju::change = 0;
+
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initObject()
+{
+	this->ThreadWork_Init();
 }
 /*----------------------------------------------------------------*/
 /**
@@ -163,6 +116,7 @@ void MainWindow::initMenu()
 	this->initMenuRun();
 	this->initMenuCollect();
 	this->initMenuConnect();
+	this->initMenuImageProcessing();
 }
 /*----------------------------------------------------------------*/
 /**
@@ -210,8 +164,22 @@ void MainWindow::initMenuConnect()
 *
 */
 /*----------------------------------------------------------------*/
+void MainWindow::initMenuImageProcessing()
+{
+	connect(ui->actionImageCalibration, SIGNAL(triggered(bool)), mImageProcCal.get(), SLOT(setImageProc(bool)));
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 void MainWindow::initMainWindowUI()
 {
+	//转盘设置
+	ui->dial->setMaximum(300);  //最大值
+	ui->dial->setMinimum(0);    //最小值
+	ui->dial->setValue(150);    //当前值
+
 	//转盘进度条设置 此为控件
 	ui->roundProgressBar->setStartAngle(RoundProgressBar::PositionTop);   //起始角度  正上方
 	ui->roundProgressBar->setBarStyle(RoundProgressBar::StyleLine);       //风格
@@ -225,6 +193,131 @@ void MainWindow::initMainWindowUI()
 
 
 
+	ui->start->setEnabled(true);  //开始录屏 按钮
+	ui->stop->setEnabled(false);  //结束录屏 按钮
+
+
+	ui->tu_startButton->setEnabled(true);
+	ui->tu_stopButton->setEnabled(false);
+
+	ui->obs_box->setEnabled(false);
+
+
+	ui->stackedWidget->setCurrentIndex(0);  //初始化模式
+
+											//线速度的刻条显示
+	ui->xian->setMinimum(0);
+	ui->xian->setMaximum(250);
+	ui->xian->setValue(125);
+	//角速度的刻条显示
+	ui->jiao->setMinimum(0);
+	ui->jiao->setMaximum(1600);
+	ui->jiao->setValue(800);
+
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initMainWindowUI_Connect()
+{
+	connect(ui->dial, SIGNAL(valueChanged(int)), this, SLOT(changeDial(int)));  //转动的角度值改变的话 调用相应函数
+	connect(ui->dial, SIGNAL(sliderReleased()), this, SLOT(release()));         //释放
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initTabCfg()
+{
+	this->initTabCfgGroundPlane();
+	this->initTabCfgCameraCalibration();
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initTabCfgGroundPlane()
+{
+
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initTabCfgCameraCalibration()
+{
+
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::connectTabCfg()
+{
+	this->connectTabCfgGroundPlane();
+	this->connectTabCfgCameraCalibration();
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::connectTabCfgGroundPlane()
+{
+	QObject* rcv = mImageProcTopDown.get();
+		
+	connect(ui->pushButton_ReCalGndPlane,SIGNAL(clicked()),rcv,SLOT(reCalGndPlane()));
+	
+	connect(ui->pushButton_ReCalGndPlane, SIGNAL(clicked()), rcv, SLOT(reCalGndPlane()));
+
+	connect(ui->doubleSpinBox_DstBoard2Camera,SIGNAL(valueChanged(double)),rcv,SLOT(setDstBoard2Camera(double)));
+	connect(ui->spinBox_BoardSize_H, SIGNAL(valueChanged(int)), rcv, SLOT(setBoardSize_H(int)));
+	connect(ui->spinBox_BoardSize_W, SIGNAL(valueChanged(int)), rcv, SLOT(setBoardSize_W(int)));
+
+	connect(ui->doubleSpinBox_SquareSize, SIGNAL(valueChanged(double)), rcv, SLOT(setSquareSize(double)));
+	connect(ui->comboBox_MapSize, SIGNAL(currentTextChanged(QString)), rcv, SLOT(setMapSize(QString)));
+	
+	//point
+	connect(ui->lineEdit_P0_X, SIGNAL(valueChanged(double)), rcv, SLOT());
+	connect(ui->lineEdit_P1_X, SIGNAL(valueChanged(double)), rcv, SLOT());
+	connect(ui->lineEdit_P2_X, SIGNAL(valueChanged(double)), rcv, SLOT());
+	connect(ui->lineEdit_P3_X, SIGNAL(valueChanged(double)), rcv, SLOT());
+	connect(ui->lineEdit_P0_Y, SIGNAL(valueChanged(double)), rcv, SLOT());
+	connect(ui->lineEdit_P1_Y, SIGNAL(valueChanged(double)), rcv, SLOT());
+	connect(ui->lineEdit_P2_Y, SIGNAL(valueChanged(double)), rcv, SLOT());
+	connect(ui->lineEdit_P3_Y, SIGNAL(valueChanged(double)), rcv, SLOT());
+	
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::connectTabCfgCameraCalibration()
+{
+
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::InitWebSocket()
+{
+	Q_ASSERT(mCarHardware.isNull());
+	mCarHardware = QSharedPointer<CarHardware>(new CarHardware());
+	mCarHardware->initConnect();
+	mCarHardware->open();
+	const QWebSocket* p_ws = mCarHardware->GetWebSocket();
+	connect(p_ws, SIGNAL(connected()), this, SLOT(onconnected()));
+	connect(p_ws, SIGNAL(disconnected()), this, SLOT(disconnected()));
+	connect(p_ws, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(errorconnected(QAbstractSocket::SocketError)));
 }
 /*----------------------------------------------------------------*/
 /**
@@ -564,7 +657,7 @@ void MainWindow::send()
     json_doc.setObject(json);
     QString msgss=json_doc.toJson(QJsonDocument::Compact);
 	
- 	mCarHardware.WebSocketSendMessageEx(msgss);
+ 	mCarHardware->WebSocketSendMessageEx(msgss);
 
     qDebug()<<msgss<<endl;
 
@@ -857,14 +950,16 @@ void MainWindow::menu_run_current_once(bool _r)
 /*----------------------------------------------------------------*/
 void MainWindow::menu_toggle_calibration_SVG_SRC(bool _f)
 {
-	const QObject *rcv = &ImageProcCal;
+	const QObject *rcv = mImageProcCal.data();
+	const QObject *play = mImagePlayer.data();
+
 	const char*  rcv_slot = SLOT(ImageProc(QImage, QDateTime));
 	if (_f){
-		disconnect(mPlayer.data(), SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), rcv, SLOT(ImageProc(QImage, QDateTime)));
+		disconnect(play, SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), rcv, SLOT(ImageProc(QImage, QDateTime)));
 		connect(&ppImageSvg, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), rcv, SLOT(ImageProc(QImage, QDateTime)));
 	}else{
 		disconnect(&ppImageSvg, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), rcv, SLOT(ImageProc(QImage, QDateTime)));
-		connect(mPlayer.data(), SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), rcv, SLOT(ImageProc(QImage, QDateTime)));
+		connect(play, SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), rcv, SLOT(ImageProc(QImage, QDateTime)));
 	}
 
 }
@@ -892,8 +987,8 @@ void MainWindow::PublishPointCloud(QVector<QVector3D> _ptc)
 	//pointscloud.SimulatePointsCircle();
 	pointscloud.setPoints(_ptc);
 
-	mCarHardware.WebSocketSendMessageEx(tf_t.toJsonStr());
-	mCarHardware.WebSocketSendMessageEx(pointscloud.toJsonStr());
+	mCarHardware->WebSocketSendMessageEx(tf_t.toJsonStr());
+	mCarHardware->WebSocketSendMessageEx(pointscloud.toJsonStr());
 }
 /*----------------------------------------------------------------*/
 /**
@@ -902,9 +997,9 @@ void MainWindow::PublishPointCloud(QVector<QVector3D> _ptc)
 /*----------------------------------------------------------------*/
 void MainWindow::on_open_cam_clicked()
 {
-    if(!mPlayer->isRunning())
+    if(!mImagePlayer->isRunning())
     {
-        mPlayer->startPlay();
+		mImagePlayer->startPlay();
     }
 }
 /*----------------------------------------------------------------*/
@@ -914,28 +1009,13 @@ void MainWindow::on_open_cam_clicked()
 /*---------------------------------------------------------------*/
 void MainWindow::on_close_cam_clicked()
 {
-    if(mPlayer->isRunning())
+    if(mImagePlayer->isRunning())
     {
-        mPlayer->stopPaly();
+		mImagePlayer->stopPaly();
         mImage = QImage(1920,1080,QImage::Format_RGB888);
         mImage.fill(QColor(240,240,240));
         update();
     }
-}
-/*----------------------------------------------------------------*/
-/**
-*
-*/
-/*----------------------------------------------------------------*/
-void MainWindow::initThreadWorkObject()
-{
-	//视频流接收 多线程
-	mPlayer = QSharedPointer<VideoPlayer>(new VideoPlayer());
-	mPlayer->SetScale(960, 540);
-		
-	svgProcImage.moveToThread(&mThreadProcSvg);
-	ppImageOrg.moveToThread(&mThreadPreShowBgraOrg);
-	ppImageSvg.moveToThread(&mThreadPreShowBgraSvg);
 }
 /*----------------------------------------------------------------*/
 /**
@@ -957,7 +1037,7 @@ void MainWindow::initThreadWorkConnect()
 /*----------------------------------------------------------------*/
 void MainWindow::initThreadWorkConnect_ImageShow()
 {
-	connect(mPlayer.data(), SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), &ppImageOrg, SLOT(ImageProc(QImage, QDateTime)));
+	connect(mImagePlayer.get(), SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), &ppImageOrg, SLOT(ImageProc(QImage, QDateTime)));
 	connect(&ppImageOrg, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), this, SLOT(ShowOneFrameBgraOrg(QImage, QDateTime)));	
 }
 /*----------------------------------------------------------------*/
@@ -967,8 +1047,8 @@ void MainWindow::initThreadWorkConnect_ImageShow()
 /*----------------------------------------------------------------*/
 void MainWindow::initThreadWorkConnect_Calibration()
 {
-	connect(mPlayer.data(), SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), &ImageProcCal, SLOT(ImageProc(QImage, QDateTime)));
-	connect(&ImageProcCal, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), this, SLOT(ShowOneFrameCalibrate(QImage, QDateTime)));
+	connect(mImagePlayer.get(), SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), mImageProcCal.get(), SLOT(ImageProc(QImage, QDateTime)));
+	connect(mImageProcCal.get(), SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), this, SLOT(ShowOneFrameCalibrate(QImage, QDateTime)));
 }
 /*----------------------------------------------------------------*/
 /**
@@ -977,9 +1057,9 @@ void MainWindow::initThreadWorkConnect_Calibration()
 /*----------------------------------------------------------------*/
 void MainWindow::initThreadWorkConnect_SVG()
 {
-	connect(mPlayer.data(), SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), &svgProcImage, SLOT(ImageProc(QImage, QDateTime)));
+	connect(mImagePlayer.get(), SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), mImageProcSVG.get(), SLOT(ImageProc(QImage, QDateTime)));
 	
-	connect(&svgProcImage, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), &ppImageSvg, SLOT(ImageProc(QImage, QDateTime)));
+	connect(mImageProcSVG.get(), SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), &ppImageSvg, SLOT(ImageProc(QImage, QDateTime)));
 	
 	connect(&ppImageSvg, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), this, SLOT(ShowOneFrameBgraSvg(QImage, QDateTime)));
 	
@@ -992,9 +1072,9 @@ void MainWindow::initThreadWorkConnect_SVG()
 /*----------------------------------------------------------------*/
 void MainWindow::initThreadWorkConnect_TopDown()
 {
-	connect(&ImageProcCal, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), &ImageProcTopDown, SLOT(ImageProc(QImage, QDateTime)));
-	connect(&ImageProcTopDown, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), this, SLOT(ShowOneFrameTopDown(QImage, QDateTime)));
-	connect(&ImageProcTopDown, SIGNAL(sig_point_cloud(QVector<QVector3D>)), this, SLOT(PublishPointCloud(QVector<QVector3D>)));
+	connect(mImageProcCal.get(), SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), mImageProcTopDown.get(), SLOT(ImageProc(QImage, QDateTime)));
+	connect(mImageProcTopDown.get(), SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), this, SLOT(ShowOneFrameTopDown(QImage, QDateTime)));
+	connect(mImageProcTopDown.get(), SIGNAL(sig_point_cloud(QVector<QVector3D>)), this, SLOT(PublishPointCloud(QVector<QVector3D>)));
 }
 /*----------------------------------------------------------------*/
 /**
@@ -1003,7 +1083,46 @@ void MainWindow::initThreadWorkConnect_TopDown()
 /*----------------------------------------------------------------*/
 void MainWindow::ThreadWork_Init()
 {
-	m_thread_obj.push_back();
+	this->ThreadWork_Init_obj();
+	this->ThreadWork_Init_thread();
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::ThreadWork_Init_obj()
+{
+	mImagePlayer= QSharedPointer<VideoPlayer>(new VideoPlayer());
+	mImagePlayer->SetScale(960, 540);
+	
+	mImageProcSVG=QSharedPointer<SVG_PROC_IMAGE>(new SVG_PROC_IMAGE());
+	mImageProcCal=QSharedPointer<ImageProcCalibration>(new ImageProcCalibration());
+	mImageProcTopDown=QSharedPointer<ImageProcTopDown>(new ImageProcTopDown());
+	
+	
+		
+	m_thread_obj.push_back(mImageProcSVG);
+	m_thread_obj.push_back(mImageProcCal);
+	m_thread_obj.push_back(mImageProcTopDown);
+
+	
+	
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::ThreadWork_Init_thread()
+{
+
+	for each (auto obj_p in m_thread_obj)
+	{
+		QSharedPointer<QThread> thread_t = QSharedPointer<QThread>(new QThread());
+		obj_p->moveToThread(thread_t.get());
+		m_thread_pool.push_back(thread_t);
+	}
 
 }
 /*----------------------------------------------------------------*/
@@ -1013,11 +1132,12 @@ void MainWindow::ThreadWork_Init()
 /*----------------------------------------------------------------*/
 void MainWindow::ThreadWork_Start()
 {
-	mPlayer->startPlay();  
+	mImagePlayer->startPlay();
 	
-	mThreadPreShowBgraOrg.start();
-	mThreadPreShowBgraSvg.start();
-	mThreadProcSvg.start();
+	for each (auto thread in  m_thread_pool)
+	{
+		thread->start();
+	}
 
 }
 /*----------------------------------------------------------------*/
@@ -1027,11 +1147,12 @@ void MainWindow::ThreadWork_Start()
 /*----------------------------------------------------------------*/
 void MainWindow::ThreadWork_Stop()
 {
-	mPlayer->stopPaly();
+	mImagePlayer->stopPaly();
 	
-	mThreadPreShowBgraOrg.quit();
-	mThreadPreShowBgraSvg.quit();
-	mThreadProcSvg.quit();
+	for each (auto thread in  m_thread_pool)
+	{
+		thread->quit();
+	}
 	
 }
 /*----------------------------------------------------------------*/
@@ -1041,11 +1162,12 @@ void MainWindow::ThreadWork_Stop()
 /*----------------------------------------------------------------*/
 void MainWindow::ThreadWork_Wait()
 {
-	mPlayer->wait();
+	mImagePlayer->wait();
 
-	mThreadPreShowBgraOrg.wait();
-	mThreadPreShowBgraSvg.wait();
-	mThreadProcSvg.wait();
+	for each (auto thread in  m_thread_pool)
+	{
+		thread->wait();
+	}
 	
 }
 /*----------------------------------------------------------------*/
@@ -1217,7 +1339,7 @@ void MainWindow::drive_run_policy(
 	const double _speed_v1,
 	const double _speed_v2)
 {
-	driveHardware.run_cmd_policy(_cmd,
+	mCarHardware->run_cmd_policy(_cmd,
 								_speed_v1,
 								_speed_v2);
 }

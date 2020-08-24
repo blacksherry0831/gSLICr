@@ -54,7 +54,7 @@ void SVG_PROC_IMAGE::ImageProc(QImage _img, const QDateTime _time)
 		}
 		else
 		{
-			qDebug() << "svg time out" << endl;
+			
 		}
 
 	}
@@ -73,7 +73,7 @@ bool SVG_PROC_IMAGE::IsLatestImage(const QDateTime & _time,const int64 _ms)
 	if (ms_diff<_ms){
 		return true;
 	}else{
-		qDebug() << ms_diff<<"ms";
+	//	qDebug() << ms_diff<<"ms";
 	}
 	
 	return false;

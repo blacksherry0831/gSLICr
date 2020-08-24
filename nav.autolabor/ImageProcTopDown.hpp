@@ -35,6 +35,9 @@ private:
 		const QVector3D& _pt,
 		QVector<QVector3D>& _pts,
 		const int Z);
+private:
+	bool mCalGndMode;
+	bool mReCalGndPlane;
 public:
 	bool IsValidQImage(const QImage& _img);
 public:
@@ -47,5 +50,17 @@ public slots :
 private:
 	ImgProcAirView m_imgProcAirV;
 	void ProcImageFrame(const QImage& _img, const QDateTime& _time);
+public slots :
+	void setBoardSize_W(const int _w);
+	void setBoardSize_H(const int _h);
+	void setDstBoard2Camera(const double _dst);
+	void setSquareSize(const double _sz);
+	void setMapSize(const double _sz);
+	void setMapSize(const QString _sz);
+public:
+	void setCalGndMode(bool _m);
+	void setReCalGndPlane(bool _m);
+	void reCalGndPlane();
 
+	
 };
