@@ -181,16 +181,13 @@ void ImgProcCalibrate::Calculate_Intrinsics_Distortion(IplImage *_img,int& _find
 			_find = this->FindChessBoard(_img);
 			this->Calculate(_img);
 		}
-
-	
-
+		
 	}
 	catch (const cv::Exception& e)
 	{
 		std::cout<< e.msg << std::endl;
 	}
-	
-	
+		
 }
 /*-----------------------------------------*/
 /**
@@ -199,8 +196,7 @@ void ImgProcCalibrate::Calculate_Intrinsics_Distortion(IplImage *_img,int& _find
 /*-----------------------------------------*/
 int ImgProcCalibrate::FindChessBoard(IplImage* _img)
 {
-	
-	
+		
 	int  corner_count;
 	int step;
 
@@ -319,7 +315,7 @@ void ImgProcCalibrate::Calculate(IplImage *_img)
 *
 */
 /*-----------------------------------------*/
-void ImgProcCalibrate::Init_Intrinsics_Distortion(IplImage *_img)
+void ImgProcCalibrate::InitStorage(IplImage *_img)
 {
 	if (IsSameWH(_img)){
 		

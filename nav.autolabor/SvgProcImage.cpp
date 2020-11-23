@@ -2,7 +2,6 @@
 /*-----------------------------------------*/
 /**
 *
-*
 */
 /*-----------------------------------------*/
 SVG_PROC_IMAGE::SVG_PROC_IMAGE()
@@ -12,7 +11,6 @@ SVG_PROC_IMAGE::SVG_PROC_IMAGE()
 /*-----------------------------------------*/
 /**
 *
-*
 */
 /*-----------------------------------------*/
 SVG_PROC_IMAGE::~SVG_PROC_IMAGE()
@@ -21,48 +19,6 @@ SVG_PROC_IMAGE::~SVG_PROC_IMAGE()
 }
 /*-----------------------------------------*/
 /**
-*
-*
-*/
-/*-----------------------------------------*/
-bool SVG_PROC_IMAGE::IsValidQImage(const QImage& _img)
-{
-	if (_img.width()+_img.height()>0) {
-		return true;
-	}
-	else
-	{
-		return false;
-	}	
-}
-/*-----------------------------------------*/
-/**
-*
-*
-*/
-/*-----------------------------------------*/
-void SVG_PROC_IMAGE::ImageProc(QImage _img, const QDateTime _time)
-{
-
-	if(this->IsValidQImage(_img)) {
-
-		if (this->IsLatestImage(_time)) {
-
-		ProcImageSVG(_img, _time);
-
-					
-		}
-		else
-		{
-			
-		}
-
-	}
-
-}
-/*-----------------------------------------*/
-/**
-*
 *
 */
 /*-----------------------------------------*/
@@ -81,24 +37,44 @@ bool SVG_PROC_IMAGE::IsLatestImage(const QDateTime & _time,const int64 _ms)
 /*-----------------------------------------*/
 /**
 *
-*
 */
 /*-----------------------------------------*/
-void SVG_PROC_IMAGE::ProcImageSVG(const QImage& _img, const QDateTime& _time)
+void SVG_PROC_IMAGE::ProcImageSVG(QSharedPointer<QImage> _img_p, const QDateTime & _time)
 {
-	QImage img_svg(_img.width(), _img.height(), _img.format());
-
+	QSharedPointer<QImage> img_svg = QSharedPointer<QImage>(new QImage(_img_p->width(), _img_p->height(), _img_p->format()));
+	
 	if (1) {
-		SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(_img, img_svg);
-	}else{
-		img_svg = _img.copy();
-	}
+		SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(_img_p, img_svg);
+	}else {
 		
-	emit sig_1_frame_bgra(img_svg,_time);
+	}
+
+	emit sig_org_frame_bgra(_img_p,_time);
+	emit sig_out_frame_bgra(img_svg, _time);
 }
 /*-----------------------------------------*/
 /**
 *
+*/
+/*-----------------------------------------*/
+void SVG_PROC_IMAGE::ImageProc(QSharedPointer<QImage> _img_p, const QDateTime _time)
+{
+	if (General::IsEmptyQImage(_img_p.get())) {
+
+		if (this->IsLatestImage(_time)) {
+
+			ProcImageSVG(_img_p, _time);
+			
+		}
+		else
+		{
+
+		}
+
+	}
+}
+/*-----------------------------------------*/
+/**
 *
 */
 /*-----------------------------------------*/

@@ -10,6 +10,8 @@
 /*-----------------------------------------*/
 #include "QT_SDK_LIB/QImage_Q.hpp"
 /*-----------------------------------------*/
+#include "General.hpp"
+/*-----------------------------------------*/
 /**
 *
 *
@@ -22,14 +24,16 @@ public:
     explicit SVG_PROC_IMAGE();
     ~SVG_PROC_IMAGE();
 public:
-	bool IsValidQImage(const QImage& _img);
-public:
 	static bool IsLatestImage(const QDateTime& _time, const int64 _ms=100);
-	void ProcImageSVG(const QImage& _img, const QDateTime& _time);
+	
+	void ProcImageSVG(QSharedPointer<QImage> _img_p, const QDateTime& _time);
+
 signals:
-void sig_1_frame_bgra(QImage, QDateTime);
+void sig_out_frame_bgra(QSharedPointer<QImage>, QDateTime);
+void sig_org_frame_bgra(QSharedPointer<QImage>, QDateTime);
+
 public slots :
-void ImageProc(QImage _img, const QDateTime _time);
+void ImageProc(QSharedPointer<QImage> _img_ptr, const QDateTime _time);
 
 };
 

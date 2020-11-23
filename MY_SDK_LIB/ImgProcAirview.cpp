@@ -244,7 +244,7 @@ void ImgProcAirView::initHomography(IplImage * _img)
 *
 */
 /*-----------------------------------------*/
-void ImgProcAirView::generateHomography(IplImage * _img)
+void ImgProcAirView::generateHomographyAuto(IplImage * _img)
 {
 
 	if (this->IsHomographyValid()){
@@ -253,6 +253,23 @@ void ImgProcAirView::generateHomography(IplImage * _img)
 	else
 	{
 		this->FindChessBoard(_img);
+	}
+
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::generateHomographyManual(IplImage * _img)
+{
+
+	if (this->IsHomographyValid()) {
+		//已加载
+	}
+	else
+	{
+		this->ManualChessBoard(_img);
 	}
 
 }
@@ -328,22 +345,89 @@ int ImgProcAirView::FindChessBoard(IplImage * _img)
 *
 */
 /*-----------------------------------------*/
-int ImgProcAirView::BirdsImage(IplImage * _img)
+int ImgProcAirView::ManualChessBoard(IplImage * _img)
 {
+	int corner_count = 0;
+	if (black == 1) {
+		cvNot(_img, _img);//找角点需要反色
+	}
+	int found = cvFindChessboardCorners(
+		_img,
+		board_sz,
+		corners,
+		&corner_count,
+		CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FILTER_QUADS
+	);
 
-	if (this->IsHomographyValid()) {
-		IplImage * img_src_t = cvCloneImage(_img);
-		cvWarpPerspective(
-			img_src_t,
-			_img,
-			H,
-			CV_INTER_LINEAR | CV_WARP_INVERSE_MAP | CV_WARP_FILL_OUTLIERS
+	if (found) {
+
+		cvCvtColor(_img, gray_image, CV_BGR2GRAY);
+		cvFindCornerSubPix(
+			gray_image,
+			corners,
+			corner_count,
+			cvSize(11, 11),
+			cvSize(-1, -1),
+			cvTermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 30, 0.1)
 		);
-		cvReleaseImage(&img_src_t);
+
+		CvPoint2D32f objPts[4], imgPts[4];
+
+		this->InitcornerPoints(objPts, imgPts, 4);
+
+		// DRAW THE POINTS in order: B,G,R,YELLOW
+		//
+		cvCircle(_img, cvPointFrom32f(imgPts[0]), 9, CV_RGB(0, 0, 255), 3); //blue
+		cvCircle(_img, cvPointFrom32f(imgPts[1]), 9, CV_RGB(0, 255, 0), 3); //green
+		cvCircle(_img, cvPointFrom32f(imgPts[2]), 9, CV_RGB(255, 0, 0), 3); //red
+		cvCircle(_img, cvPointFrom32f(imgPts[3]), 9, CV_RGB(255, 255, 0), 3); //yellow
+																			  // DRAW THE FOUND CHESSBOARD
+
+		cvDrawChessboardCorners(
+			_img,
+			board_sz,
+			corners,
+			corner_count,
+			found
+		);
+
+		if (this->H == nullptr) {
+			H = cvCreateMat(3, 3, CV_32F);
+			cvZero(H);
+			cvGetPerspectiveTransform(objPts, imgPts, H);
+			this->SaveHomographyFiles();
+			cvvSaveImage("Homograph.jpg", _img);
+		}
 
 	}
 
-	return 0;
+	if (black == 1) {
+		cvNot(_img, _img);//找角点需要反色
+	}
+
+	return found;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+bool ImgProcAirView::BirdsImage(IplImage * _src, IplImage * _dst)
+{
+	if (this->IsHomographyValid()) {
+		
+		cvWarpPerspective(
+			_src,
+			_dst,
+			H,
+			CV_INTER_LINEAR | CV_WARP_INVERSE_MAP | CV_WARP_FILL_OUTLIERS
+		);
+		return true;
+		
+
+	}
+
+	return false;
 }
 /*-----------------------------------------*/
 /**

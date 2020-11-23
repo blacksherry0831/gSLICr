@@ -68,8 +68,12 @@ static void SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
 	cv::Mat& _svg_idx_frame);
 
 static void SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
-	const QImage& _imgSrc,
-	const QImage& _imgSVG);
+	const QImage* _imgSrc,
+	const QImage* _imgSVG);
+
+static void SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
+	const QSharedPointer<QImage> _imgSrc,
+	const QSharedPointer<QImage> _imgSVG);
 
 static void SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
 	const char * _IMG_SRC,

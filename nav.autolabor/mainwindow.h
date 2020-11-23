@@ -77,6 +77,7 @@ private:
 private:
 	void initParam();
 	void initObject();
+	void initRegisterMetaType();
 private:
 	void initMenu();
 	void initMenuShow();
@@ -164,15 +165,14 @@ public slots:
 
     void release();  //转盘释放事件
 	   
-	void ShowOneFrameBgraOrg(QImage _img,const QDateTime _time);
-	void ShowOneFrameBgraSvg(QImage _img,const QDateTime _time);
-	void ShowOneFrameCalibrate(QImage _img, const QDateTime _time);
-	void ShowOneFrameTopDown(QImage _img, const QDateTime _time);
-
-	void ShowOneFrameOnLabel(QImage * _img, const QDateTime * _time, QLabel * _qlab);
-
+	void ShowOneFrameBgraOrg(QSharedPointer<QImage> _img_ptr,const QDateTime _time);
+	void ShowOneFrameBgraSvg(QSharedPointer<QImage> _img_ptr,const QDateTime _time);
 	
-
+	void ShowOneFrameCalibrate(QSharedPointer<QImage> _img_ptr, const QDateTime _time);
+	void ShowOneFrameTopDown(QSharedPointer<QImage> _img_ptr, const QDateTime _time);
+	
+	void ShowOneFrameOnLabel(QImage * _img, const QDateTime * _time, QLabel * _qlab);
+	
 	void RcvOneFrameBgraOrg(QImage _img,const QDateTime _time);
 	void RcvOneFrameBgraSvg(QImage _img,const QDateTime _time);
 	   	
@@ -181,9 +181,14 @@ public slots:
 	void menu_run_current_once(bool _r);
 					
 	void menu_toggle_calibration_SVG_SRC(bool _f);
-
-
+public:
+	void connect_calibration_SVG();
+	void connect_calibration_SRC();
+	
+	
+public slots:
 	void PublishPointCloud(QVector<QVector3D> _ptc);
+	
 private:
     Ui::MainWindow *ui;
 	   
@@ -206,7 +211,7 @@ private:
     int obs_x;  //障碍物中心x坐标
     int obs_y;  //障碍物中心y坐标
     int obs_r;      //障碍物半径
- private:
+private:
 		PreProcImageOrg ppImageOrg;
 		PreProcImageSvg ppImageSvg;
 private:
@@ -219,8 +224,8 @@ private:
 private:
 		QSharedPointer<CarHardware>				mCarHardware;
 private:
-	QVector<QSharedPointer<QObject>> m_thread_obj;
-	QVector<QSharedPointer<QThread>> m_thread_pool;
+	    QVector<QSharedPointer<QObject>> m_thread_obj;
+	    QVector<QSharedPointer<QThread>> m_thread_pool;
 public:
 	void ThreadWork_Init();
 	void ThreadWork_Init_thread();
@@ -232,7 +237,7 @@ public:
 public:
 	
 	void initThreadWorkConnect();
-
+	void initThreadWorkConnect_PreImageShow();
 	void initThreadWorkConnect_ImageShow();
 	void initThreadWorkConnect_Calibration();
 	void initThreadWorkConnect_SVG();

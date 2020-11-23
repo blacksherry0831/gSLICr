@@ -3,6 +3,7 @@
 #include <QThread>
 #include <QImage>
 #include <QQueue>
+#include <QMetaType>
 /*-----------------------------------------*/
 #include "SGV/SGV_Method.h"
 /*-----------------------------------------*/
@@ -11,6 +12,8 @@
 #include "OPENCV_QT_SDK_LIB\OpencvQtBase.h"
 /*-----------------------------------------*/
 #include "QT_SDK_LIB/QImage_Q.hpp"
+/*-----------------------------------------*/
+#include "General.hpp"
 /*-----------------------------------------*/
 /**
 *
@@ -24,6 +27,11 @@ public:
     explicit ImageProcTopDown();
     ~ImageProcTopDown();
 private:
+	bool mCalGndMode;
+	bool mReCalGndPlane;
+public:
+	void init_param();
+private:
 	QVector<QVector3D> getPointCloud(const IplImage* _img);
 	
 	QVector3D toCamreaCoord(
@@ -35,21 +43,32 @@ private:
 		const QVector3D& _pt,
 		QVector<QVector3D>& _pts,
 		const int Z);
+	void PushPoint(
+		const QVector3D& _pt,
+		QVector<QVector3D>& _pts);
+
+	  QVector<QVector3D> Cvt2PolarCoord(QVector<QVector3D> _xy);
+	  QVector<QVector3D> Cvt2CartesianCoord(QVector<QVector3D> _rt);
+
+
 private:
-	bool mCalGndMode;
-	bool mReCalGndPlane;
+	void emit_sig_point_cloud(IplImage* _src);
 public:
-	bool IsValidQImage(const QImage& _img);
-public:
-	static bool IsLatestImage(const QDateTime& _time, const int64 _ms=100);
+	
 signals:
-	void sig_1_frame_bgra(QImage, QDateTime);
+	
+	void sig_1_frame_bgra_ref(QSharedPointer<QImage>, const QDateTime);
 	void sig_point_cloud(QVector<QVector3D>);
 public slots :
-	void ImageProc(QImage _img, const QDateTime _time);
+	
+	void ImageProc(QSharedPointer<QImage> _img_p, const QDateTime _time);
 private:
 	ImgProcAirView m_imgProcAirV;
-	void ProcImageFrame(const QImage& _img, const QDateTime& _time);
+	
+	void ProcImageFrame(
+		QSharedPointer<QImage> _img_p,
+		const QDateTime& _time);
+
 public slots :
 	void setBoardSize_W(const int _w);
 	void setBoardSize_H(const int _h);
@@ -62,5 +81,10 @@ public:
 	void setReCalGndPlane(bool _m);
 	void reCalGndPlane();
 
+public:
+	static	IplImage * createImageHeader(QSharedPointer<QImage> _img_p);
+
 	
 };
+
+Q_DECLARE_METATYPE(QVector<QVector3D>);

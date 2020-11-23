@@ -1,4 +1,47 @@
-# 树莓派ROS开发计划（室内导航）
+# 多点导航ROS机器人开发计划（室内导航）
+
+机器人已具备激光SLAM功能。在此基础上修改出特定场景的多点导航功能。
+
+# 激光SLAM导航有以下问题：
+
+1.  需要构图才能导航
+2. 坐标系建立的是相对坐标系
+3. 线扫雷达盲区较大
+4. 无法适应室外场景
+5. 没有视觉图像
+
+# 多点导航需要解决：
+
+1. 预先加载已知地图
+
+2. 建立绝对坐标系
+
+3. 增加传感器
+
+4. 适应室内外场景
+
+5. 增加视觉系统
+
+# 开发的软件硬件部分包括以下：
+
+| 开发内容       | 硬件             | 软件包                                                       | 开发内容           | 开发者 | 进度               |
+| -------------- | ---------------- | ------------------------------------------------------------ | ------------------ | ------ | ------------------ |
+| 底盘           | 康尼底盘         |                                                              | 底盘运动控制模型   | 康尼   | ？                 |
+| 加速计/陀螺仪  | IMU              |                                                              | 惯导模块           | ?      | 视康尼开发进度而定 |
+| 室内定位       | UWB              |                                                              | 室内定位功能。     |        | ？                 |
+| 避障雷达       | 超声波           |                                                              | 实现盲区避障       |        | ？                 |
+| 线扫雷达       | RPLIDAR A Series | [Slamtec](https://github.com/Slamtec)/**[rplidar_sdk](https://github.com/Slamtec/rplidar_sdk)** | 360度避障          |        | OK                 |
+| 室外定位       | 室外定位GNSS     | nmea_navsat_driver                                           | 室外全球定位功能   |        | OK                 |
+| 图像节点       | 摄像头           | rocon_rtsp_camera_relay                                      | 图像显示           |        | OK                 |
+| 遥控           | Logitech F710    | [ros-drivers](https://github.com/ros-drivers)/**[joystick_drivers](https://github.com/ros-drivers/joystick_drivers)** | 遥控小车           |        | OK                 |
+| -              | -                | -                                                            | -                  | -      | -                  |
+| 扩展卡尔曼滤波 |                  | [robot_pose_ekf](http://wiki.ros.org/action/fullsearch/robot_pose_ekf?action=fullsearch&context=180&value=linkto%3A"robot_pose_ekf") | 融合底盘与IMU      | ？     | 视康尼开发进度而定 |
+| 地图           |                  | [map_server](http://wiki.ros.org/map_server/)                | 测绘并发布室内地图 |        | ？                 |
+| 坐标系         |                  | TF                                                           | 传感器坐标系建立   |        | ？                 |
+| 室内导航       |                  | [move_base](http://wiki.ros.org/action/fullsearch/move_base?action=fullsearch&context=180&value=linkto%3A"move_base") | 配置导航功能包     |        | ？                 |
+| 室内多点导航   |                  | 参考autolabor最新设计                                        | 多点导航           |        | ?                  |
+|                |                  |                                                              |                    |        |                    |
+| -              | -                | -                                                            | -                  | -      | -                  |
 
 [TOC]
 
@@ -759,6 +802,10 @@ DWAPlannerROS:
 #  holonomic_robot: false 
    #是否为全向机器人。 值为false时为差分机器人； 为true时表示全向机器人
 ```
+
+### 5.2 多点导航功能
+
+参考autolabor多点导航方案。
 
 ### 5.3 参考链接
 

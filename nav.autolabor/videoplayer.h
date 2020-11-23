@@ -96,7 +96,8 @@ protected:
     void run();
 
 signals:
-	void sig_1_frame_RGB32(QImage, QDateTime); //每获取到一帧图像 就发送此信号
+	
+	void sig_1_frame_RGB32_ref(QSharedPointer<QImage>, const QDateTime);
 	
 };
 

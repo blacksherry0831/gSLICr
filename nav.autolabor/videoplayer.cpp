@@ -414,18 +414,16 @@ void VideoPlayer::emit_RGB32_QImage()
 
 		mSwsContextSafe.GetDstSize(WidthScale, HeightScale);
 
-		QImage q_img(WidthScale, HeightScale, QImage::Format_RGB32);
+		QSharedPointer<QImage> img_ptr= QSharedPointer<QImage>(new QImage (WidthScale, HeightScale, QImage::Format_RGB32));
+				
+		Q_ASSERT(dbg_is_equal(img_ptr->byteCount(),avpicture_get_size(AV_PIX_FMT_RGB32, WidthScale, HeightScale)));
 		
-		Q_ASSERT(dbg_is_equal(q_img.byteCount(),avpicture_get_size(AV_PIX_FMT_RGB32, WidthScale, HeightScale)));
-		
-		avpicture_fill((AVPicture *)pFrameRGB32, q_img.bits(), AV_PIX_FMT_RGB32, WidthScale, HeightScale);
+		avpicture_fill((AVPicture *)pFrameRGB32, img_ptr->bits(), AV_PIX_FMT_RGB32, WidthScale, HeightScale);
 			
 		mSwsContextSafe.SwsContextScaleEx(pFrame, pFrameRGB32);
 
 		//把这个RGB数据 用QImage加载
-		
-
-		emit sig_1_frame_RGB32(q_img,QDateTime::currentDateTime() );  //发送信号	
+		emit sig_1_frame_RGB32_ref(img_ptr,QDateTime::currentDateTime() );  //发送信号	
 }
 /*----------------------------------------------------------------*/
 /**

@@ -29,18 +29,20 @@ public:
 	Q_INVOKABLE explicit DriveAuto(QObject *parent = nullptr);
 	~DriveAuto();
 
-	static void DrawSafeArea(QImage& _img);
-	static void DrawSafeArea_1920_1080(QImage& _img);
-	static void DrawSafeArea_960_540(QImage& _img);
+	static void DrawSafeArea(QSharedPointer<QImage> _img_ptr);
 
-	static void DrawRunDirection(QImage& _img,RunCmd _run_dir);
-	static void DrawRunDirection(QImage& _img,bool _run, RunCmd _run_dir);
+	static void DrawSafeArea(QImage* _img);
+	static void DrawSafeArea_1920_1080(QImage* _img);
+	static void DrawSafeArea_960_540(QImage* _img);
 
-	static void CalSafeArea(QImage& _img);
-	static void CalSafeArea_1920_1080(QImage& _img);
-	static void CalSafeArea_960_540(QImage& _img);
+	static void DrawRunDirection(QImage* _img,RunCmd _run_dir);
+	static void DrawRunDirection(QImage* _img,bool _run, RunCmd _run_dir);
 
-	static int Qimage2cvMat(QImage& _img);
+	static void CalSafeArea(QImage* _img);
+	static void CalSafeArea_1920_1080(QImage* _img);
+	static void CalSafeArea_960_540(QImage* _img);
+
+	static int Qimage2cvMat(QImage* _img);
 
 };
 

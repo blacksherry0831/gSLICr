@@ -12,6 +12,8 @@
 /*-----------------------------------------*/
 #include "QT_SDK_LIB/QImage_Q.hpp"
 /*-----------------------------------------*/
+#include "General.hpp"
+/*-----------------------------------------*/
 /**
 *
 *
@@ -24,18 +26,23 @@ public:
      ImageProcCalibration();
     ~ImageProcCalibration();
 private:
+	static IplImage* createImageHeader(QSharedPointer<QImage> _img_p);
+private:
 	ImgProcCalibrate m_imgProcCal;
 	bool mIsImageProc;
 public:
-	bool IsValidQImage(const QImage& _img);
-public:
-	static bool IsLatestImage(const QDateTime& _time, const int64 _ms=100);
-	void ProcImageFrame(const QImage& _img, const QDateTime& _time);
-	void ProcImageFrame01(const QImage& _img, const QDateTime& _time);
+	void ProcImageFrame(QSharedPointer<QImage> _img_p, const QDateTime& _time);
+	void ProcImageFrameNot(QSharedPointer<QImage> _img_p, const QDateTime& _time);
+	
 signals:
-void sig_1_frame_bgra(QImage, QDateTime);
+void sig_1_frame_bgra_ref(QSharedPointer<QImage>, const QDateTime);
+
 public slots :
-void ImageProc(QImage _img, const QDateTime _time);
+
+void ImageProc(
+	QSharedPointer<QImage> _img_p,
+	const QDateTime _t);
+
 void setImageProc(bool _f);
 
 };

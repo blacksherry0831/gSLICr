@@ -22,6 +22,16 @@ ImageProcTopDown::~ImageProcTopDown()
 *
 */
 /*-----------------------------------------*/
+void ImageProcTopDown::init_param()
+{
+	this->mCalGndMode=false;
+	this->mReCalGndPlane=false;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
 QVector<QVector3D> ImageProcTopDown::getPointCloud(const IplImage * _img)
 {
 	QVector<QVector3D> pts;
@@ -32,25 +42,32 @@ QVector<QVector3D> ImageProcTopDown::getPointCloud(const IplImage * _img)
 	const int CH = _img->nChannels;
 	const float mpp = this->m_imgProcAirV.MetersPerPixel();
 	const int C_X = W / 2;
-	const int C_Y = H;
+	const int C_Y = H-1;
 
 	const QVector3D cam_c(C_X,C_Y,0);
 
 	for (int xi = 0; xi < W; xi++){
 		int yi;
 		
-		for (yi=H-1; yi >0; yi--){
+		for (yi=H-2; yi >0; yi--){
 					const char* c_ptr = _img->imageData+ yi*STEP+xi*CH;
 					const int* i_ptr =(const int *) c_ptr ;
 					const int data_t = i_ptr[0];
 					if (data_t== 0xE0ff0000){
 						QVector3D  pt = toCamreaCoord(QVector3D(xi, yi, 0), cam_c, mpp);
-						PushPointAddAxisZ(pt,pts,3);
+#if 0
+					PushPointAddAxisZ(pt,pts,3);
+#else
+						pts.push_back(pt);
+#endif // 0
+
+						
+						
 						break;
 
 					}
 		}
-#if 1
+#if 0
 		if (yi == 0) {
 			QVector3D  pt=	toCamreaCoord(QVector3D(xi,yi,0), cam_c,mpp);
 			pts.push_back(pt);
@@ -101,81 +118,144 @@ void ImageProcTopDown::PushPointAddAxisZ(
 *
 */
 /*-----------------------------------------*/
-bool ImageProcTopDown::IsValidQImage(const QImage& _img)
+void ImageProcTopDown::PushPoint(const QVector3D & _pt, QVector<QVector3D>& _pts)
 {
-	if (_img.width()+_img.height()>0) {
-		return true;
-	}
-	else
-	{
-		return false;
-	}	
+
 }
 /*-----------------------------------------*/
 /**
 *
 */
 /*-----------------------------------------*/
-void ImageProcTopDown::ImageProc(QImage _img, const QDateTime _time)
+QVector<QVector3D> ImageProcTopDown::Cvt2PolarCoord(QVector<QVector3D> _xy)
 {
+	const int SCALE = 5;
+	const int RANGE = 360;
+	
+	QVector<QVector3D>  polar_t(RANGE *SCALE,QVector3D(0,0,0));
 
-	if(this->IsValidQImage(_img)) {
+	for each (QVector3D p in _xy)
+	{
+		Q_ASSERT(p.y() != 0 || p.x() != 0);
+		const float rho   = std::sqrtf(p.x()*p.x() + p.y()*p.y());
+		const float theta = std::atan2f(p.y(), p.x()); 
+		//(-pi,pi]
+		const int   thIdx = qFloor(SCALE*(theta+PI) *180.0/PI);
+		const int   rho_old = polar_t.at(thIdx).x();
 
-		if (this->IsLatestImage(_time,1000)) {
-					
-			ProcImageFrame(_img, _time);
+		if (rho_old == 0) {
+			polar_t[thIdx].setX(rho);
+			polar_t[thIdx].setY(theta);
+		}else if (rho_old>rho) {
+			polar_t[thIdx].setX(rho);
+			polar_t[thIdx].setY(theta);
+		}else{
+			Q_ASSERT(rho_old<rho);
 		}
-		else
-		{
+
+
+	}
+
+	return  polar_t;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+QVector<QVector3D> ImageProcTopDown::Cvt2CartesianCoord(QVector<QVector3D> _rt)
+{
+	QVector<QVector3D>  cartes_t;
+	
+	for each (QVector3D p in _rt)
+	{
+		const float   rho    = p.x();
+		const float   theta  = p.y();
+
+		if (rho>0){
+			const float   x = rho * cosf(theta);
+			const float   y = rho * sinf(theta);
+			cartes_t.push_back(QVector3D(x,y,0));
+		}
+		
+	}
+	
+	return cartes_t;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::emit_sig_point_cloud(IplImage * _src)
+{
+#if 1
+	/*clock_t start, stop;
+	double duration;
+	start = clock();
+	{*/
+	QVector<QVector3D> pts = this->getPointCloud(_src);
+
+	QVector<QVector3D> polar_pts = this->Cvt2PolarCoord(pts);
+	pts = this->Cvt2CartesianCoord(polar_pts);
+
+	emit sig_point_cloud(pts);
+	/*}
+	stop = clock();
+	duration = ((double)(stop - start)) / CLK_TCK;
+	start = stop;*/
+#endif 
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::ImageProc(
+	QSharedPointer<QImage> _img_p,
+	const QDateTime _t)
+{
+	if (General::IsEmptyQImage(_img_p)) {
+
+		if (General::IsLatestImage(_t, 1000)) {
+
+			ProcImageFrame(_img_p, _t);
+		
+		}else {
 			qDebug() << "Calibration time out" << endl;
 		}
 
 	}
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::ProcImageFrame(
+	QSharedPointer<QImage> _img_p,
+	const QDateTime & _time)
+{
+	QSharedPointer<QImage> bird_p = QSharedPointer<QImage>(new QImage(_img_p->width(),_img_p->height(),_img_p->format()));
 
-}
-/*-----------------------------------------*/
-/**
-*
-*/
-/*-----------------------------------------*/
-bool ImageProcTopDown::IsLatestImage(const QDateTime & _time,const int64 _ms)
-{
-	const qint64 ms_diff=_time.msecsTo(QDateTime::currentDateTime());
-		
-	if (ms_diff<_ms){
-		return true;
-	}else{
-		qDebug() << ms_diff<<"ms";
-	}
-	
-	return false;
-}
-/*-----------------------------------------*/
-/**
-*
-*/
-/*-----------------------------------------*/
-void ImageProcTopDown::ProcImageFrame(const QImage& _img, const QDateTime& _time)
-{
-	QImage  qimg = _img.copy();
-	CvSize img_sz_t = cvSize(qimg.width(), qimg.height());
-	const uchar* data_t = qimg.bits();
-	const int step_t = qimg.bytesPerLine();
-	IplImage* img_t = cvCreateImageHeader(img_sz_t, IPL_DEPTH_8U, 4);
-	cvSetData(img_t, (void*)data_t, step_t);
+	IplImage* img_src_t = createImageHeader(_img_p);
+	IplImage* img_dst_t = createImageHeader(bird_p);
 	{
+#if 1
+		this->m_imgProcAirV.initHomography(img_src_t);
+		this->m_imgProcAirV.generateHomography(img_src_t);
+		bool IsBirdCvt=this->m_imgProcAirV.BirdsImage(img_src_t, img_dst_t);
 
-		this->m_imgProcAirV.initHomography(img_t);
-		this->m_imgProcAirV.generateHomography(img_t);
-		this->m_imgProcAirV.BirdsImage(img_t);
-		emit sig_1_frame_bgra(qimg, _time);
-
-		QVector<QVector3D> pts=this->getPointCloud(img_t);
-
-		emit sig_point_cloud(pts);
+		if (IsBirdCvt) {
+			emit sig_1_frame_bgra_ref(bird_p, _time);
+		}else{
+			emit sig_1_frame_bgra_ref(_img_p, _time);
+		}
+		this->emit_sig_point_cloud(img_dst_t);
+#endif // 1		
 	}
-	cvReleaseImageHeader(&img_t);
-	
+	cvReleaseImageHeader(&img_src_t);
+	cvReleaseImageHeader(&img_dst_t);
 }
 /*-----------------------------------------*/
 /**
@@ -257,6 +337,21 @@ void ImageProcTopDown::setReCalGndPlane(bool _m)
 void ImageProcTopDown::reCalGndPlane()
 {
 	this->setReCalGndPlane(true);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+IplImage * ImageProcTopDown::createImageHeader(QSharedPointer<QImage> _img_p)
+{
+	CvSize img_sz_t = cvSize(_img_p->width(), _img_p->height());
+	const uchar* data_t = _img_p->bits();
+	const int step_t = _img_p->bytesPerLine();
+	Q_ASSERT(step_t % 4 == 0);
+	IplImage* img_t = cvCreateImageHeader(img_sz_t, IPL_DEPTH_8U, 4);
+	cvSetData(img_t, (void*)data_t, step_t);
+	return img_t;
 }
 /*-----------------------------------------*/
 /**

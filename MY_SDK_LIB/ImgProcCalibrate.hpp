@@ -60,13 +60,15 @@ public:
 public:
 	void DrawProgressBar(IplImage *_img);
 public:
-	void Init_Intrinsics_Distortion(IplImage *_img);
+	
 
 	void Calculate_Intrinsics_Distortion(IplImage *_img, int& _find);
 
 	int FindChessBoard(IplImage *_img);
 
 	void Calculate(IplImage *_img);
+
+	void InitStorage(IplImage * _img);
 
 	void calibration_image(IplImage * _img);
 

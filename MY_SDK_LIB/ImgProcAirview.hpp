@@ -58,10 +58,15 @@ public:
 	
 public:
 	void initHomography(IplImage *_img);
-	void generateHomography(IplImage *_img);
+	void generateHomographyAuto(IplImage *_img);
+	void generateHomographyManual(IplImage *_img);
 public:
 	int FindChessBoard(IplImage *_img);
-	int BirdsImage(IplImage *_img);
+
+	int ManualChessBoard(IplImage *_img);
+	
+	bool BirdsImage(IplImage *_src, IplImage *_dst);
+
 public:
 	void setDstBoard2Camera(const double _dst);
 	void setBoardSize_W(const int _w);

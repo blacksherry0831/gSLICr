@@ -417,15 +417,15 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
 */
 /*-------------------------------------------------------------------------*/
 void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
-	const QImage & _imgSrc,
-	const QImage & _imgSVG)
+	const QImage * _imgSrc,
+	const QImage * _imgSVG)
 {
 
-	const char*		IMG_SRC = (const char*) _imgSrc.bits();
-	const int		ImageSize = _imgSrc.byteCount();
-	const int		WIDTH =		_imgSrc.width();
-	const int		HEIGHT =	_imgSrc.height();
-	int*		IMG_SVG_DATA = (int*) _imgSVG.bits();
+	const char*		IMG_SRC = (const char*) _imgSrc->bits();
+	const int		ImageSize = _imgSrc->byteCount();
+	const int		WIDTH =		_imgSrc->width();
+	const int		HEIGHT =	_imgSrc->height();
+	int*		IMG_SVG_DATA = (int*) _imgSVG->bits();
 
 	SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
 		IMG_SRC,
@@ -434,6 +434,17 @@ void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
 		HEIGHT,
 		IMG_SVG_DATA);
 
+}
+/*-------------------------------------------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------------------------------------------*/
+void SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(
+	const QSharedPointer<QImage> _imgSrc,
+	const QSharedPointer<QImage> _imgSVG)
+{
+	SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(_imgSrc.get(), _imgSVG.get());
 }
 /*-------------------------------------------------------------------------*/
 /**

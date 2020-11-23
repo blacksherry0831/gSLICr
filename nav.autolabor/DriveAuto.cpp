@@ -22,11 +22,20 @@ DriveAuto::~DriveAuto()
 *
 */
 /*-----------------------------------------*/
-void DriveAuto::DrawSafeArea(QImage& _img)
+void DriveAuto::DrawSafeArea(QSharedPointer<QImage> _img_ptr)
+{
+	DrawSafeArea(_img_ptr.get());
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void DriveAuto::DrawSafeArea(QImage* _img)
 {
 
-	const int W = _img.width();
-	const int H = _img.height();
+	const int W = _img->width();
+	const int H = _img->height();
 
 	if (1920 == W &&
 		1080 == H) {
@@ -44,11 +53,11 @@ void DriveAuto::DrawSafeArea(QImage& _img)
 *安全区显示
 */
 /*-----------------------------------------*/
-void DriveAuto::DrawSafeArea_1920_1080(QImage& _img)
+void DriveAuto::DrawSafeArea_1920_1080(QImage* _img)
 {
-		Q_ASSERT(1920 == _img.width() && 1080 == _img.height());
+		Q_ASSERT(1920 == _img->width() && 1080 == _img->height());
 
-		QPainter painter(&_img);
+		QPainter painter(_img);
 		painter.setPen(QPen(QColor(255, 255, 0), 3));
 		painter.drawEllipse(0, 0, 100, 100);
 		painter.drawLine(240, 1075, 1680, 1075);
@@ -71,11 +80,11 @@ void DriveAuto::DrawSafeArea_1920_1080(QImage& _img)
 *
 */
 /*-----------------------------------------*/
-void DriveAuto::DrawSafeArea_960_540(QImage& _img)
+void DriveAuto::DrawSafeArea_960_540(QImage* _img)
 {
-		Q_ASSERT(960 == _img.width() &&	540 == _img.height());
+		Q_ASSERT(960 == _img->width() &&	540 == _img->height());
 		const int SCALE = 2;
-		QPainter painter(&_img);
+		QPainter painter(_img);
 		painter.setPen(QPen(QColor(255, 255, 0), 4 / SCALE));
 #if 0
 		painter.drawEllipse(0, 0, 100 / SCALE, 100 / SCALE);
@@ -101,14 +110,14 @@ void DriveAuto::DrawSafeArea_960_540(QImage& _img)
 *
 */
 /*-----------------------------------------*/
-void DriveAuto::DrawRunDirection(QImage & _img, RunCmd _run_dir)
+void DriveAuto::DrawRunDirection(QImage * _img, RunCmd _run_dir)
 {
 	const int LSZ = 4;
-	QPainter painter(&_img);
+	QPainter painter(_img);
 	painter.setPen(QPen(QColor(255, 255, 0), LSZ));
 
-	const int W = _img.width();
-	const int H = _img.height();
+	const int W = _img->width();
+	const int H = _img->height();
 	const int R = ((W > H) ? H : W)/4;
 	const QPoint c(W/2,H/2);
 	
@@ -166,10 +175,10 @@ void DriveAuto::DrawRunDirection(QImage & _img, RunCmd _run_dir)
 *
 */
 /*-----------------------------------------*/
-void DriveAuto::DrawRunDirection(QImage & _img, bool _run, RunCmd _run_dir)
+void DriveAuto::DrawRunDirection(QImage * _img, bool _run, RunCmd _run_dir)
 {
 	const int LSZ = 4;
-	QPainter painter(&_img);
+	QPainter painter(_img);
 
 	QPen red(QColor(255, 0, 0),LSZ);
 	QPen green(QColor(0, 255, 0),LSZ);
@@ -180,8 +189,8 @@ void DriveAuto::DrawRunDirection(QImage & _img, bool _run, RunCmd _run_dir)
 		painter.setPen(red);
 	}
 
-	const int W = _img.width();
-	const int H = _img.height();
+	const int W = _img->width();
+	const int H = _img->height();
 	const int R = ((W > H) ? H : W) / 4;
 	const QPoint c(W / 2, H / 2);
 
@@ -238,10 +247,10 @@ void DriveAuto::DrawRunDirection(QImage & _img, bool _run, RunCmd _run_dir)
 *
 */
 /*-----------------------------------------*/
-void DriveAuto::CalSafeArea(QImage & _img)
+void DriveAuto::CalSafeArea(QImage * _img)
 {
-	const int W = _img.width();
-	const int H = _img.height();
+	const int W = _img->width();
+	const int H = _img->height();
 
 	if (1920 == W &&
 		1080 == H) {
@@ -260,7 +269,7 @@ void DriveAuto::CalSafeArea(QImage & _img)
 *
 */
 /*-----------------------------------------*/
-void DriveAuto::CalSafeArea_1920_1080(QImage & _img)
+void DriveAuto::CalSafeArea_1920_1080(QImage * _img)
 {
 
 }
@@ -269,7 +278,7 @@ void DriveAuto::CalSafeArea_1920_1080(QImage & _img)
 *
 */
 /*-----------------------------------------*/
-void DriveAuto::CalSafeArea_960_540(QImage & _img)
+void DriveAuto::CalSafeArea_960_540(QImage * _img)
 {
 
 }
@@ -278,15 +287,15 @@ void DriveAuto::CalSafeArea_960_540(QImage & _img)
 *
 */
 /*-----------------------------------------*/
-int DriveAuto::Qimage2cvMat(QImage& _img)
+int DriveAuto::Qimage2cvMat(QImage* _img)
 {
 	cv::Mat mat;
 
-	mat.create(_img.height(), _img.width(), CV_8UC4);
+	mat.create(_img->height(), _img->width(), CV_8UC4);
 	
-	Q_ASSERT(_img.byteCount()== mat.total() * mat.elemSize());
+	Q_ASSERT(_img->byteCount()== mat.total() * mat.elemSize());
 
-	memcpy(mat.ptr<uchar>(0), _img.bits(),_img.byteCount());
+	memcpy(mat.ptr<uchar>(0), _img->bits(),_img->byteCount());
 		
 	return 0;
 }

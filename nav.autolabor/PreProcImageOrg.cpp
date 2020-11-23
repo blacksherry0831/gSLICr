@@ -55,9 +55,40 @@ void PreProcImageOrg::SaveQImage(const QImage& _img )
 *
 */
 /*-----------------------------------------*/
+void PreProcImageOrg::SaveQImage(const QSharedPointer<QImage> _img)
+{
+	qint64 t = QDateTime::currentDateTime().toMSecsSinceEpoch();
+	QString name = QString("%1").arg(t) + ".png";
+
+	if (!(_img)->save(mPaths + name, "png")) {
+		qDebug() << "picture save failed" << endl;
+	}
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
 void PreProcImageOrg::SetResize(const int _w, const int _h)
 {
 	
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void PreProcImageOrg::ImageProc(QSharedPointer<QImage> _img_ptr, QDateTime _time)
+{
+	if (mSaveImage) {
+		SaveQImage(_img_ptr);
+	}
+
+	if (mSafeArea) {
+		DriveAuto::DrawSafeArea(_img_ptr.get());
+	}
+
+	emit sig_1_frame_bgra_ref(_img_ptr, _time);
 }
 /*-----------------------------------------*/
 /**
@@ -76,24 +107,6 @@ void PreProcImageOrg::DrawSafeArea(const bool _r)
 void PreProcImageOrg::SetSaveImage(const bool _s)
 {
 	this->mSaveImage = _s;
-}
-/*-----------------------------------------*/
-/**
-*
-*/
-/*-----------------------------------------*/
-void PreProcImageOrg::ImageProc(QImage _img, const QDateTime _time)
-{
-
-	if (mSaveImage){
-		SaveQImage(_img);
-	}
-
-	if (mSafeArea){
-		DriveAuto::DrawSafeArea(_img);
-	}
-
-	emit sig_1_frame_bgra(_img, _time);
 }
 /*-----------------------------------------*/
 /**

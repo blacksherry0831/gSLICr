@@ -31,14 +31,17 @@ public:
 	void InitImageSavePath();
 public:
 	void SaveQImage(const QImage & _img);
+	void SaveQImage(const QSharedPointer<QImage> _img);
+
 	void SetResize(const int _w,const int _h);
 private:
 	static bool CreateDir(const QString & path);
 public:
 signals:
-	void sig_1_frame_bgra(QImage, QDateTime);
+	void sig_1_frame_bgra_ref(QSharedPointer<QImage>, const QDateTime);
 public slots :
-	void ImageProc(QImage _img, QDateTime _time);
+	
+	void ImageProc(QSharedPointer<QImage> _img_ptr, QDateTime _time);
 	void DrawSafeArea(const bool _r);
 	void SetSaveImage(const bool _s);
 };

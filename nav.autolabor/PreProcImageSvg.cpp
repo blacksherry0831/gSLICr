@@ -40,14 +40,16 @@ void PreProcImageSvg::DrawSafeArea(const bool _r)
 *
 */
 /*-----------------------------------------*/
-void PreProcImageSvg::ImageProc(QImage _img, const QDateTime _time)
+void PreProcImageSvg::ImageProc(
+	QSharedPointer<QImage> _img_ptr,
+	const QDateTime _time)
 {
 	if (mSafeArea)
 	{
-		DriveAuto::DrawSafeArea(_img);
+		DriveAuto::DrawSafeArea(_img_ptr);
 	}
 
-	emit sig_1_frame_bgra(_img,_time);
+	emit sig_1_frame_RGB32_ref(_img_ptr, _time);
 }
 /*-----------------------------------------*/
 /**

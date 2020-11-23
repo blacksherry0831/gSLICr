@@ -27,9 +27,11 @@ public:
 	void SetResize(const int _w,const int _h);
 public:
 signals:
-	void sig_1_frame_bgra(QImage, QDateTime);
+	void sig_1_frame_RGB32_ref(QSharedPointer<QImage>, const QDateTime);
 public slots :
-	void ImageProc(QImage _img, const QDateTime _time);
+	void ImageProc(QSharedPointer<QImage> _img_ptr,
+					const QDateTime _time);
+		
 	void DrawSafeArea(const bool _r);
 
 };

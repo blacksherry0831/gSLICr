@@ -7,7 +7,6 @@
 
 #pragma execution_character_set("utf-8")
 
-//debug笔记：需控制发指令的线程数，如不控制，可能会导致viodeo线程的挂起！！！！
 /*----------------------------------------------------------------*/
 /**
 *
@@ -17,8 +16,9 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+	ui->setupUi(this);
 
-    ui->setupUi(this);
+	this->initRegisterMetaType();
 
 	this->initParam();
 	this->initObject();
@@ -74,7 +74,6 @@ void MainWindow::advertiseTopic()
 				mIsAdvertiseTopic = mCarHardware->WebSocketSendMessageEx(a_topic.toJsonStr());
 	}
 	
-
 }
 /*----------------------------------------------------------------*/
 /**
@@ -104,6 +103,16 @@ void MainWindow::initParam()
 void MainWindow::initObject()
 {
 	this->ThreadWork_Init();
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initRegisterMetaType()
+{
+	qRegisterMetaType<QVector<QVector3D> >("QVector<QVector3D>");
+	qRegisterMetaType<QSharedPointer<QImage> >("QSharedPointer<QImage>");
 }
 /*----------------------------------------------------------------*/
 /**
@@ -271,11 +280,11 @@ void MainWindow::connectTabCfg()
 void MainWindow::connectTabCfgGroundPlane()
 {
 	QObject* rcv = mImageProcTopDown.get();
-		
+#if 0	
 	connect(ui->pushButton_ReCalGndPlane,SIGNAL(clicked()),rcv,SLOT(reCalGndPlane()));
 	
 	connect(ui->pushButton_ReCalGndPlane, SIGNAL(clicked()), rcv, SLOT(reCalGndPlane()));
-
+#endif
 	connect(ui->doubleSpinBox_DstBoard2Camera,SIGNAL(valueChanged(double)),rcv,SLOT(setDstBoard2Camera(double)));
 	connect(ui->spinBox_BoardSize_H, SIGNAL(valueChanged(int)), rcv, SLOT(setBoardSize_H(int)));
 	connect(ui->spinBox_BoardSize_W, SIGNAL(valueChanged(int)), rcv, SLOT(setBoardSize_W(int)));
@@ -283,6 +292,7 @@ void MainWindow::connectTabCfgGroundPlane()
 	connect(ui->doubleSpinBox_SquareSize, SIGNAL(valueChanged(double)), rcv, SLOT(setSquareSize(double)));
 	connect(ui->comboBox_MapSize, SIGNAL(currentTextChanged(QString)), rcv, SLOT(setMapSize(QString)));
 	
+#if 0
 	//point
 	connect(ui->lineEdit_P0_X, SIGNAL(valueChanged(double)), rcv, SLOT());
 	connect(ui->lineEdit_P1_X, SIGNAL(valueChanged(double)), rcv, SLOT());
@@ -292,7 +302,8 @@ void MainWindow::connectTabCfgGroundPlane()
 	connect(ui->lineEdit_P1_Y, SIGNAL(valueChanged(double)), rcv, SLOT());
 	connect(ui->lineEdit_P2_Y, SIGNAL(valueChanged(double)), rcv, SLOT());
 	connect(ui->lineEdit_P3_Y, SIGNAL(valueChanged(double)), rcv, SLOT());
-	
+#endif
+
 }
 /*----------------------------------------------------------------*/
 /**
@@ -759,36 +770,36 @@ void MainWindow::release()
 *
 */
 /*----------------------------------------------------------------*/
-void MainWindow::ShowOneFrameBgraOrg(QImage _img,const QDateTime _time)
+void MainWindow::ShowOneFrameBgraOrg(QSharedPointer<QImage> _img_ptr,const QDateTime _time)
 {
-	ShowOneFrameOnLabel(&_img, &_time, ui->label_Image);
+	ShowOneFrameOnLabel(_img_ptr.get(), &_time, ui->label_Image);
 }
 /*----------------------------------------------------------------*/
 /**
 *
 */
 /*----------------------------------------------------------------*/
-void MainWindow::ShowOneFrameBgraSvg(QImage _img, const QDateTime _time)
+void MainWindow::ShowOneFrameBgraSvg(QSharedPointer<QImage> _img_ptr, const QDateTime _time)
 {
-	ShowOneFrameOnLabel(&_img, &_time, ui->label_Image_svg);
+	ShowOneFrameOnLabel(_img_ptr.get(), &_time, ui->label_Image_svg);
 }
 /*----------------------------------------------------------------*/
 /**
 *
 */
 /*----------------------------------------------------------------*/
-void MainWindow::ShowOneFrameCalibrate(QImage _img, const QDateTime _time)
+void MainWindow::ShowOneFrameCalibrate(QSharedPointer<QImage> _img_ptr, const QDateTime _time)
 {
-	ShowOneFrameOnLabel(&_img, &_time, ui->label_calibration);
+	ShowOneFrameOnLabel(_img_ptr.data(), &_time, ui->label_calibration);
 }
 /*----------------------------------------------------------------*/
 /**
 *
 */
 /*----------------------------------------------------------------*/
-void MainWindow::ShowOneFrameTopDown(QImage _img, const QDateTime _time)
+void MainWindow::ShowOneFrameTopDown(QSharedPointer<QImage> _img_ptr, const QDateTime _time)
 {
-	ShowOneFrameOnLabel(&_img, &_time, ui->label_top_down);
+	ShowOneFrameOnLabel(_img_ptr.data(), &_time, ui->label_top_down);
 }
 /*----------------------------------------------------------------*/
 /**
@@ -950,18 +961,53 @@ void MainWindow::menu_run_current_once(bool _r)
 /*----------------------------------------------------------------*/
 void MainWindow::menu_toggle_calibration_SVG_SRC(bool _f)
 {
-	const QObject *rcv = mImageProcCal.data();
-	const QObject *play = mImagePlayer.data();
-
-	const char*  rcv_slot = SLOT(ImageProc(QImage, QDateTime));
 	if (_f){
-		disconnect(play, SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), rcv, SLOT(ImageProc(QImage, QDateTime)));
-		connect(&ppImageSvg, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), rcv, SLOT(ImageProc(QImage, QDateTime)));
+		connect_calibration_SVG();		
 	}else{
-		disconnect(&ppImageSvg, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), rcv, SLOT(ImageProc(QImage, QDateTime)));
-		connect(play, SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), rcv, SLOT(ImageProc(QImage, QDateTime)));
+		connect_calibration_SRC();
 	}
 
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::connect_calibration_SVG()
+{
+	const QObject *src = mImageProcSVG.get();
+	const QObject *cal = mImageProcCal.data();
+
+	disconnect(src,
+		SIGNAL(sig_org_frame_bgra(QSharedPointer<QImage>, QDateTime)),
+		cal,
+		SLOT(ImageProc(QSharedPointer<QImage>, QDateTime)));
+
+	connect(src,
+		SIGNAL(sig_out_frame_bgra(QSharedPointer<QImage>, QDateTime)),
+		cal,
+		SLOT(ImageProc(QSharedPointer<QImage>, QDateTime)));
+
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::connect_calibration_SRC()
+{
+	const QObject *src = mImageProcSVG.get();
+	const QObject *cal = mImageProcCal.data();
+
+	disconnect(src,
+		SIGNAL(sig_out_frame_bgra(QSharedPointer<QImage>, QDateTime)),
+		cal,
+		SLOT(ImageProc(QSharedPointer<QImage>, QDateTime)));
+
+	connect(src,
+		SIGNAL(sig_org_frame_bgra(QSharedPointer<QImage>, QDateTime)),
+		cal,
+		SLOT(ImageProc(QSharedPointer<QImage>, QDateTime)));
 }
 /*----------------------------------------------------------------*/
 /**
@@ -1024,11 +1070,33 @@ void MainWindow::on_close_cam_clicked()
 /*----------------------------------------------------------------*/
 void MainWindow::initThreadWorkConnect()
 {
-	this->initThreadWorkConnect_ImageShow();
-	this->initThreadWorkConnect_Calibration();
 	this->initThreadWorkConnect_SVG();
+	this->initThreadWorkConnect_Calibration();
 	this->initThreadWorkConnect_TopDown();
+
+
+	this->initThreadWorkConnect_PreImageShow();
+	this->initThreadWorkConnect_ImageShow();
 	
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initThreadWorkConnect_PreImageShow()
+{
+
+	connect(mImageProcSVG.get(),
+		SIGNAL(sig_org_frame_bgra(QSharedPointer<QImage>, QDateTime)),
+		&ppImageOrg,
+		SLOT(ImageProc(QSharedPointer<QImage>, QDateTime)));
+
+	connect(mImageProcSVG.get(),
+		SIGNAL(sig_out_frame_bgra(QSharedPointer<QImage>, QDateTime)),
+		&ppImageSvg,
+		SLOT(ImageProc(QSharedPointer<QImage>, QDateTime)));
+
 }
 /*----------------------------------------------------------------*/
 /**
@@ -1037,8 +1105,28 @@ void MainWindow::initThreadWorkConnect()
 /*----------------------------------------------------------------*/
 void MainWindow::initThreadWorkConnect_ImageShow()
 {
-	connect(mImagePlayer.get(), SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), &ppImageOrg, SLOT(ImageProc(QImage, QDateTime)));
-	connect(&ppImageOrg, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), this, SLOT(ShowOneFrameBgraOrg(QImage, QDateTime)));	
+
+	connect(&ppImageOrg,
+		SIGNAL(sig_1_frame_bgra_ref(QSharedPointer<QImage>, QDateTime)),
+		this,
+		SLOT(ShowOneFrameBgraOrg(QSharedPointer<QImage>, QDateTime)));
+	
+	connect(&ppImageSvg,
+		SIGNAL(sig_1_frame_RGB32_ref(QSharedPointer<QImage>, QDateTime)),
+		this,
+		SLOT(ShowOneFrameBgraSvg(QSharedPointer<QImage>, QDateTime)));
+
+	connect(mImageProcCal.get(),
+		SIGNAL(sig_1_frame_bgra_ref(QSharedPointer<QImage>, QDateTime)),
+		this,
+		SLOT(ShowOneFrameCalibrate(QSharedPointer<QImage>, QDateTime)));
+
+	QObject* topDown = mImageProcTopDown.get();
+	connect(topDown,
+		SIGNAL(sig_1_frame_bgra_ref(QSharedPointer<QImage>, QDateTime)),
+		this,
+		SLOT(ShowOneFrameTopDown(QSharedPointer<QImage>, QDateTime)));
+
 }
 /*----------------------------------------------------------------*/
 /**
@@ -1047,8 +1135,12 @@ void MainWindow::initThreadWorkConnect_ImageShow()
 /*----------------------------------------------------------------*/
 void MainWindow::initThreadWorkConnect_Calibration()
 {
-	connect(mImagePlayer.get(), SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), mImageProcCal.get(), SLOT(ImageProc(QImage, QDateTime)));
-	connect(mImageProcCal.get(), SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), this, SLOT(ShowOneFrameCalibrate(QImage, QDateTime)));
+	
+	connect(mImageProcSVG.get(),
+		SIGNAL(sig_org_frame_bgra(QSharedPointer<QImage>, QDateTime)),
+		mImageProcCal.get(),
+		SLOT(ImageProc(QSharedPointer<QImage>, QDateTime)));
+	
 }
 /*----------------------------------------------------------------*/
 /**
@@ -1057,13 +1149,10 @@ void MainWindow::initThreadWorkConnect_Calibration()
 /*----------------------------------------------------------------*/
 void MainWindow::initThreadWorkConnect_SVG()
 {
-	connect(mImagePlayer.get(), SIGNAL(sig_1_frame_RGB32(QImage, QDateTime)), mImageProcSVG.get(), SLOT(ImageProc(QImage, QDateTime)));
-	
-	connect(mImageProcSVG.get(), SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), &ppImageSvg, SLOT(ImageProc(QImage, QDateTime)));
-	
-	connect(&ppImageSvg, SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), this, SLOT(ShowOneFrameBgraSvg(QImage, QDateTime)));
-	
-		
+	connect(mImagePlayer.get(),
+		SIGNAL(sig_1_frame_RGB32_ref(QSharedPointer<QImage>, QDateTime)),
+		mImageProcSVG.get(),
+		SLOT(ImageProc(QSharedPointer<QImage>, QDateTime)));	
 }
 /*----------------------------------------------------------------*/
 /**
@@ -1072,9 +1161,22 @@ void MainWindow::initThreadWorkConnect_SVG()
 /*----------------------------------------------------------------*/
 void MainWindow::initThreadWorkConnect_TopDown()
 {
-	connect(mImageProcCal.get(), SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), mImageProcTopDown.get(), SLOT(ImageProc(QImage, QDateTime)));
-	connect(mImageProcTopDown.get(), SIGNAL(sig_1_frame_bgra(QImage, QDateTime)), this, SLOT(ShowOneFrameTopDown(QImage, QDateTime)));
-	connect(mImageProcTopDown.get(), SIGNAL(sig_point_cloud(QVector<QVector3D>)), this, SLOT(PublishPointCloud(QVector<QVector3D>)));
+	QObject* procCal = mImageProcCal.get();
+	QObject* topDown = mImageProcTopDown.get();
+	
+	Q_ASSERT(procCal != Q_NULLPTR);
+	Q_ASSERT(topDown != Q_NULLPTR);
+	
+	connect(procCal,
+		SIGNAL(sig_1_frame_bgra_ref(QSharedPointer<QImage>, QDateTime)),
+		topDown,
+		SLOT(ImageProc(QSharedPointer<QImage>, QDateTime)));
+	
+	connect(topDown,
+		SIGNAL(sig_point_cloud(QVector<QVector3D>)),
+		this,
+		SLOT(PublishPointCloud(QVector<QVector3D>)));
+
 }
 /*----------------------------------------------------------------*/
 /**
@@ -1099,15 +1201,11 @@ void MainWindow::ThreadWork_Init_obj()
 	mImageProcSVG=QSharedPointer<SVG_PROC_IMAGE>(new SVG_PROC_IMAGE());
 	mImageProcCal=QSharedPointer<ImageProcCalibration>(new ImageProcCalibration());
 	mImageProcTopDown=QSharedPointer<ImageProcTopDown>(new ImageProcTopDown());
-	
-	
-		
+			
 	m_thread_obj.push_back(mImageProcSVG);
 	m_thread_obj.push_back(mImageProcCal);
 	m_thread_obj.push_back(mImageProcTopDown);
-
-	
-	
+		
 }
 /*----------------------------------------------------------------*/
 /**

@@ -22,103 +22,80 @@ ImageProcCalibration::~ImageProcCalibration()
 *
 */
 /*-----------------------------------------*/
-bool ImageProcCalibration::IsValidQImage(const QImage& _img)
+IplImage * ImageProcCalibration::createImageHeader(QSharedPointer<QImage> _img_p)
 {
-	if (_img.width()+_img.height()>0) {
-		return true;
-	}
-	else
-	{
-		return false;
-	}	
+	CvSize img_sz_t = cvSize(_img_p->width(), _img_p->height());
+	const uchar* data_t = _img_p->bits();
+	const int step_t = _img_p->bytesPerLine();
+	IplImage* img_t = cvCreateImageHeader(img_sz_t, IPL_DEPTH_8U, 4);
+	cvSetData(img_t, (void*)data_t, step_t);
+	return img_t;
 }
 /*-----------------------------------------*/
 /**
 *
 */
 /*-----------------------------------------*/
-void ImageProcCalibration::ImageProc(QImage _img, const QDateTime _time)
+void ImageProcCalibration::ProcImageFrame(
+	QSharedPointer<QImage> _img_p,
+	const QDateTime& _time)
 {
-
-	if(this->IsValidQImage(_img)) {
-
-		if (this->IsLatestImage(_time,1000)) {
-					
-			ProcImageFrame01(_img, _time);
-		}
-		else
+	if (this->mIsImageProc) {
+				
+		IplImage* img_t = createImageHeader(_img_p);
 		{
-			//qDebug() << "Calibration time out" << endl;
-		}
+			int find=0;
+			m_imgProcCal.InitStorage(img_t);
 
-	}
 
-}
-/*-----------------------------------------*/
-/**
-*
-*/
-/*-----------------------------------------*/
-bool ImageProcCalibration::IsLatestImage(const QDateTime & _time,const int64 _ms)
-{
-	const qint64 ms_diff=_time.msecsTo(QDateTime::currentDateTime());
-		
-	if (ms_diff<_ms){
-		return true;
-	}else{
-		//qDebug() << ms_diff<<"ms";
-	}
-	
-	return false;
-}
-/*-----------------------------------------*/
-/**
-*
-*/
-/*-----------------------------------------*/
-void ImageProcCalibration::ProcImageFrame(const QImage& _img, const QDateTime& _time)
-{
-	
-	
-}
-/*-----------------------------------------*/
-/**
-*
-*/
-/*-----------------------------------------*/
-void ImageProcCalibration::ProcImageFrame01(const QImage & _img, const QDateTime & _time)
-{
-
-	if (this->mIsImageProc){
-
-		QImage  qimg = _img.copy();
-		CvSize img_sz_t = cvSize(qimg.width(), qimg.height());
-		const uchar* data_t = qimg.bits();
-		const int step_t = qimg.bytesPerLine();
-		IplImage* img_t = cvCreateImageHeader(img_sz_t, IPL_DEPTH_8U, 4);
-		cvSetData(img_t, (void*)data_t, step_t);
-		{
 			m_imgProcCal.IncFrame();
-			if (m_imgProcCal.IsDetectFrame()) {
-				int find;
-				m_imgProcCal.Init_Intrinsics_Distortion(img_t);
+			if (m_imgProcCal.IsDetectFrame()) {				
 				m_imgProcCal.Calculate_Intrinsics_Distortion(img_t, find);
 				m_imgProcCal.DrawProgressBar(img_t);
-
 				m_imgProcCal.calibration_image(img_t);
-
-				emit sig_1_frame_bgra(qimg, _time);
-
+				emit sig_1_frame_bgra_ref(_img_p, _time);
 			}
-
 		}
 		cvReleaseImageHeader(&img_t);
 
-	}else{
-		emit sig_1_frame_bgra(_img, _time);
 	}
-
+	else {
+		emit sig_1_frame_bgra_ref(_img_p, _time);
+	}
 	
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcCalibration::ProcImageFrameNot(QSharedPointer<QImage> _img_p, const QDateTime & _time)
+{
+	emit sig_1_frame_bgra_ref(_img_p, _time);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcCalibration::ImageProc(
+	QSharedPointer<QImage> _img_p,
+	const QDateTime _t)
+{
+	if (General::IsEmptyQImage(_img_p)) {
+		if (General::IsLatestImage(_t, 1000)) {
+
+#if 0
+			ProcImageFrame(_img_p, _t);
+#else
+			ProcImageFrameNot(_img_p, _t);
+#endif // 0
+
+		}
+		else {
+			//qDebug() << "Calibration time out" << endl;
+		}
+	}
 }
 /*-----------------------------------------*/
 /**
