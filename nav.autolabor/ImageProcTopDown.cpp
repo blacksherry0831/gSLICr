@@ -243,7 +243,7 @@ void ImageProcTopDown::ProcImageFrame(
 	{
 #if 1
 		this->m_imgProcAirV.initHomography(img_src_t);
-		this->m_imgProcAirV.generateHomography(img_src_t);
+		this->m_imgProcAirV.generateHomographyAuto(img_src_t);
 		bool IsBirdCvt=this->m_imgProcAirV.BirdsImage(img_src_t, img_dst_t);
 
 		if (IsBirdCvt) {
