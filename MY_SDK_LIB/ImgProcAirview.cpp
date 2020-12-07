@@ -28,7 +28,8 @@ ImgProcAirView::~ImgProcAirView()
 /*-----------------------------------------*/
 void ImgProcAirView::initParam() 
 {
-	
+	this->m_calibrate = false;
+
 	this->SetBoard(11, 8);
 	this->black = 1;
 	m_img_width=0;
@@ -60,6 +61,8 @@ void ImgProcAirView::SetBoard(const int _w, const int _h)
 void ImgProcAirView::initParamPtr()
 {
 	this->H = nullptr;
+	this->corners = nullptr;
+	this->gray_image = nullptr;
 }
 /*-----------------------------------------*/
 /**
@@ -83,9 +86,10 @@ int ImgProcAirView::HaveHomographyFiles()
 *
 */
 /*-----------------------------------------*/
-void ImgProcAirView::SaveHomographyFiles()
+void ImgProcAirView::SaveHomographyFiles(const IplImage* _img,const CvMat* _H)
 {
-	cvSave("Homography.xml", H);
+	cvSave("Homography.xml", _H);
+	cvvSaveImage("Homography.jpg", _img);
 }
 /*-----------------------------------------*/
 /**
@@ -103,7 +107,9 @@ void ImgProcAirView::LoadHomographyFiles()
 *
 */
 /*-----------------------------------------*/
-CvPoint2D32f ImgProcAirView::getPolygonCenter(CvPoint2D32f * _Pts, const int _sz)
+CvPoint2D32f ImgProcAirView::getPolygonCenter(
+	CvPoint2D32f * _Pts,
+	const int _sz)
 {
 	CvPoint2D32f c_t = cvPoint2D32f(0,0);
 		
@@ -161,7 +167,7 @@ void ImgProcAirView::InitcornerPoints(
 	imgPts[2] = corners[(board_h - 1)*board_w];
 	imgPts[3] = corners[(board_h - 1)*board_w + board_w - 1];
 
-#if 1
+#if 0
 	imgPts[0] = cvPoint2D32f(347,366) ;
 	imgPts[1] = cvPoint2D32f(523,364);
 	imgPts[2] = cvPoint2D32f(312,402);
@@ -211,17 +217,106 @@ void ImgProcAirView::InitcornerPoints(
 *
 */
 /*-----------------------------------------*/
-bool ImgProcAirView::IsHomographyValid()
+void ImgProcAirView::InitcornerPointsManual(const int _sz)
 {
-	if (H!=nullptr){
-		cv::Mat h_t(H);
-		const int nonZero = cv::countNonZero(h_t);
-		if (nonZero) {
-			return true;
-		}
-	}
-	return false;
+#if 0
+	imgPts_Board[0] = corners[0];
+	imgPts_Board[1] = corners[board_w - 1];
+	imgPts_Board[2] = corners[(board_h - 1)*board_w];
+	imgPts_Board[3] = corners[(board_h - 1)*board_w + board_w - 1];
+#endif // 0
+#if 0
+	imgPts_Board[0] = cvPoint2D32f(347, 366);
+	imgPts_Board[1] = cvPoint2D32f(523, 364);
+	imgPts_Board[2] = cvPoint2D32f(312, 402);
+	imgPts_Board[3] = cvPoint2D32f(551, 399);
+#endif // 0
+	
+	cornerPoints(_sz);
+	
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::cornerPoints(const int _sz)
+{
+	this->cornerPointsSort(_sz);
+	this->cornerPointsMapResult(_sz);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::cornerPointsSort(const int _sz)
+{
+	int quadMap[4];
+	CvPoint2D32f	imgPts[4];
+	memcpy(imgPts, imgPts_Board, sizeof(imgPts));
+	const CvPoint2D32f img_center = getPolygonCenter(imgPts, _sz);
 
+	for (size_t i = 0; i < _sz; i++) {
+		const CvPoint2D32f P_t = imgPts[i];
+		const int q = this->getPointQuadrant(img_center, P_t);
+		if (q<0) {
+			return;
+		}
+		else {
+			quadMap[q - 1] = q;
+			imgPts_Board[q - 1] = P_t;
+		}
+
+	}
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::cornerPointsMapResult(const int _sz)
+{
+	const float S = m_board_cell_pixels;
+
+	const float   meters_per_pixel = this->MetersPerPixel();
+
+	const int DST_C_B = m_real_board_2_camera / meters_per_pixel;
+
+	const int B_H = S*(board_h - 1);
+	const int B_W = S*(board_w - 1);
+	const int X_OFF = (m_img_width - B_H) / 2;
+	const int Y_OFF = m_img_height - DST_C_B - B_W / 2;
+
+	objPts_Board[0] = cvPoint2D32f(B_H, B_W);//1
+	objPts_Board[1] = cvPoint2D32f(0, B_W);//2
+	objPts_Board[2] = cvPoint2D32f(0, 0);//3
+	objPts_Board[3] = cvPoint2D32f(B_H, 0);//4
+
+	objPts_Board[0].x += X_OFF; objPts_Board[0].y += Y_OFF;
+	objPts_Board[1].x += X_OFF; objPts_Board[1].y += Y_OFF;
+	objPts_Board[2].x += X_OFF; objPts_Board[2].y += Y_OFF;
+	objPts_Board[3].x += X_OFF; objPts_Board[3].y += Y_OFF;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+bool ImgProcAirView::IsHomographyNullorZero()
+{
+	return ImgProcBase::IsMatNullorZero(H);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::ColorInvert(CvArr * _src)
+{
+	if (black == 1) {
+		cvNot(_src, _src);//找角点需要反色
+	}
 }
 /*-----------------------------------------*/
 /**
@@ -247,7 +342,7 @@ void ImgProcAirView::initHomography(IplImage * _img)
 void ImgProcAirView::generateHomographyAuto(IplImage * _img)
 {
 
-	if (this->IsHomographyValid()){
+	if (this->IsHomographyNullorZero()){
 		//已加载
 	}
 	else
@@ -263,14 +358,8 @@ void ImgProcAirView::generateHomographyAuto(IplImage * _img)
 /*-----------------------------------------*/
 void ImgProcAirView::generateHomographyManual(IplImage * _img)
 {
-
-	if (this->IsHomographyValid()) {
-		//已加载
-	}
-	else
-	{
-		this->ManualChessBoard(_img);
-	}
+		
+		this->ChessBoardManual(_img);
 
 }
 /*-----------------------------------------*/
@@ -281,9 +370,7 @@ void ImgProcAirView::generateHomographyManual(IplImage * _img)
 int ImgProcAirView::FindChessBoard(IplImage * _img)
 {
 	int corner_count = 0;
-	if (black == 1) {
-		cvNot(_img, _img);//找角点需要反色
-	}
+	ColorInvert(_img);
 	int found = cvFindChessboardCorners(
 		_img,
 		board_sz,
@@ -328,14 +415,33 @@ int ImgProcAirView::FindChessBoard(IplImage * _img)
 			H = cvCreateMat(3, 3, CV_32F);
 			cvZero(H);
 			cvGetPerspectiveTransform(objPts, imgPts, H);
-			this->SaveHomographyFiles();
-			cvvSaveImage("Homograph.jpg",_img);
+			this->SaveHomographyFiles(_img,H);
+			
 		}
 		
 	}
 
-	if (black == 1) {
-		cvNot(_img, _img);//找角点需要反色
+	ColorInvert(_img);
+
+	return found;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+int ImgProcAirView::ChessBoardManual(IplImage * _img)
+{
+	
+	int corner_count = 0;	
+	const int found = m_calibrate;
+
+	if (found) {
+		cvCvtColor(_img, gray_image, CV_BGR2GRAY);		
+		this->InitcornerPointsManual(4);
+		this->DrawChessboard4Points(_img);
+		this->getHomographyTransform(_img);
+		m_calibrate = false;
 	}
 
 	return found;
@@ -345,67 +451,17 @@ int ImgProcAirView::FindChessBoard(IplImage * _img)
 *
 */
 /*-----------------------------------------*/
-int ImgProcAirView::ManualChessBoard(IplImage * _img)
+void ImgProcAirView::getHomographyTransform(const IplImage *_img)
 {
-	int corner_count = 0;
-	if (black == 1) {
-		cvNot(_img, _img);//找角点需要反色
-	}
-	int found = cvFindChessboardCorners(
-		_img,
-		board_sz,
-		corners,
-		&corner_count,
-		CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FILTER_QUADS
-	);
-
-	if (found) {
-
-		cvCvtColor(_img, gray_image, CV_BGR2GRAY);
-		cvFindCornerSubPix(
-			gray_image,
-			corners,
-			corner_count,
-			cvSize(11, 11),
-			cvSize(-1, -1),
-			cvTermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 30, 0.1)
-		);
-
-		CvPoint2D32f objPts[4], imgPts[4];
-
-		this->InitcornerPoints(objPts, imgPts, 4);
-
-		// DRAW THE POINTS in order: B,G,R,YELLOW
-		//
-		cvCircle(_img, cvPointFrom32f(imgPts[0]), 9, CV_RGB(0, 0, 255), 3); //blue
-		cvCircle(_img, cvPointFrom32f(imgPts[1]), 9, CV_RGB(0, 255, 0), 3); //green
-		cvCircle(_img, cvPointFrom32f(imgPts[2]), 9, CV_RGB(255, 0, 0), 3); //red
-		cvCircle(_img, cvPointFrom32f(imgPts[3]), 9, CV_RGB(255, 255, 0), 3); //yellow
-																			  // DRAW THE FOUND CHESSBOARD
-
-		cvDrawChessboardCorners(
-			_img,
-			board_sz,
-			corners,
-			corner_count,
-			found
-		);
-
-		if (this->H == nullptr) {
-			H = cvCreateMat(3, 3, CV_32F);
-			cvZero(H);
-			cvGetPerspectiveTransform(objPts, imgPts, H);
-			this->SaveHomographyFiles();
-			cvvSaveImage("Homograph.jpg", _img);
-		}
-
+	CV_Assert(m_calibrate==true);
+	if (this->H == nullptr) {
+		H = cvCreateMat(3, 3, CV_32F);		
 	}
 
-	if (black == 1) {
-		cvNot(_img, _img);//找角点需要反色
-	}
-
-	return found;
+	cvZero(H);
+	cvGetPerspectiveTransform(objPts_Board, imgPts_Board, H);
+	this->SaveHomographyFiles(_img, H);
+	
 }
 /*-----------------------------------------*/
 /**
@@ -414,7 +470,7 @@ int ImgProcAirView::ManualChessBoard(IplImage * _img)
 /*-----------------------------------------*/
 bool ImgProcAirView::BirdsImage(IplImage * _src, IplImage * _dst)
 {
-	if (this->IsHomographyValid()) {
+	if (this->IsHomographyNullorZero()) {
 		
 		cvWarpPerspective(
 			_src,
@@ -428,6 +484,41 @@ bool ImgProcAirView::BirdsImage(IplImage * _src, IplImage * _dst)
 	}
 
 	return false;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::DrawChessboard(
+	IplImage *_img,
+	int _corner_count,
+	int _found)
+{
+
+#if 1
+	// DRAW THE FOUND CHESSBOARD
+	cvDrawChessboardCorners(
+		_img,
+		board_sz,
+		corners,
+		_corner_count,
+		_found
+	);
+#endif // 1
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::DrawChessboard4Points(IplImage * _img)
+{
+	// DRAW THE POINTS in order: B,G,R,YELLOW
+	cvCircle(_img, cvPointFrom32f(imgPts_Board[0]), 9, CV_RGB(0, 0, 255), 3); //blue
+	cvCircle(_img, cvPointFrom32f(imgPts_Board[1]), 9, CV_RGB(0, 255, 0), 3); //green
+	cvCircle(_img, cvPointFrom32f(imgPts_Board[2]), 9, CV_RGB(255, 0, 0), 3); //red
+	cvCircle(_img, cvPointFrom32f(imgPts_Board[3]), 9, CV_RGB(255, 255, 0), 3); //yellow
 }
 /*-----------------------------------------*/
 /**
@@ -472,6 +563,16 @@ void ImgProcAirView::AllocateStorage(const IplImage *_img)
 *
 */
 /*-----------------------------------------*/
+void ImgProcAirView::ReleaseStorage()
+{
+	delete[] corners;
+	cvReleaseImage(&gray_image);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
 void ImgProcAirView::SetWH(const IplImage * _img)
 {
 	this->m_img_width = _img->width;
@@ -487,15 +588,7 @@ int ImgProcAirView::IsSameWH(const IplImage * _img)
 	CV_Assert(nullptr!=_img);
 	return (_img->width==m_img_width)&&(_img->height==m_img_height);
 }
-/*-----------------------------------------*/
-/**
-*
-*/
-/*-----------------------------------------*/
-void ImgProcAirView::ReleaseStorage()
-{
 
-}
 /*-----------------------------------------*/
 /**
 *
@@ -523,6 +616,105 @@ void ImgProcAirView::setCellSize(const double _sz)
 void ImgProcAirView::setCellPixel(const double _sz)
 {
 	this->m_board_cell_pixels = _sz;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::setCalibrate(bool _c)
+{
+	this->m_calibrate = _c;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::set_X_P(const int _i, const float _v)
+{
+	imgPts_Board[_i].x = _v;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::set_Y_P(const int _i, const float _v)
+{
+	imgPts_Board[_i].y = _v;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::set_X_P0(const float _v) 
+{
+	set_X_P(0, _v);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::set_X_P1(const float _v) 
+{
+	set_X_P(1, _v);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::set_X_P2(const float _v) 
+{
+	set_X_P(2, _v);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::set_X_P3(const float _v) 
+{
+	set_X_P(3, _v);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::set_Y_P0(const float _v) 
+{
+	set_Y_P(0,_v);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::set_Y_P1(const float _v) 
+{
+	set_Y_P(1, _v);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::set_Y_P2(const float _v) 
+{
+	set_Y_P(2, _v);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::set_Y_P3(const float _v) 
+{
+	set_Y_P(3, _v);
 }
 /*-----------------------------------------*/
 /**

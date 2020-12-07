@@ -25,7 +25,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		
 	this->initMenu();
 
-	this->initTabCfg();
+	
 	this->connectTabCfg();
 
 	this->initMainWindowUI();
@@ -35,6 +35,8 @@ MainWindow::MainWindow(QWidget *parent) :
 		
 	this->initThreadWorkConnect();
 	this->ThreadWork_Start();
+
+	this->initUiValueGroundPlane();
 
 
 #if 0
@@ -158,6 +160,7 @@ void MainWindow::initMenuRun()
 void MainWindow::initMenuCollect()
 {
 	connect(ui->actionCollectAlways, SIGNAL(triggered(bool)), &ppImageOrg, SLOT(SetSaveImage(bool)));
+	connect(ui->actionCollectOnce, SIGNAL(triggered(bool)), &ppImageOrg, SLOT(SetSaveImageOnce(bool)));
 }
 /*----------------------------------------------------------------*/
 /**
@@ -199,22 +202,17 @@ void MainWindow::initMainWindowUI()
 	ui->roundProgressBar->setTextVisible(false);                          //设置文字是否隐形
 	ui->roundProgressBar->setRange(0, 6.4);                                //设置角度范围
 	ui->roundProgressBar->setValue(0);                                    //设置当前角度
-
-
-
+	
 	ui->start->setEnabled(true);  //开始录屏 按钮
 	ui->stop->setEnabled(false);  //结束录屏 按钮
-
-
+	
 	ui->tu_startButton->setEnabled(true);
 	ui->tu_stopButton->setEnabled(false);
 
 	ui->obs_box->setEnabled(false);
-
-
+	
 	ui->stackedWidget->setCurrentIndex(0);  //初始化模式
-
-											//线速度的刻条显示
+												//线速度的刻条显示
 	ui->xian->setMinimum(0);
 	ui->xian->setMaximum(250);
 	ui->xian->setValue(125);
@@ -222,6 +220,8 @@ void MainWindow::initMainWindowUI()
 	ui->jiao->setMinimum(0);
 	ui->jiao->setMaximum(1600);
 	ui->jiao->setValue(800);
+
+	this->initMainWindowUI_Tab_CfgCroundPlane();
 
 }
 /*----------------------------------------------------------------*/
@@ -239,28 +239,19 @@ void MainWindow::initMainWindowUI_Connect()
 *
 */
 /*----------------------------------------------------------------*/
-void MainWindow::initTabCfg()
+void MainWindow::initMainWindowUI_Tab_CfgCroundPlane()
 {
-	this->initTabCfgGroundPlane();
-	this->initTabCfgCameraCalibration();
-}
-/*----------------------------------------------------------------*/
-/**
-*
-*/
-/*----------------------------------------------------------------*/
-void MainWindow::initTabCfgGroundPlane()
-{
+	QIntValidator*  qiv = new QIntValidator(0, 2048, this);
 
-}
-/*----------------------------------------------------------------*/
-/**
-*
-*/
-/*----------------------------------------------------------------*/
-void MainWindow::initTabCfgCameraCalibration()
-{
+	ui->lineEdit_P0_X->setValidator(qiv);
+	ui->lineEdit_P1_X->setValidator(qiv);
+	ui->lineEdit_P2_X->setValidator(qiv);
+	ui->lineEdit_P3_X->setValidator(qiv);
 
+	ui->lineEdit_P0_Y->setValidator(qiv);
+	ui->lineEdit_P1_Y->setValidator(qiv);
+	ui->lineEdit_P2_Y->setValidator(qiv);
+	ui->lineEdit_P3_Y->setValidator(qiv);
 }
 /*----------------------------------------------------------------*/
 /**
@@ -279,12 +270,10 @@ void MainWindow::connectTabCfg()
 /*----------------------------------------------------------------*/
 void MainWindow::connectTabCfgGroundPlane()
 {
-	QObject* rcv = mImageProcTopDown.get();
-#if 0	
-	connect(ui->pushButton_ReCalGndPlane,SIGNAL(clicked()),rcv,SLOT(reCalGndPlane()));
+	const QObject* rcv = mImageProcTopDown.get();
 	
-	connect(ui->pushButton_ReCalGndPlane, SIGNAL(clicked()), rcv, SLOT(reCalGndPlane()));
-#endif
+	connect(ui->pushButton_ReCalGndPlane,SIGNAL(clicked()),rcv,SLOT(reCalGndPlane()));
+
 	connect(ui->doubleSpinBox_DstBoard2Camera,SIGNAL(valueChanged(double)),rcv,SLOT(setDstBoard2Camera(double)));
 	connect(ui->spinBox_BoardSize_H, SIGNAL(valueChanged(int)), rcv, SLOT(setBoardSize_H(int)));
 	connect(ui->spinBox_BoardSize_W, SIGNAL(valueChanged(int)), rcv, SLOT(setBoardSize_W(int)));
@@ -292,16 +281,16 @@ void MainWindow::connectTabCfgGroundPlane()
 	connect(ui->doubleSpinBox_SquareSize, SIGNAL(valueChanged(double)), rcv, SLOT(setSquareSize(double)));
 	connect(ui->comboBox_MapSize, SIGNAL(currentTextChanged(QString)), rcv, SLOT(setMapSize(QString)));
 	
-#if 0
-	//point
-	connect(ui->lineEdit_P0_X, SIGNAL(valueChanged(double)), rcv, SLOT());
-	connect(ui->lineEdit_P1_X, SIGNAL(valueChanged(double)), rcv, SLOT());
-	connect(ui->lineEdit_P2_X, SIGNAL(valueChanged(double)), rcv, SLOT());
-	connect(ui->lineEdit_P3_X, SIGNAL(valueChanged(double)), rcv, SLOT());
-	connect(ui->lineEdit_P0_Y, SIGNAL(valueChanged(double)), rcv, SLOT());
-	connect(ui->lineEdit_P1_Y, SIGNAL(valueChanged(double)), rcv, SLOT());
-	connect(ui->lineEdit_P2_Y, SIGNAL(valueChanged(double)), rcv, SLOT());
-	connect(ui->lineEdit_P3_Y, SIGNAL(valueChanged(double)), rcv, SLOT());
+#if 1
+	connect(ui->lineEdit_P0_X, SIGNAL(textChanged(const QString &)), rcv, SLOT(set_X_P0(const QString &)));
+	connect(ui->lineEdit_P1_X, SIGNAL(textChanged(const QString &)), rcv, SLOT(set_X_P1(const QString &)));
+	connect(ui->lineEdit_P2_X, SIGNAL(textChanged(const QString &)), rcv, SLOT(set_X_P2(const QString &)));
+	connect(ui->lineEdit_P3_X, SIGNAL(textChanged(const QString &)), rcv, SLOT(set_X_P3(const QString &)));
+
+	connect(ui->lineEdit_P0_Y, SIGNAL(textChanged(const QString &)), rcv, SLOT(set_Y_P0(const QString &)));
+	connect(ui->lineEdit_P1_Y, SIGNAL(textChanged(const QString &)), rcv, SLOT(set_Y_P1(const QString &)));
+	connect(ui->lineEdit_P2_Y, SIGNAL(textChanged(const QString &)), rcv, SLOT(set_Y_P2(const QString &)));
+	connect(ui->lineEdit_P3_Y, SIGNAL(textChanged(const QString &)), rcv, SLOT(set_Y_P3(const QString &)));
 #endif
 
 }
@@ -312,6 +301,36 @@ void MainWindow::connectTabCfgGroundPlane()
 /*----------------------------------------------------------------*/
 void MainWindow::connectTabCfgCameraCalibration()
 {
+	
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initUiValueGroundPlane()
+{
+	ui->doubleSpinBox_DstBoard2Camera->setValue(1.0);
+	ui->spinBox_BoardSize_H->setValue(11);
+	ui->spinBox_BoardSize_W->setValue(8);
+
+	ui->doubleSpinBox_SquareSize->setValue(0.03);;
+	ui->comboBox_MapSize->setCurrentIndex(6);
+
+#if 1
+	ui->lineEdit_P0_X->setText("347");
+	ui->lineEdit_P0_Y->setText("366");
+
+	ui->lineEdit_P1_X->setText("523");
+	ui->lineEdit_P1_Y->setText("364");
+
+	ui->lineEdit_P2_X->setText("312");
+	ui->lineEdit_P2_Y->setText("402");
+
+	ui->lineEdit_P3_X->setText("551");
+	ui->lineEdit_P3_Y->setText("399");
+	
+#endif
 
 }
 /*----------------------------------------------------------------*/

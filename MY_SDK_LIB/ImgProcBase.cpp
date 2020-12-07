@@ -52,6 +52,22 @@ void ImgProcBase::RECT_adjWidth4(CvRect* _rect)
 	while (_rect->width % 4 != 0) _rect->width--;
 
 }
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+bool ImgProcBase::IsMatNullorZero(const CvMat *_m)
+{
+	if (_m != nullptr) {
+		cv::Mat h_t(_m);
+		const int nonZero = cv::countNonZero(h_t);
+		if (nonZero) {
+			return true;
+		}
+	}
+	return false;
+}
 /*-------------------------------------*/
 /**
 *

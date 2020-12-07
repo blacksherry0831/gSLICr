@@ -25,7 +25,7 @@ ImageProcTopDown::~ImageProcTopDown()
 void ImageProcTopDown::init_param()
 {
 	this->mCalGndMode=false;
-	this->mReCalGndPlane=false;
+	
 }
 /*-----------------------------------------*/
 /**
@@ -243,7 +243,7 @@ void ImageProcTopDown::ProcImageFrame(
 	{
 #if 1
 		this->m_imgProcAirV.initHomography(img_src_t);
-		this->m_imgProcAirV.generateHomographyAuto(img_src_t);
+		this->m_imgProcAirV.generateHomographyManual(img_src_t);
 		bool IsBirdCvt=this->m_imgProcAirV.BirdsImage(img_src_t, img_dst_t);
 
 		if (IsBirdCvt) {
@@ -252,6 +252,7 @@ void ImageProcTopDown::ProcImageFrame(
 			emit sig_1_frame_bgra_ref(_img_p, _time);
 		}
 		this->emit_sig_point_cloud(img_dst_t);
+
 #endif // 1		
 	}
 	cvReleaseImageHeader(&img_src_t);
@@ -325,9 +326,9 @@ void ImageProcTopDown::setCalGndMode(bool _m)
 *
 */
 /*-----------------------------------------*/
-void ImageProcTopDown::setReCalGndPlane(bool _m)
+void ImageProcTopDown::setReCalGndPlane(bool _c)
 {
-	this->mReCalGndPlane = _m;
+	this->m_imgProcAirV.setCalibrate(_c);
 }
 /*-----------------------------------------*/
 /**
@@ -337,6 +338,150 @@ void ImageProcTopDown::setReCalGndPlane(bool _m)
 void ImageProcTopDown::reCalGndPlane()
 {
 	this->setReCalGndPlane(true);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::set_X_P0(const double _v)
+{
+	this->m_imgProcAirV.set_X_P0(_v);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::set_X_P1(const double _v)
+{
+	this->m_imgProcAirV.set_X_P1(_v);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::set_X_P2(const double _v)
+{
+	this->m_imgProcAirV.set_X_P2(_v);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::set_X_P3(const double _v)
+{
+	this->m_imgProcAirV.set_X_P3(_v);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::set_Y_P0(const double _v)
+{
+	this->m_imgProcAirV.set_Y_P0(_v);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::set_Y_P1(const double _v)
+{
+	this->m_imgProcAirV.set_Y_P1(_v);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::set_Y_P2(const double _v)
+{
+	this->m_imgProcAirV.set_Y_P2(_v);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::set_Y_P3(const double _v)
+{
+	this->m_imgProcAirV.set_Y_P3(_v);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::set_X_P0(const QString & _v)
+{
+	this->set_X_P0(_v.toDouble());
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::set_X_P1(const QString & _v)
+{
+	this->set_X_P1(_v.toDouble());
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::set_X_P2(const QString & _v)
+{
+	this->set_X_P2(_v.toDouble());
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::set_X_P3(const QString & _v)
+{
+	this->set_X_P3(_v.toDouble());
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::set_Y_P0(const QString & _v)
+{
+	this->set_Y_P0(_v.toDouble());
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::set_Y_P1(const QString & _v)
+{
+	this->set_Y_P1(_v.toDouble());
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::set_Y_P2(const QString & _v)
+{
+	this->set_Y_P2(_v.toDouble());
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::set_Y_P3(const QString & _v)
+{
+	this->set_Y_P3(_v.toDouble());
 }
 /*-----------------------------------------*/
 /**

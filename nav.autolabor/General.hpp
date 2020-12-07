@@ -7,7 +7,7 @@
 #include <QMetaType>
 #include <QDebug>
 /*-----------------------------------------*/
-
+#include <opencv2\opencv.hpp>
 /*-----------------------------------------*/
 /**
 *
@@ -27,5 +27,8 @@ public:
 	static bool IsEmptyQImage(const QSharedPointer<QImage>  _img_ptr);
 	
 	static bool IsLatestImage(const QDateTime& _time, const qint64 _ms);
+
+	
+
 
 };

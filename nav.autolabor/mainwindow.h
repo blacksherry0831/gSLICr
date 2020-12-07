@@ -90,14 +90,16 @@ private:
 private:
 	void initMainWindowUI();
 	void initMainWindowUI_Connect();
+	void initMainWindowUI_Tab_CfgCroundPlane();
 private:
-	void initTabCfg();
-	void initTabCfgGroundPlane();
-	void initTabCfgCameraCalibration();
+	
+	
 private:
 	void connectTabCfg();
 	void connectTabCfgGroundPlane();
 	void connectTabCfgCameraCalibration();
+private:
+	void initUiValueGroundPlane();
 private:
 	void InitWebSocket();
 private slots:
@@ -185,7 +187,6 @@ public:
 	void connect_calibration_SVG();
 	void connect_calibration_SRC();
 	
-	
 public slots:
 	void PublishPointCloud(QVector<QVector3D> _ptc);
 	
@@ -195,9 +196,7 @@ private:
     QString path;      //数据文件路径
 
     int last_key;     //上一次按键的值
-
-
-		
+			
     QImage mImage;           //记录当前图像 用于展示
                
     int point1_x;

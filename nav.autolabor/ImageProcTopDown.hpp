@@ -28,7 +28,7 @@ public:
     ~ImageProcTopDown();
 private:
 	bool mCalGndMode;
-	bool mReCalGndPlane;
+	
 public:
 	void init_param();
 private:
@@ -76,10 +76,30 @@ public slots :
 	void setSquareSize(const double _sz);
 	void setMapSize(const double _sz);
 	void setMapSize(const QString _sz);
-public:
+public slots:
 	void setCalGndMode(bool _m);
-	void setReCalGndPlane(bool _m);
+	void setReCalGndPlane(bool _c);
 	void reCalGndPlane();
+public slots:
+	void set_X_P0(const double _v);
+	void set_X_P1(const double _v);
+	void set_X_P2(const double _v);
+	void set_X_P3(const double _v);
+
+	void set_Y_P0(const double _v);
+	void set_Y_P1(const double _v);
+	void set_Y_P2(const double _v);
+	void set_Y_P3(const double _v);
+
+	void set_X_P0(const QString& _v);
+	void set_X_P1(const QString& _v);
+	void set_X_P2(const QString& _v);
+	void set_X_P3(const QString& _v);
+
+	void set_Y_P0(const QString& _v);
+	void set_Y_P1(const QString& _v);
+	void set_Y_P2(const QString& _v);
+	void set_Y_P3(const QString& _v);
 
 public:
 	static	IplImage * createImageHeader(QSharedPointer<QImage> _img_p);

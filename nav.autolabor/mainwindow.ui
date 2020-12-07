@@ -997,6 +997,9 @@
    </property>
   </action>
   <action name="actionCollectOnce">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>CollectOnce</string>
    </property>

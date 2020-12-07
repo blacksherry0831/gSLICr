@@ -25,6 +25,7 @@ public:
 private:
 	bool mSafeArea;
 	bool mSaveImage;
+	bool mSaveImageOnce;
 private:
 	QString mPaths;
 public:
@@ -44,6 +45,7 @@ public slots :
 	void ImageProc(QSharedPointer<QImage> _img_ptr, QDateTime _time);
 	void DrawSafeArea(const bool _r);
 	void SetSaveImage(const bool _s);
+	void SetSaveImageOnce(const bool _s);
 };
 
 #endif

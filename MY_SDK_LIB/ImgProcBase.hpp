@@ -24,7 +24,7 @@ public:
 	static const CvScalar BLACK_RGB;
 	static const CvScalar WHITE_RGB;
 
-
+	static bool IsMatNullorZero(const CvMat *_m);
 
 
 

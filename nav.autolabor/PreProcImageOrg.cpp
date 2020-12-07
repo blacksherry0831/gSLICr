@@ -8,6 +8,7 @@ PreProcImageOrg::PreProcImageOrg(QObject *parent) :QObject(parent)
 {
 	mSafeArea = false;
 	this->mSaveImage = false;
+	this->mSaveImageOnce = false;
 	this->InitImageSavePath();
 }
 /*-----------------------------------------*/
@@ -84,6 +85,12 @@ void PreProcImageOrg::ImageProc(QSharedPointer<QImage> _img_ptr, QDateTime _time
 		SaveQImage(_img_ptr);
 	}
 
+	if (mSaveImageOnce)
+	{
+		SaveQImage(_img_ptr);
+		mSaveImageOnce = false;
+	}
+
 	if (mSafeArea) {
 		DriveAuto::DrawSafeArea(_img_ptr.get());
 	}
@@ -107,6 +114,15 @@ void PreProcImageOrg::DrawSafeArea(const bool _r)
 void PreProcImageOrg::SetSaveImage(const bool _s)
 {
 	this->mSaveImage = _s;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void PreProcImageOrg::SetSaveImageOnce(const bool _s)
+{
+	this->mSaveImageOnce = _s ;
 }
 /*-----------------------------------------*/
 /**
