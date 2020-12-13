@@ -24,7 +24,7 @@ ImageProcTopDown::~ImageProcTopDown()
 /*-----------------------------------------*/
 void ImageProcTopDown::init_param()
 {
-	this->mCalGndMode=false;
+	
 	
 }
 /*-----------------------------------------*/
@@ -146,12 +146,18 @@ QVector<QVector3D> ImageProcTopDown::Cvt2PolarCoord(QVector<QVector3D> _xy)
 		if (rho_old == 0) {
 			polar_t[thIdx].setX(rho);
 			polar_t[thIdx].setY(theta);
-		}else if (rho_old>rho) {
-			polar_t[thIdx].setX(rho);
-			polar_t[thIdx].setY(theta);
 		}else{
-			Q_ASSERT(rho_old<rho);
+
+			if (rho_old>rho) {
+				polar_t[thIdx].setX(rho);
+				polar_t[thIdx].setY(theta);
+			}else {
+				Q_ASSERT(rho_old <= rho);
+			}
+			
 		}
+		
+		
 
 
 	}
@@ -243,7 +249,7 @@ void ImageProcTopDown::ProcImageFrame(
 	{
 #if 1
 		this->m_imgProcAirV.initHomography(img_src_t);
-		this->m_imgProcAirV.generateHomographyManual(img_src_t);
+		this->m_imgProcAirV.generateHomography(img_src_t);
 		bool IsBirdCvt=this->m_imgProcAirV.BirdsImage(img_src_t, img_dst_t);
 
 		if (IsBirdCvt) {
@@ -319,7 +325,7 @@ void ImageProcTopDown::setMapSize(const QString _sz)
 /*-----------------------------------------*/
 void ImageProcTopDown::setCalGndMode(bool _m)
 {
-	this->mCalGndMode=_m;
+	this->m_imgProcAirV.setCalGndMode(_m);
 }
 /*-----------------------------------------*/
 /**

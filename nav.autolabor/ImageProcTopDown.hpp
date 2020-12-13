@@ -26,8 +26,7 @@ class ImageProcTopDown :public QObject
 public:
     explicit ImageProcTopDown();
     ~ImageProcTopDown();
-private:
-	bool mCalGndMode;
+
 	
 public:
 	void init_param();

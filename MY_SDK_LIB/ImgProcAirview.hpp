@@ -14,6 +14,8 @@ public:
 		ImgProcAirView();
 		~ImgProcAirView();
 private:
+	bool mCalGndMode;
+private:
 	CvPoint2D32f    objPts_Board[4];
 	CvPoint2D32f	imgPts_Board[4];
 private:
@@ -57,12 +59,9 @@ public:
 public:
 	static CvPoint2D32f getPolygonCenter(CvPoint2D32f* _Pts,  const int _sz);
 	int getPointQuadrant(const CvPoint2D32f _cPt, const CvPoint2D32f _Pt);
-	
-	void InitcornerPoints(
-		CvPoint2D32f* _objPts,
-		CvPoint2D32f* _imgPts,
-		const int _sz);
 
+	void InitcornerPointsAuto(const int _sz);
+	
 	void InitcornerPointsManual(const int _sz);
 
 	void cornerPoints(const int _sz);
@@ -76,6 +75,7 @@ public:
 	void ColorInvert(CvArr* _src);
 public:
 	void initHomography(IplImage *_img);
+	void generateHomography(IplImage *_img);
 	void generateHomographyAuto(IplImage *_img);
 	void generateHomographyManual(IplImage *_img);
 public:
@@ -113,4 +113,5 @@ public:
 	void set_Y_P1(const float _v);
 	void set_Y_P2(const float _v);
 	void set_Y_P3(const float _v);
+	void setCalGndMode(bool _m);
 };

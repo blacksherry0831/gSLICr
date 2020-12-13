@@ -272,6 +272,11 @@ void MainWindow::connectTabCfgGroundPlane()
 {
 	const QObject* rcv = mImageProcTopDown.get();
 	
+	
+	connect(ui->radioButton_CalGndManual, SIGNAL(toggled(bool)), this, SLOT(SetCalGndMode(bool)));
+	//connect(ui->radioButton_CalGndAuto, SIGNAL(clicked(bool)), this, SLOT(SetCalGndMode(bool)));
+
+
 	connect(ui->pushButton_ReCalGndPlane,SIGNAL(clicked()),rcv,SLOT(reCalGndPlane()));
 
 	connect(ui->doubleSpinBox_DstBoard2Camera,SIGNAL(valueChanged(double)),rcv,SLOT(setDstBoard2Camera(double)));
@@ -292,6 +297,8 @@ void MainWindow::connectTabCfgGroundPlane()
 	connect(ui->lineEdit_P2_Y, SIGNAL(textChanged(const QString &)), rcv, SLOT(set_Y_P2(const QString &)));
 	connect(ui->lineEdit_P3_Y, SIGNAL(textChanged(const QString &)), rcv, SLOT(set_Y_P3(const QString &)));
 #endif
+
+
 
 }
 /*----------------------------------------------------------------*/
@@ -1459,6 +1466,17 @@ void MainWindow::drive_run_policy(
 	mCarHardware->run_cmd_policy(_cmd,
 								_speed_v1,
 								_speed_v2);
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::SetCalGndMode(bool _s)
+{
+	 ImageProcTopDown* rcv_top_down = mImageProcTopDown.get();
+
+	rcv_top_down->setCalGndMode(!_s);
 }
 /*----------------------------------------------------------------*/
 /**

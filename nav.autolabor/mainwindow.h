@@ -183,6 +183,9 @@ public slots:
 	void menu_run_current_once(bool _r);
 					
 	void menu_toggle_calibration_SVG_SRC(bool _f);
+
+public slots:
+	void SetCalGndMode(bool _s);
 public:
 	void connect_calibration_SVG();
 	void connect_calibration_SRC();

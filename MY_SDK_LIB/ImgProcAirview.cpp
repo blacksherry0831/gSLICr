@@ -29,6 +29,7 @@ ImgProcAirView::~ImgProcAirView()
 void ImgProcAirView::initParam() 
 {
 	this->m_calibrate = false;
+	this->mCalGndMode = false;
 
 	this->SetBoard(11, 8);
 	this->black = 1;
@@ -154,63 +155,18 @@ int ImgProcAirView::getPointQuadrant(const CvPoint2D32f  _cPt,const CvPoint2D32f
 *
 */
 /*-----------------------------------------*/
-void ImgProcAirView::InitcornerPoints(
-	CvPoint2D32f * _objPts,
-	CvPoint2D32f * _imgPts,
+void ImgProcAirView::InitcornerPointsAuto(
 	const int _sz)
 {
-	int quadMap[4];
-	CvPoint2D32f imgPts[4];
-	
-	imgPts[0] = corners[0];
-	imgPts[1] = corners[board_w - 1];
-	imgPts[2] = corners[(board_h - 1)*board_w];
-	imgPts[3] = corners[(board_h - 1)*board_w + board_w - 1];
 
-#if 0
-	imgPts[0] = cvPoint2D32f(347,366) ;
-	imgPts[1] = cvPoint2D32f(523,364);
-	imgPts[2] = cvPoint2D32f(312,402);
-	imgPts[3] = cvPoint2D32f(551,399);
-#endif // 0
+	imgPts_Board[0] = corners[0];
+	imgPts_Board[1] = corners[board_w - 1];
+	imgPts_Board[2] = corners[(board_h - 1)*board_w];
+	imgPts_Board[3] = corners[(board_h - 1)*board_w + board_w - 1];
 
-	
+	this->cornerPointsSort(_sz);
+	this->cornerPointsMapResult(_sz);
 
-	const CvPoint2D32f img_center=getPolygonCenter(imgPts,_sz);
-
-	for (size_t i = 0; i < _sz; i++){
-		const CvPoint2D32f P_t= imgPts[i];
-		const int q=this->getPointQuadrant(img_center, P_t);
-		if (q<0){
-			return ;
-		}else{
-			quadMap[q-1] = q;
-			_imgPts[q-1] = P_t;
-		}
-	
-	}
-	
-	
-	const float S = m_board_cell_pixels;
-	
-	const float   meters_per_pixel = this->MetersPerPixel();
-
-	const int DST_C_B = m_real_board_2_camera / meters_per_pixel;
-
-	const int B_H = S*(board_h - 1);
-	const int B_W = S*(board_w - 1);
-	const int X_OFF = (m_img_width-B_H)/2;
-	const int Y_OFF = m_img_height- DST_C_B-B_W/2;
-
-	_objPts[0]=cvPoint2D32f(B_H, B_W);//1
-	_objPts[1]=cvPoint2D32f(0, B_W);//2
-	_objPts[2]=cvPoint2D32f(0, 0);//3
-	_objPts[3]=cvPoint2D32f(B_H, 0);//4
-	
-	_objPts[0].x += X_OFF; _objPts[0].y += Y_OFF;
-	_objPts[1].x += X_OFF; _objPts[1].y += Y_OFF;
-	_objPts[2].x += X_OFF; _objPts[2].y += Y_OFF;
-	_objPts[3].x += X_OFF; _objPts[3].y += Y_OFF;
 }
 /*-----------------------------------------*/
 /**
@@ -339,15 +295,33 @@ void ImgProcAirView::initHomography(IplImage * _img)
 *
 */
 /*-----------------------------------------*/
+void ImgProcAirView::generateHomography(IplImage * _img)
+{
+
+	if (this->mCalGndMode){
+		this->generateHomographyAuto(_img);
+	}else {
+		this->generateHomographyManual(_img);
+	}
+	
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
 void ImgProcAirView::generateHomographyAuto(IplImage * _img)
 {
 
-	if (this->IsHomographyNullorZero()){
-		//已加载
-	}
-	else
-	{
-		this->FindChessBoard(_img);
+	const int cal = m_calibrate;
+
+	if (cal){
+
+		if (this->FindChessBoard(_img)) {
+		
+			m_calibrate = false;
+		}
+
 	}
 
 }
@@ -390,17 +364,11 @@ int ImgProcAirView::FindChessBoard(IplImage * _img)
 			cvSize(-1, -1),
 			cvTermCriteria(CV_TERMCRIT_EPS | CV_TERMCRIT_ITER, 30, 0.1)
 		);
-
-		CvPoint2D32f objPts[4], imgPts[4];
-
-		this->InitcornerPoints(objPts, imgPts,4);
+				
+		this->InitcornerPointsAuto(4);
 		
 		// DRAW THE POINTS in order: B,G,R,YELLOW
-		//
-		cvCircle(_img, cvPointFrom32f(imgPts[0]), 9, CV_RGB(0, 0, 255), 3); //blue
-		cvCircle(_img, cvPointFrom32f(imgPts[1]), 9, CV_RGB(0, 255, 0), 3); //green
-		cvCircle(_img, cvPointFrom32f(imgPts[2]), 9, CV_RGB(255, 0, 0), 3); //red
-		cvCircle(_img, cvPointFrom32f(imgPts[3]), 9, CV_RGB(255, 255, 0), 3); //yellow
+		this->DrawChessboard4Points(_img);
 		// DRAW THE FOUND CHESSBOARD
 		
 		cvDrawChessboardCorners(
@@ -411,13 +379,7 @@ int ImgProcAirView::FindChessBoard(IplImage * _img)
 			found
 		);
 
-		if (this->H==nullptr){
-			H = cvCreateMat(3, 3, CV_32F);
-			cvZero(H);
-			cvGetPerspectiveTransform(objPts, imgPts, H);
-			this->SaveHomographyFiles(_img,H);
-			
-		}
+		getHomographyTransform(_img);
 		
 	}
 
@@ -715,6 +677,15 @@ void ImgProcAirView::set_Y_P2(const float _v)
 void ImgProcAirView::set_Y_P3(const float _v) 
 {
 	set_Y_P(3, _v);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImgProcAirView::setCalGndMode(bool _m)
+{
+	this->mCalGndMode = _m;
 }
 /*-----------------------------------------*/
 /**

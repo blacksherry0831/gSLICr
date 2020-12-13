@@ -180,7 +180,7 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_13">
               <item>
-               <widget class="QGroupBox" name="groupBox">
+               <widget class="QGroupBox" name="groupBox_CalGndMode">
                 <property name="title">
                  <string>calibrate ground mode</string>
                 </property>
