@@ -80,6 +80,7 @@ private:
 	void initRegisterMetaType();
 private:
 	void initMenu();
+	void initMenuVideoDecoder();
 	void initMenuShow();
 	void initMenuRun();
 	void initMenuCollect();

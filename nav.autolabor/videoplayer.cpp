@@ -32,6 +32,18 @@ VideoPlayer::VideoPlayer()
 *
 */
 /*----------------------------------------------------------------*/
+VideoPlayer::VideoPlayer(const std::string _url)
+{
+	videoStreamIdx = -1;
+	this->init_param();
+	this->initFFMPEG();
+	this->SetRtspUrl(_url);
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 VideoPlayer::~VideoPlayer()
 {
 	freePlayModule();
@@ -240,6 +252,9 @@ void VideoPlayer::init_param()
 	pAVDic = NULL;
 	this->mDecodeLoop = false;
 	this->mThreadRun = true;
+	this->rtsp_url = "rtsp://192.168.99.201/stream1";
+	this->mFpsOut = 1;
+	this->mFrameCount=0;
 	
 }
 /*----------------------------------------------------------------*/
@@ -312,32 +327,24 @@ void VideoPlayer::initFFMPEG()
 int VideoPlayer::run_video_decode()
 {
 	 //读取视频的一帧，并保存值packet中
+	int  got_picture;
 	if (av_read_frame(pFormatCtx, pPacket) < 0){
-				
 		mDecodeLoop = 0;
-				
 	}else{
-
-				if (pPacket->stream_index == videoStreamIdx) {
-					int  got_picture;
-					const int ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, pPacket);   //视频解码
-
-					if (ret < 0) {
-								printf("decode error.\n");
-								mDecodeLoop = 0;
-						
-					}else {					
-								//视频解码后的数据格式为YUV420，这里将其转为rgb数据格式，利于保存为图片
-								if (got_picture) {
-									this->emit_RGB32_QImage();
-								}				
-					}
+			if (pPacket->stream_index == videoStreamIdx) {
+						const int ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, pPacket);   //视频解码
+				    		if (ret < 0) {
+											printf("decode error.\n");
+											mDecodeLoop = 0;
+							}else {	//视频解码后的数据格式为YUV420，这里将其转为rgb数据格式，利于保存为图片												
+											if (got_picture) {
+														if (IncFrameIsOut()) 
+															this->emit_RGB32_QImage();
+											}
+							}										
 				}
-
 				av_packet_unref(pPacket); //释放资源,否则内存会一直上升
-
-	}
-	
+	}	
 	return mDecodeLoop;
 }
 /*----------------------------------------------------------------*/
@@ -368,6 +375,55 @@ void VideoPlayer::run()
 
 			}
 
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+int VideoPlayer::IncFrameIsOut()
+{
+	return (this->mFrameCount++ % frameInterval() == 0);
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+int VideoPlayer::fpsOut1()
+{
+	SetOutputFps(1);
+	return 0;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+int VideoPlayer::fpsOut5()
+{
+	SetOutputFps(5);
+	return 0;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+int VideoPlayer::fpsOut10()
+{
+	SetOutputFps(10);
+	return 0;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+int VideoPlayer::fpsOut25()
+{
+	SetOutputFps(25);
+	return 0;
 }
 /*----------------------------------------------------------------*/
 /**
@@ -430,6 +486,20 @@ void VideoPlayer::emit_RGB32_QImage()
 *
 */
 /*----------------------------------------------------------------*/
+int VideoPlayer::frameInterval()
+{
+
+	double fps_raw = getFpsRaw();
+	double fps_out = mFpsOut;
+	int frame_interval = std::round( fps_raw / fps_out);
+	return frame_interval;
+
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 int VideoPlayer::dbg_is_equal(const int _s1, const int _s2)
 {
 	return _s1==_s2;
@@ -451,6 +521,34 @@ int VideoPlayer::IsLoopRun()
 void VideoPlayer::SetScale(const int _w, const int _h)
 {
 	mSwsContextSafe.SetSwsContextDst(_w, _h);
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void VideoPlayer::SetRtspUrl(std::string _url)
+{
+	this->rtsp_url = _url;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+double VideoPlayer::getFpsRaw()
+{
+	double framerate = av_q2d(pFormatCtx->streams[videoStreamIdx]->r_frame_rate);
+	return framerate;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void VideoPlayer::SetOutputFps(const int _fps)
+{
+	this->mFpsOut = _fps;
 }
 /*----------------------------------------------------------------*/
 /**

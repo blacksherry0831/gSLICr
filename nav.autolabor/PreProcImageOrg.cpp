@@ -31,7 +31,7 @@ void PreProcImageOrg::InitImageSavePath()
 
 	const QString PathImageSave = qexeFullPath + "/" + "Image" + "/";
 
-	if (CreateDir(PathImageSave)) {
+	if (QBase::CreateDir(PathImageSave)) {
 		this->mPaths = PathImageSave;
 	}
 }
@@ -123,24 +123,6 @@ void PreProcImageOrg::SetSaveImage(const bool _s)
 void PreProcImageOrg::SetSaveImageOnce(const bool _s)
 {
 	this->mSaveImageOnce = _s ;
-}
-/*-----------------------------------------*/
-/**
-*
-*/
-/*-----------------------------------------*/
-bool PreProcImageOrg::CreateDir(const QString &path)
-{
-	QDir dir(path); // 注意
-	if (dir.exists())
-	{
-		return true;
-	}
-	else {
-		dir.setPath("");
-		bool ok = dir.mkpath(path);
-		return ok;
-	}
 }
 /*-----------------------------------------*/
 /**

@@ -6,7 +6,8 @@
 /*-----------------------------------------*/
 ImageProcTopDown::ImageProcTopDown()
 {
-
+	this->init_param();
+	this->InitImageSavePath();
 }
 /*-----------------------------------------*/
 /**
@@ -24,8 +25,23 @@ ImageProcTopDown::~ImageProcTopDown()
 /*-----------------------------------------*/
 void ImageProcTopDown::init_param()
 {
+	this->mSaveImageOnce = false;
 	
-	
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::InitImageSavePath()
+{
+	const QString qexeFullPath = QCoreApplication::applicationDirPath();
+
+	const QString PathImageSave = qexeFullPath + "/" + "ImageTopDown" + "/";
+
+	if (QBase::CreateDir(PathImageSave)) {
+		this->mPaths = PathImageSave;
+	}
 }
 /*-----------------------------------------*/
 /**
@@ -251,6 +267,8 @@ void ImageProcTopDown::ProcImageFrame(
 		this->m_imgProcAirV.initHomography(img_src_t);
 		this->m_imgProcAirV.generateHomography(img_src_t);
 		bool IsBirdCvt=this->m_imgProcAirV.BirdsImage(img_src_t, img_dst_t);
+
+		SaveQImageOnce(bird_p);
 
 		if (IsBirdCvt) {
 			emit sig_1_frame_bgra_ref(bird_p, _time);
@@ -494,6 +512,15 @@ void ImageProcTopDown::set_Y_P3(const QString & _v)
 *
 */
 /*-----------------------------------------*/
+void ImageProcTopDown::SetSaveImageOnce()
+{
+	SetSaveImageOnce(true);
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
 IplImage * ImageProcTopDown::createImageHeader(QSharedPointer<QImage> _img_p)
 {
 	CvSize img_sz_t = cvSize(_img_p->width(), _img_p->height());
@@ -503,6 +530,42 @@ IplImage * ImageProcTopDown::createImageHeader(QSharedPointer<QImage> _img_p)
 	IplImage* img_t = cvCreateImageHeader(img_sz_t, IPL_DEPTH_8U, 4);
 	cvSetData(img_t, (void*)data_t, step_t);
 	return img_t;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::SetSaveImageOnce(const bool _s)
+{
+	this->mSaveImageOnce = _s;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void  ImageProcTopDown::SaveQImage(const QSharedPointer<QImage> _img)
+{
+	qint64 t = QDateTime::currentDateTime().toMSecsSinceEpoch();
+	QString name = QString("%1").arg(t) + ".png";
+
+	if (!(_img)->save(mPaths + name, "png")) {
+		qDebug() << "picture save failed" << endl;
+	}
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+void ImageProcTopDown::SaveQImageOnce(const QSharedPointer<QImage> _img)
+{
+	if (mSaveImageOnce)
+	{
+		SaveQImage(_img);
+		mSaveImageOnce = false;
+	}
 }
 /*-----------------------------------------*/
 /**

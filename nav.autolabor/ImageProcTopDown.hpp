@@ -15,6 +15,8 @@
 /*-----------------------------------------*/
 #include "General.hpp"
 /*-----------------------------------------*/
+#include "QT_SDK_LIB/QBase.h"
+/*-----------------------------------------*/
 /**
 *
 *
@@ -26,10 +28,12 @@ class ImageProcTopDown :public QObject
 public:
     explicit ImageProcTopDown();
     ~ImageProcTopDown();
-
-	
+private:
+	QString mPaths;
+	bool mSaveImageOnce;
 public:
 	void init_param();
+	void InitImageSavePath();
 private:
 	QVector<QVector3D> getPointCloud(const IplImage* _img);
 	
@@ -99,11 +103,14 @@ public slots:
 	void set_Y_P1(const QString& _v);
 	void set_Y_P2(const QString& _v);
 	void set_Y_P3(const QString& _v);
-
+public slots:
+	void SetSaveImageOnce(const bool _s);
+	void SetSaveImageOnce();
 public:
 	static	IplImage * createImageHeader(QSharedPointer<QImage> _img_p);
-
-	
+	void SaveQImage(const QSharedPointer<QImage> _img);
+	void SaveQImageOnce(const QSharedPointer<QImage> _img);
+		
 };
 
 Q_DECLARE_METATYPE(QVector<QVector3D>);

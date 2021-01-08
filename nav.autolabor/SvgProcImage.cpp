@@ -41,13 +41,22 @@ bool SVG_PROC_IMAGE::IsLatestImage(const QDateTime & _time,const int64 _ms)
 /*-----------------------------------------*/
 void SVG_PROC_IMAGE::ProcImageSVG(QSharedPointer<QImage> _img_p, const QDateTime & _time)
 {
-	QSharedPointer<QImage> img_svg = QSharedPointer<QImage>(new QImage(_img_p->width(), _img_p->height(), _img_p->format()));
-	
+	const int wOrg = _img_p->width();
+	const int hOrg = _img_p->height();
+	const int S = 2;
+	const int W = wOrg / S;
+	const int H = hOrg / S;
+	const QImage::Format F = _img_p->format();
+		 	
+	QSharedPointer<QImage> img_min_p = QSharedPointer<QImage>(new QImage(_img_p->scaled(W,H)));
+	QSharedPointer<QImage> img_min_svg = QSharedPointer<QImage>(new QImage(W, H,F));
+
 	if (1) {
-		SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(_img_p, img_svg);
+		SGV_Method::SVG_NAVIGATION_CAR_CLUSTER_FAST_1_FRAME(img_min_p, img_min_svg);
 	}else {
 		
 	}
+	QSharedPointer<QImage> img_svg = QSharedPointer<QImage>(new QImage(img_min_svg->scaled(wOrg, hOrg)));
 
 	emit sig_org_frame_bgra(_img_p,_time);
 	emit sig_out_frame_bgra(img_svg, _time);

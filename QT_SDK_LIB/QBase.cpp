@@ -199,6 +199,23 @@ void QBase::UI_Show_QImage_on_QLabel(QLabel * _qlab, QImage * const _p_qimg)
 /*-----------------------------------------*/
 /**
 *
+*/
+/*-----------------------------------------*/
+bool  QBase::CreateDir(const QString &path)
+{
+	QDir dir(path); // зЂвт
+	if (dir.exists())
+	{
+		return true;
+	}
+	else {
+		dir.setPath("");
+		bool ok = dir.mkpath(path);
+		return ok;
+	}
+}
+/*-----------------------------------------*/
+/**
 *
 */
 /*-----------------------------------------*/

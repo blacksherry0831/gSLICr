@@ -11,6 +11,8 @@
 /*-----------------------------------------*/
 #include "DriveAuto.h"
 /*-----------------------------------------*/
+#include "QT_SDK_LIB/QBase.h"
+/*-----------------------------------------*/
 /**
 *
 */
@@ -35,8 +37,6 @@ public:
 	void SaveQImage(const QSharedPointer<QImage> _img);
 
 	void SetResize(const int _w,const int _h);
-private:
-	static bool CreateDir(const QString & path);
 public:
 signals:
 	void sig_1_frame_bgra_ref(QSharedPointer<QImage>, const QDateTime);

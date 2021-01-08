@@ -35,5 +35,6 @@ public:
 	static  QSharedPointer<QDomDocument>	fs_read_xml(const QString _save_full_path);
 public:
 	static void UI_Show_QImage_on_QLabel(QLabel * _qlab, QImage * const  _p_qimg);
+	static bool CreateDir(const QString & path);
 };
 

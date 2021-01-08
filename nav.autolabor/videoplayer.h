@@ -34,6 +34,7 @@ class VideoPlayer : public QThread
 
 public:
     explicit VideoPlayer();
+	VideoPlayer(const std::string _url);
     ~VideoPlayer();
 private:
 	int Width();
@@ -53,10 +54,13 @@ private:
 private:
 	int videoStreamIdx;
 private:
-	const std::string rtsp_url = "rtsp://192.168.99.201/stream1";
+	 std::string rtsp_url;
 private:
 	int mThreadRun;
 	int mDecodeLoop;
+private:
+	int mFpsOut;
+	int mFrameCount;
 public:
     void startPlay();
 	void stopPaly();
@@ -67,11 +71,14 @@ public:
 	void initFFMPEG();
 public:
 	void emit_RGB32_QImage();
+	int frameInterval();
 	int dbg_is_equal(const int _s1, const int _s2);
 private:
 	int IsLoopRun();
 public:
 	void SetScale(const int _w,const int _h);
+	void SetRtspUrl(std::string _url);
+	double  getFpsRaw();
 private:
 	void AllocAvFrame();
 	void FreeAvFrame();
@@ -80,7 +87,7 @@ private:
 	void initAVDictionary();
 	void initAVFormatContext();
 private:
-	int openRtspStream();
+	int  openRtspStream();
 	void findRtspStream();
 	void findRtspCodec();
 protected:
@@ -94,7 +101,14 @@ protected:
 	int run_video_decode();
 protected:
     void run();
-
+public slots:
+	void SetOutputFps(const int _fps);
+	int  IncFrameIsOut();
+	int  fpsOut1();
+	int  fpsOut5();
+	int  fpsOut10();
+	int  fpsOut25();
+/*************************************************************************/
 signals:
 	
 	void sig_1_frame_RGB32_ref(QSharedPointer<QImage>, const QDateTime);

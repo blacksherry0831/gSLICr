@@ -123,11 +123,24 @@ void MainWindow::initRegisterMetaType()
 /*----------------------------------------------------------------*/
 void MainWindow::initMenu()
 {
+	this->initMenuVideoDecoder();
 	this->initMenuShow();
 	this->initMenuRun();
 	this->initMenuCollect();
 	this->initMenuConnect();
 	this->initMenuImageProcessing();
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initMenuVideoDecoder()
+{
+	connect(ui->actionfps1, SIGNAL(triggered()), mImagePlayer.get(), SLOT(fpsOut1()));
+	connect(ui->actionfps5, SIGNAL(triggered()), mImagePlayer.get(), SLOT(fpsOut5()));
+	connect(ui->actionfps10, SIGNAL(triggered()), mImagePlayer.get(), SLOT(fpsOut10()));
+	connect(ui->actionfps25, SIGNAL(triggered()), mImagePlayer.get(), SLOT(fpsOut25()));
 }
 /*----------------------------------------------------------------*/
 /**
@@ -161,6 +174,9 @@ void MainWindow::initMenuCollect()
 {
 	connect(ui->actionCollectAlways, SIGNAL(triggered(bool)), &ppImageOrg, SLOT(SetSaveImage(bool)));
 	connect(ui->actionCollectOnce, SIGNAL(triggered(bool)), &ppImageOrg, SLOT(SetSaveImageOnce(bool)));
+
+	connect(ui->actionCollectOnceTopDown, SIGNAL(triggered(bool)), mImageProcTopDown.get(), SLOT(SetSaveImageOnce(bool)));
+
 }
 /*----------------------------------------------------------------*/
 /**
@@ -271,12 +287,10 @@ void MainWindow::connectTabCfg()
 void MainWindow::connectTabCfgGroundPlane()
 {
 	const QObject* rcv = mImageProcTopDown.get();
-	
-	
+		
 	connect(ui->radioButton_CalGndManual, SIGNAL(toggled(bool)), this, SLOT(SetCalGndMode(bool)));
 	//connect(ui->radioButton_CalGndAuto, SIGNAL(clicked(bool)), this, SLOT(SetCalGndMode(bool)));
-
-
+	
 	connect(ui->pushButton_ReCalGndPlane,SIGNAL(clicked()),rcv,SLOT(reCalGndPlane()));
 
 	connect(ui->doubleSpinBox_DstBoard2Camera,SIGNAL(valueChanged(double)),rcv,SLOT(setDstBoard2Camera(double)));
@@ -297,9 +311,7 @@ void MainWindow::connectTabCfgGroundPlane()
 	connect(ui->lineEdit_P2_Y, SIGNAL(textChanged(const QString &)), rcv, SLOT(set_Y_P2(const QString &)));
 	connect(ui->lineEdit_P3_Y, SIGNAL(textChanged(const QString &)), rcv, SLOT(set_Y_P3(const QString &)));
 #endif
-
-
-
+	
 }
 /*----------------------------------------------------------------*/
 /**
@@ -325,17 +337,17 @@ void MainWindow::initUiValueGroundPlane()
 	ui->comboBox_MapSize->setCurrentIndex(6);
 
 #if 1
-	ui->lineEdit_P0_X->setText("347");
-	ui->lineEdit_P0_Y->setText("366");
+	ui->lineEdit_P0_X->setText("933");
+	ui->lineEdit_P0_Y->setText("836");
 
-	ui->lineEdit_P1_X->setText("523");
-	ui->lineEdit_P1_Y->setText("364");
+	ui->lineEdit_P1_X->setText("1148");
+	ui->lineEdit_P1_Y->setText("830");
 
-	ui->lineEdit_P2_X->setText("312");
-	ui->lineEdit_P2_Y->setText("402");
+	ui->lineEdit_P2_X->setText("890");
+	ui->lineEdit_P2_Y->setText("964");
 
-	ui->lineEdit_P3_X->setText("551");
-	ui->lineEdit_P3_Y->setText("399");
+	ui->lineEdit_P3_X->setText("1198");
+	ui->lineEdit_P3_Y->setText("956");
 	
 #endif
 
@@ -1221,8 +1233,8 @@ void MainWindow::ThreadWork_Init()
 /*----------------------------------------------------------------*/
 void MainWindow::ThreadWork_Init_obj()
 {
-	mImagePlayer= QSharedPointer<VideoPlayer>(new VideoPlayer());
-	mImagePlayer->SetScale(960, 540);
+	mImagePlayer= QSharedPointer<VideoPlayer>(new VideoPlayer("rtsp://192.168.99.201/stream1"));
+	mImagePlayer->SetScale(1920, 1080);
 	
 	mImageProcSVG=QSharedPointer<SVG_PROC_IMAGE>(new SVG_PROC_IMAGE());
 	mImageProcCal=QSharedPointer<ImageProcCalibration>(new ImageProcCalibration());
