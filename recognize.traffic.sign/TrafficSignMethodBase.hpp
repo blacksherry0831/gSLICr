@@ -7,16 +7,17 @@
 /*-----------------------------------------*/
 #include "TrafficSignPropertyBase.hpp"
 #include "TrafficSignProperty.hpp"
+
+#include "TrafficSignMethodBase.hpp"
+
 /*-----------------------------------------*/
 #include "MY_SDK_LIB/Base.h"
-
-
 /*-----------------------------------------*/
-class TrafficSignMethod
+class TrafficSignMethodBase
 {
 public:
-	TrafficSignMethod(void);
-	~TrafficSignMethod(void);
+	TrafficSignMethodBase(void);
+	~TrafficSignMethodBase(void);
 public:
 	const CvScalar ColorWhite = CV_RGB(255, 255, 255);
 public:
@@ -41,14 +42,12 @@ public:
 	const CvScalar Cyan_low = cvScalar(78, 43, 46);
 	const CvScalar Cyan_up  = cvScalar(99, 255, 255);
 
-private:
-	std::vector<std::shared_ptr<TrafficSignProperty>>   mProperty;
-private:
+protected:
 	std::string		mPathFull;
 	std::string		mFileName;
 	std::string		mFilePath;
 	std::string     mPathName;
-private:
+protected:
 	IplImage*  mImgOrg;
 	IplImage*  mImgHsv;
 
@@ -61,7 +60,7 @@ private:
 	IplImage*  mImgBlockGreen;
 	IplImage*  mImgBlockYellow;
 	IplImage*  mImgBlockRed;
-private:
+protected:
 	CvMemStorage* mMemStorage;
 private:
 	void  init();
@@ -69,19 +68,17 @@ private:
 	void  allocImg();
 	void  allocImg(const int _w,const int _h, const int _d);
 	void  releaseImg();
-private:
-	void FillExternalContours(
-		IplImage * pBinary,
-		IplImage * _imgOut,
-		const float _areaMin,
-		const float _areaMax,
-		std::string _colour);
 
 public:
 	void LoadImage(const std::string _p);
 public:
-	bool IsContourSizeInRange(const CvSeq* _c,const float _min,const float _max);
-	bool IsContourSizeInRange(const float _area, const float _min, const float _max);
+	static bool IsContourSizeInRange(const CvSeq* _c,const float _min,const float _max);
+	static bool IsContourSizeInRange(const float _area, const float _min, const float _max);
+
+	static  float LogPolarMatchAngle(cv::Mat _s,cv::Mat _t);
+
+	static  void  resizeSameSize(cv::Mat& _s, cv::Mat& _t);
+
 public:
 	CvRect  rectExpandBorder(
 		CvRect _r,
@@ -90,13 +87,7 @@ public:
 		const int _h);
 public:
 	void cutTempleteArea(const int _blockSz);
-	void saveTempleteAreaImage();
-public:
-	std::shared_ptr<TrafficSignProperty>   getTrafficSignMax();
 
-public:
-	std::vector<std::shared_ptr<TrafficSignProperty>> ImgFragProcSift();
-
-	std::vector<std::shared_ptr<TrafficSignProperty>> MatchSift(std::vector<std::shared_ptr<TrafficSignProperty>> _t, std::vector<std::shared_ptr<TrafficSignProperty>> _s);
+	
 
 };
