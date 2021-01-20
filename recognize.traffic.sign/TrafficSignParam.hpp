@@ -22,27 +22,28 @@ private:
 	std::string  mForward;
 	std::string  mLeft;
 	std::string  mRight;
-	std::string  mSides;
+
 public:
 	std::string getForwardPrefix();
 	std::string getLeftPrefix();
 	std::string getRightPrefix();
-	std::string getSidesPrefix();
+	
+	std::vector<std::string> getAllArrowType();
 public:
 	std::string getForwardPathSampleTemplete();
 	std::string getLeftPathSampleTemplete();
 	std::string getRightPathSampleTemplete();
-	std::string getSidesPathSampleTemplete();
+	
 public:
 	std::string getForwardPathSampleTesting();
 	std::string getLeftPathSampleTesting();
 	std::string getRightPathSampleTesting();
-	std::string getSidesPathSampleTesting();
+	
 public:
 	std::string getForwardPathTemplete();
 	std::string getLeftPathTemplete();
 	std::string getRightPathTemplete();
-	std::string getSidesPathTemplete();
+	
 public:
 	std::vector<std::string> getSampleTempletePaths();
 	std::string getSampleTempletePath();

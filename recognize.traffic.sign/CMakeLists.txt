@@ -13,8 +13,15 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 CUDA_ADD_EXECUTABLE(EXE_TRAFFIC_SIGN
 							TrafficSignParam.cpp
 							TrafficSignTemplete.cpp
+							
+							TrafficSignMethodBase.cpp
 							TrafficSignMethod.cpp
+							TrafficSignMethodHu.cpp
+							
+							TrafficSignPropertyBase.cpp
 							TrafficSignProperty.cpp
+							TrafficSignPropertyHu.cpp
+							
 							main_traffic_sign.cpp
 					)
 

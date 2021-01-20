@@ -29,7 +29,7 @@ void TrafficSignParam::initDefault()
 	this->mForward = "Forward";
 	this->mLeft    = "Left";
 	this->mRight   = "Right";
-	this->mSides   = "Sides";
+
 
 	this->mBlockSize = 6300;
 
@@ -75,9 +75,15 @@ std::string TrafficSignParam::getRightPrefix()
 *
 */
 /*-----------------------------------------*/
-std::string TrafficSignParam::getSidesPrefix()
+std::vector<std::string> TrafficSignParam::getAllArrowType()
 {
-	return mSides;
+	std::vector<std::string> at;
+
+	at.push_back(getForwardPrefix());
+	at.push_back(getLeftPrefix());
+	at.push_back(getRightPrefix());
+	
+	return at;
 }
 /*-----------------------------------------*/
 /**
@@ -99,7 +105,7 @@ std::vector<std::string> TrafficSignParam::getSampleTestingPaths()
 	paths.push_back(this->getForwardPathSampleTesting());
 	paths.push_back(this->getLeftPathSampleTesting());
 	paths.push_back(this->getRightPathSampleTesting());
-	paths.push_back(this->getSidesPathSampleTesting());
+
 	return paths;
 }
 /*-----------------------------------------*/
@@ -132,7 +138,7 @@ std::vector<std::string> TrafficSignParam::getTempletePaths()
 	paths.push_back(this->getForwardPathTemplete());
 	paths.push_back(this->getLeftPathTemplete());
 	paths.push_back(this->getRightPathTemplete());
-	paths.push_back(this->getSidesPathTemplete());
+	
 	return paths;
 }
 /*-----------------------------------------*/
@@ -198,15 +204,6 @@ std::string TrafficSignParam::getRightPathSampleTemplete()
 *
 */
 /*-----------------------------------------*/
-std::string TrafficSignParam::getSidesPathSampleTemplete()
-{
-	return  pathConn(this->mPathRootSampleTemplete, this->mSides);
-}
-/*-----------------------------------------*/
-/**
-*
-*/
-/*-----------------------------------------*/
 std::string TrafficSignParam::getForwardPathSampleTesting()
 {
 	return  pathConn(this->mPathRootSampleTesting, this->mForward);
@@ -228,15 +225,6 @@ std::string TrafficSignParam::getLeftPathSampleTesting()
 std::string TrafficSignParam::getRightPathSampleTesting()
 {
 	return  pathConn(this->mPathRootSampleTesting, this->mRight);
-}
-/*-----------------------------------------*/
-/**
-*
-*/
-/*-----------------------------------------*/
-std::string TrafficSignParam::getSidesPathSampleTesting()
-{
-	return  pathConn(this->mPathRootSampleTesting, this->mSides);
 }
 /*-----------------------------------------*/
 /**
@@ -270,15 +258,6 @@ std::string TrafficSignParam::getRightPathTemplete()
 *
 */
 /*-----------------------------------------*/
-std::string TrafficSignParam::getSidesPathTemplete()
-{
-	return  pathConn(this->mPathRootTemplete, this->mSides);
-}
-/*-----------------------------------------*/
-/**
-*
-*/
-/*-----------------------------------------*/
 std::string TrafficSignParam::getSampleTempletePath()
 {
 	return this->mPathRootSampleTemplete;
@@ -294,7 +273,7 @@ std::vector<std::string> TrafficSignParam::getSampleTempletePaths()
 	paths.push_back(this->getForwardPathSampleTemplete());
 	paths.push_back(this->getLeftPathSampleTemplete());
 	paths.push_back(this->getRightPathSampleTemplete());
-	paths.push_back(this->getSidesPathSampleTemplete());
+
 	return paths;
 }
 /*-----------------------------------------*/
