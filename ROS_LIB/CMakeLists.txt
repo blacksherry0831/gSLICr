@@ -16,16 +16,15 @@ SET(ROS_LIB_SRCS
 	sensor_msgs_ChannelFloat32.cpp
 	sensor_msgs_PointCloud.cpp
 
+	geometry_msgs_Pose.cpp
+	geometry_msgs_PoseStamped.cpp
+	
 	geometry_msgs_Transform.cpp
 	geometry_msgs_TransformStamped.cpp
+
 	tf_tfMessage.cpp
 
-	advertise_a_topic.cpp
-	
-	
-
-
-	)
+	advertise_a_topic.cpp)
 	
 ADD_LIBRARY(ROS_LIB   STATIC    ${ROS_LIB_SRCS})
 ###############################################################################

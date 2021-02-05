@@ -19,6 +19,7 @@ class CarHardware : public QObject
 	Q_OBJECT
 public:
 	Q_INVOKABLE explicit CarHardware(QObject *parent = nullptr);
+	Q_INVOKABLE explicit CarHardware(QString _url,QObject *parent = nullptr);
 	~CarHardware();
 signals:
 	void running_status(bool);
@@ -26,7 +27,7 @@ private:
 	bool mReconnect;
 	bool mIsConnected;
 	QUrl mUrl; 
-	QWebSocket mWebSocket;
+	QSharedPointer<QWebSocket>	 mWebSocket;
 private:
 	bool mRunning;
 private:

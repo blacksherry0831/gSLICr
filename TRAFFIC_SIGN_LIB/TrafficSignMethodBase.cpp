@@ -141,6 +141,21 @@ void TrafficSignMethodBase::LoadImage(const std::string _p)
 *
 */
 /*-----------------------------------------*/
+void TrafficSignMethodBase::CloneImage(IplImage * _src)
+{
+	if (mImgOrg != nullptr) {
+		cvReleaseImage(&mImgOrg);
+	}
+	
+	this->mImgOrg = cvCloneImage(_src);
+
+	this->allocImg();
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
 bool TrafficSignMethodBase::IsContourSizeInRange(const CvSeq * _c, const float _min, const float _max)
 {
 	CV_Assert(_c!=0);

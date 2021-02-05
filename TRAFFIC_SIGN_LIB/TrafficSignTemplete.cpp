@@ -203,7 +203,9 @@ void TrafficSignTemplete::SampleTempletePreprocessHu()
 *
 */
 /*-----------------------------------------*/
-void TrafficSignTemplete::SampleTestingPreprocessHu(std::vector<std::shared_ptr<TrafficSignPropertyHu>>& _ps)
+void 
+TrafficSignTemplete::SampleTestingPreprocessHu(
+	std::vector<std::shared_ptr<TrafficSignPropertyHu>>& _ps)
 {
 	std::vector<std::string>  paths = mParam->getSampleTestingPaths();
 
@@ -221,10 +223,8 @@ void TrafficSignTemplete::SampleTestingPreprocessHu(std::vector<std::shared_ptr<
 			TrafficSignMethodHu tsm;
 			tsm.LoadImage(files.at(fi));
 			tsm.cutTempleteArea(this->mParam->getBlockSize());
-
-			std::vector<std::shared_ptr<TrafficSignPropertyHu>> pp = tsm.getProperty();
-			
-			tsm.MatchHu(_ps);
+						
+			std::vector<TrafficSignResult>  results=tsm.MatchHu(_ps,1);
 			
 		}
 

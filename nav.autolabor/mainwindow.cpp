@@ -22,7 +22,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	this->initParam();
 	this->initObject();
-		
+	this->initUICfg();
+
 	this->initMenu();
 
 	
@@ -68,14 +69,46 @@ MainWindow::~MainWindow()
 /*----------------------------------------------------------------*/
 void MainWindow::advertiseTopic()
 {
-	const QString	topic_front_camera = "/camera_front_point_cloud";
-	const QString	type = "sensor_msgs/PointCloud";
-	advertise_a_topic a_topic(this, topic_front_camera, type);
+
+	const int		topicLen = 5;
+	const QString	topic[topicLen] = {
+		ROS_topic_f_cam_svg_pointcloud,
+		ROS_topic_f_cam_tsign_pose_red,
+		ROS_topic_f_cam_tsign_pose_yellow,
+		ROS_topic_f_cam_tsign_pose_green,
+		ROS_topic_f_cam_tsign_pointcloud
+
+	};
+	const QString	topicType[topicLen] = {
+		SensorMsgsPointCloud::sensor_msgs__PointCloud ,
+		geometry_msgs_PoseStamped::geometry_msgs__PoseStamped,
+		geometry_msgs_PoseStamped::geometry_msgs__PoseStamped,
+		geometry_msgs_PoseStamped::geometry_msgs__PoseStamped,
+		SensorMsgsPointCloud::sensor_msgs__PointCloud ,
+	};
 	
-	if (!mIsAdvertiseTopic){
-				mIsAdvertiseTopic = mCarHardware->WebSocketSendMessageEx(a_topic.toJsonStr());
+	for (size_t ti = 0; ti < topicLen; ti++){
+		if (!mIsAdvertiseTopic[ti]) {
+			mIsAdvertiseTopic[ti] = advertiseTopicOne(topic[ti], topicType[ti]);
+		}
 	}
-	
+		
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+int MainWindow::advertiseTopicOne(
+	const QString _topic,
+	const QString _type)
+{
+	advertise_a_topic a_topic(
+		this,
+		_topic,
+		_type);
+	const int IsAdvertise = mCarHardware->WebSocketSendMessageEx(a_topic.toJsonStr());	
+	return IsAdvertise;	
 }
 /*----------------------------------------------------------------*/
 /**
@@ -87,14 +120,16 @@ void MainWindow::initParam()
 	this->mShowDirection = false;
 	this->mIsCarRunAuto=false;
 
-	this->mIsAdvertiseTopic = false;
-
+	memset(this->mIsAdvertiseTopic, 0, sizeof(this->mIsAdvertiseTopic));
+	
 	//全局变量初始化
 	Quanju::x = 1;
 	Quanju::y = 0;
 	Quanju::v1 = 0.125;
 	Quanju::v2 = 0.8;
 	Quanju::change = 0;
+
+	this->mAirViewTf=QSharedPointer<ImgProcAirView>(new ImgProcAirView());
 
 }
 /*----------------------------------------------------------------*/
@@ -105,6 +140,18 @@ void MainWindow::initParam()
 void MainWindow::initObject()
 {
 	this->ThreadWork_Init();
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initUICfg()
+{
+	this->mMW_CFG = QSharedPointer<MW_CFG_KV>(new MW_CFG_KV());
+
+	this->mMW_CFG->InitLoad();
+
 }
 /*----------------------------------------------------------------*/
 /**
@@ -175,7 +222,7 @@ void MainWindow::initMenuCollect()
 	connect(ui->actionCollectAlways, SIGNAL(triggered(bool)), &ppImageOrg, SLOT(SetSaveImage(bool)));
 	connect(ui->actionCollectOnce, SIGNAL(triggered(bool)), &ppImageOrg, SLOT(SetSaveImageOnce(bool)));
 
-	connect(ui->actionCollectOnceTopDown, SIGNAL(triggered(bool)), mImageProcTopDown.get(), SLOT(SetSaveImageOnce(bool)));
+	connect(ui->actionCollectOnceTopDown, SIGNAL(triggered(bool)), mImageProcTopDownSVG.get(), SLOT(SetSaveImageOnce(bool)));
 
 }
 /*----------------------------------------------------------------*/
@@ -185,7 +232,7 @@ void MainWindow::initMenuCollect()
 /*----------------------------------------------------------------*/
 void MainWindow::initMenuConnect()
 {
-	connect(ui->action_toggle_calibration_SVG_SRC, SIGNAL(triggered(bool)), this, SLOT(menu_toggle_calibration_SVG_SRC(bool)));
+		
 }
 /*----------------------------------------------------------------*/
 /**
@@ -194,7 +241,7 @@ void MainWindow::initMenuConnect()
 /*----------------------------------------------------------------*/
 void MainWindow::initMenuImageProcessing()
 {
-	connect(ui->actionImageCalibration, SIGNAL(triggered(bool)), mImageProcCal.get(), SLOT(setImageProc(bool)));
+	connect(ui->actionImageCalibration, SIGNAL(triggered(bool)), mImageProcCalSVG.get(), SLOT(setImageProc(bool)));
 }
 /*----------------------------------------------------------------*/
 /**
@@ -286,7 +333,7 @@ void MainWindow::connectTabCfg()
 /*----------------------------------------------------------------*/
 void MainWindow::connectTabCfgGroundPlane()
 {
-	const QObject* rcv = mImageProcTopDown.get();
+	const QObject* rcv = mImageProcTopDownSVG.get();
 		
 	connect(ui->radioButton_CalGndManual, SIGNAL(toggled(bool)), this, SLOT(SetCalGndMode(bool)));
 	//connect(ui->radioButton_CalGndAuto, SIGNAL(clicked(bool)), this, SLOT(SetCalGndMode(bool)));
@@ -329,25 +376,35 @@ void MainWindow::connectTabCfgCameraCalibration()
 /*----------------------------------------------------------------*/
 void MainWindow::initUiValueGroundPlane()
 {
-	ui->doubleSpinBox_DstBoard2Camera->setValue(1.0);
-	ui->spinBox_BoardSize_H->setValue(11);
-	ui->spinBox_BoardSize_W->setValue(8);
 
-	ui->doubleSpinBox_SquareSize->setValue(0.03);;
-	ui->comboBox_MapSize->setCurrentIndex(6);
+	const float cam2board	= this->mMW_CFG->getFrontCamDst2Board();
+	const float board_h		= this->mMW_CFG->getFrontCamBoardH();
+	const float board_w		= this->mMW_CFG->getFrontCamBoardW();
+	const float board_c		= this->mMW_CFG->getFrontCamSzBoardCell();
+	const float map_sz		= this->mMW_CFG->getFrontCamSzMap();
+
+	const std::vector<QString> a_x = this->mMW_CFG->getFrontCamAffineX_QStr();
+	const std::vector<QString> a_y = this->mMW_CFG->getFrontCamAffineY_QStr();
+
+	ui->doubleSpinBox_DstBoard2Camera->setValue(cam2board);
+	ui->spinBox_BoardSize_H->setValue(board_h);
+	ui->spinBox_BoardSize_W->setValue(board_w);
+
+	ui->doubleSpinBox_SquareSize->setValue(board_c);;
+	ui->comboBox_MapSize->setCurrentIndex(map_sz);
 
 #if 1
-	ui->lineEdit_P0_X->setText("933");
-	ui->lineEdit_P0_Y->setText("836");
+	ui->lineEdit_P0_X->setText(a_x.at(0));
+	ui->lineEdit_P0_Y->setText(a_y.at(0));
 
-	ui->lineEdit_P1_X->setText("1148");
-	ui->lineEdit_P1_Y->setText("830");
+	ui->lineEdit_P1_X->setText(a_x.at(1));
+	ui->lineEdit_P1_Y->setText(a_y.at(1));
 
-	ui->lineEdit_P2_X->setText("890");
-	ui->lineEdit_P2_Y->setText("964");
+	ui->lineEdit_P2_X->setText(a_x.at(2));
+	ui->lineEdit_P2_Y->setText(a_y.at(2));
 
-	ui->lineEdit_P3_X->setText("1198");
-	ui->lineEdit_P3_Y->setText("956");
+	ui->lineEdit_P3_X->setText(a_x.at(3));
+	ui->lineEdit_P3_Y->setText(a_y.at(3));
 	
 #endif
 
@@ -360,8 +417,8 @@ void MainWindow::initUiValueGroundPlane()
 void MainWindow::InitWebSocket()
 {
 	Q_ASSERT(mCarHardware.isNull());
-	mCarHardware = QSharedPointer<CarHardware>(new CarHardware());
-	mCarHardware->initConnect();
+	mCarHardware = QSharedPointer<CarHardware>(new CarHardware(URL_ROS_WS));
+	mCarHardware->initConnect(); 
 	mCarHardware->open();
 	const QWebSocket* p_ws = mCarHardware->GetWebSocket();
 	connect(p_ws, SIGNAL(connected()), this, SLOT(onconnected()));
@@ -808,7 +865,9 @@ void MainWindow::release()
 *
 */
 /*----------------------------------------------------------------*/
-void MainWindow::ShowOneFrameBgraOrg(QSharedPointer<QImage> _img_ptr,const QDateTime _time)
+void MainWindow::ShowOneFrameBgraOrg(
+	QSharedPointer<QImage> _img_ptr,
+	const QDateTime _time)
 {
 	ShowOneFrameOnLabel(_img_ptr.get(), &_time, ui->label_Image);
 }
@@ -844,6 +903,24 @@ void MainWindow::ShowOneFrameTopDown(QSharedPointer<QImage> _img_ptr, const QDat
 *
 */
 /*----------------------------------------------------------------*/
+void MainWindow::ShowOneFrameCalibrateOrg(QSharedPointer<QImage> _img_ptr, const QDateTime _time)
+{
+	ShowOneFrameOnLabel(_img_ptr.data(), &_time, ui->label_calibration_org);
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::ShowOneFrameTopDownOrg(QSharedPointer<QImage> _img_ptr, const QDateTime _time)
+{
+	ShowOneFrameOnLabel(_img_ptr.data(), &_time, ui->label_top_down_org);
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 void MainWindow::ShowOneFrameOnLabel(QImage* _img, const QDateTime* _time, QLabel * _qlab)
 {
 	if (ui != NULL) {
@@ -858,94 +935,15 @@ void MainWindow::ShowOneFrameOnLabel(QImage* _img, const QDateTime* _time, QLabe
 void MainWindow::on_start_clicked()
 {
 
-//    if(m_rect->height()<=0||m_rect->width()<=0)
-//    {
-//        if(mImage.width()<=0)
-//        {
-//            qDebug()<<"error no picture";
-//            return;
-//        }
-
-//        int x = this->geometry().x()+50;
-//        int y = this->geometry().y()+75;
-//        QImage imge=mImage.scaled(this->size()/1.5,Qt::KeepAspectRatio);
-//        int w = imge.width();
-//        int h = imge.height();
-
-//        if (x % 2 != 0)
-//        {
-//            x--;
-//            w--;
-//        }
-//        if (y % 2 != 0)
-//        {
-//            y--;
-//            h--;
-//        }
-//        if (w % 2 != 0)
-//        {
-//            w--;
-//        }
-//        if (h % 2 != 0)
-//        {
-//            h--;
-//        }
-
-//        m_rect->setX(x);
-//        m_rect->setY(y);
-//        m_rect->setHeight(h);
-//        m_rect->setWidth(w);
-
-//        qDebug()<<"x:"<<this->geometry().x()<<" "<<"y:"<<this->geometry().y();
-//     }
-
-
-//    if(m_recordeState==true)
-//    {
-//        qDebug()<<"is already start!";
-//        return;
-//    }
-//    else
-//    {
-//        //判断是否已经有m_screenRecorder对象
-//        if (m_screenRecorder)
-//            delete m_screenRecorder;
-//        m_screenRecorder = new ScreenRecorder;
-//        m_screenRecorder->setFileName(m_recordPath.toLocal8Bit().data());
-//        m_screenRecorder->setVideoFrameRate(25);
-
-//        if (m_screenRecorder->init("screen-capture-recorder",true) == SUCCEED)
-//        {
-//            qDebug()<<"初始化录屏设备成功";
-//            m_screenRecorder->setPicRange(m_rect->x(),m_rect->y(),m_rect->width(),m_rect->height());
-//            qDebug()<<m_rect->x()<<" "<<m_rect->x();
-//            m_screenRecorder->startRecord();
-//            m_recordeState=true;
-//            ui->start->setEnabled(false);
-//            ui->stop->setEnabled(true);
-//        }
-//        else
-//        {
-//            qDebug()<<"提示","出错了,初始化录屏设备失败！";
-//            return;
-//        }
-
-//        qDebug()<<"开始录制";
-//    }
 }
-
-//停止录屏
+/*----------------------------------------------------------------*/
+/**
+*停止录屏
+*/
+/*----------------------------------------------------------------*/
 void MainWindow::on_stop_clicked()
 {
-//    if (m_recordeState != false)
-//    {
-//        m_screenRecorder->stopRecord();
-//        qDebug()<<"停止录制";
-//        m_recordeState=false;
-//        ui->start->setEnabled(true);
-//        ui->stop->setEnabled(false);
 
-//    }
 }
 /*----------------------------------------------------------------*/
 /**
@@ -997,82 +995,113 @@ void MainWindow::menu_run_current_once(bool _r)
 *
 */
 /*----------------------------------------------------------------*/
-void MainWindow::menu_toggle_calibration_SVG_SRC(bool _f)
+void MainWindow::publishPointCloud(
+	QString _topic,
+	QString _frame_base,
+	QString _frame_sensor,
+	QVector<QVector3D> _ptc)
 {
-	if (_f){
-		connect_calibration_SVG();		
-	}else{
-		connect_calibration_SRC();
-	}
+	SensorMsgsPointCloud pointscloud_t(
+		this,
+		_topic,
+		_frame_sensor);
 
+	pointscloud_t.setPoints(_ptc);
+	mCarHardware->WebSocketSendMessageEx(pointscloud_t.toJsonStr());
 }
 /*----------------------------------------------------------------*/
 /**
 *
 */
 /*----------------------------------------------------------------*/
-void MainWindow::connect_calibration_SVG()
+void MainWindow::publishPointCloud_FrameCamrea(
+	QString _topic,
+	QVector<QVector3D> _ptc)
 {
-	const QObject *src = mImageProcSVG.get();
-	const QObject *cal = mImageProcCal.data();
-
-	disconnect(src,
-		SIGNAL(sig_org_frame_bgra(QSharedPointer<QImage>, QDateTime)),
-		cal,
-		SLOT(ImageProc(QSharedPointer<QImage>, QDateTime)));
-
-	connect(src,
-		SIGNAL(sig_out_frame_bgra(QSharedPointer<QImage>, QDateTime)),
-		cal,
-		SLOT(ImageProc(QSharedPointer<QImage>, QDateTime)));
-
+	publishPointCloud(
+		_topic,
+		ROS_frame_id_base,
+		ROS_frame_id_camera,
+		_ptc);
 }
 /*----------------------------------------------------------------*/
 /**
 *
 */
 /*----------------------------------------------------------------*/
-void MainWindow::connect_calibration_SRC()
+void MainWindow::publishPose(
+	QString _topic, 
+	QVector3D _p3t,
+	QVector4D _p4t)
 {
-	const QObject *src = mImageProcSVG.get();
-	const QObject *cal = mImageProcCal.data();
+	geometry_msgs_PoseStamped  ts_pose(ROS_frame_id_camera);
+	ts_pose.setTopic(_topic);
+	ts_pose.setPose(_p3t,_p4t);
 
-	disconnect(src,
-		SIGNAL(sig_out_frame_bgra(QSharedPointer<QImage>, QDateTime)),
-		cal,
-		SLOT(ImageProc(QSharedPointer<QImage>, QDateTime)));
-
-	connect(src,
-		SIGNAL(sig_org_frame_bgra(QSharedPointer<QImage>, QDateTime)),
-		cal,
-		SLOT(ImageProc(QSharedPointer<QImage>, QDateTime)));
+	const QString poseMsg = ts_pose.toPubMsgsPoseJsonStr();
+	
+	mCarHardware->WebSocketSendMessageEx(poseMsg);
 }
 /*----------------------------------------------------------------*/
 /**
 *
 */
 /*----------------------------------------------------------------*/
-void MainWindow::PublishPointCloud(QVector<QVector3D> _ptc)
+void MainWindow::publishTF_Camera()
 {
-	const QString	frame_id_parent = "base_link";
-	const QString	frame_id = "base_front_camera_link";
-	const QString	topic_front_camera = "/camera_front_point_cloud";
-	const QString	type = "sensor_msgs/PointCloud";
-
-	advertiseTopic();
-
-	geometry_msgs_TransformStamped tf_camera_front(frame_id_parent, frame_id);
-
+	geometry_msgs_TransformStamped tf_camera_front(ROS_frame_id_base, ROS_frame_id_camera);
 	tf_tfMessage tf_t;
 	tf_t.setTransformStamped(tf_camera_front);
-
-	SensorMsgsPointCloud pointscloud(this, topic_front_camera, frame_id);
-	
-	//pointscloud.SimulatePointsCircle();
-	pointscloud.setPoints(_ptc);
-
 	mCarHardware->WebSocketSendMessageEx(tf_t.toJsonStr());
-	mCarHardware->WebSocketSendMessageEx(pointscloud.toJsonStr());
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::PublishPointCloud_TS(QVector<QVector3D> _ptc)
+{
+	advertiseTopic();
+	publishTF_Camera();
+	publishPointCloud_FrameCamrea(
+		ROS_topic_f_cam_tsign_pointcloud,
+		_ptc);
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::PublishPose_TS(QString _color,QVector3D _p3t, QVector4D _p4t)
+{
+	advertiseTopic();
+	publishTF_Camera();
+
+	const QString	topic[3] = {		
+		ROS_topic_f_cam_tsign_pose_red,
+		ROS_topic_f_cam_tsign_pose_yellow,
+		ROS_topic_f_cam_tsign_pose_green,
+	};
+
+	for each(auto var in topic) {	
+		if (var.contains(_color)) {
+			this->publishPose(var,_p3t,_p4t);
+		}
+	}
+	
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::PublishPointCloud_SVG(QVector<QVector3D> _ptc)
+{
+	advertiseTopic();	
+	publishTF_Camera();
+	publishPointCloud_FrameCamrea(
+		ROS_topic_f_cam_svg_pointcloud,
+		_ptc);
 }
 /*----------------------------------------------------------------*/
 /**
@@ -1109,9 +1138,12 @@ void MainWindow::on_close_cam_clicked()
 void MainWindow::initThreadWorkConnect()
 {
 	this->initThreadWorkConnect_SVG();
+	
 	this->initThreadWorkConnect_Calibration();
-	this->initThreadWorkConnect_TopDown();
+	this->initThreadWorkConnect_Calibration_Org();
 
+	this->initThreadWorkConnect_TopDown();
+	this->initThreadWorkConnect_TopDown_Org();
 
 	this->initThreadWorkConnect_PreImageShow();
 	this->initThreadWorkConnect_ImageShow();
@@ -1153,18 +1185,51 @@ void MainWindow::initThreadWorkConnect_ImageShow()
 		SIGNAL(sig_1_frame_RGB32_ref(QSharedPointer<QImage>, QDateTime)),
 		this,
 		SLOT(ShowOneFrameBgraSvg(QSharedPointer<QImage>, QDateTime)));
+	
 
-	connect(mImageProcCal.get(),
+	this->initThreadWorkConnect_ImageShow_CalSvg();
+	this->initThreadWorkConnect_ImageShow_CalOrg();
+
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initThreadWorkConnect_ImageShow_CalOrg()
+{
+	QObject* cal = mImageProcCalOrg.get();
+	QObject* topDown = mImageProcTopDownOrg.get();
+
+	connect(cal,
 		SIGNAL(sig_1_frame_bgra_ref(QSharedPointer<QImage>, QDateTime)),
 		this,
-		SLOT(ShowOneFrameCalibrate(QSharedPointer<QImage>, QDateTime)));
-
-	QObject* topDown = mImageProcTopDown.get();
+		SLOT(ShowOneFrameCalibrateOrg(QSharedPointer<QImage>, QDateTime)));
+	
 	connect(topDown,
 		SIGNAL(sig_1_frame_bgra_ref(QSharedPointer<QImage>, QDateTime)),
 		this,
-		SLOT(ShowOneFrameTopDown(QSharedPointer<QImage>, QDateTime)));
+		SLOT(ShowOneFrameTopDownOrg(QSharedPointer<QImage>, QDateTime)));
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initThreadWorkConnect_ImageShow_CalSvg()
+{
+	QObject* cal = mImageProcCalSVG.get();
+	QObject* birdSvg = mImageProcTopDownSVG.get();
 
+	connect(cal,
+		SIGNAL(sig_1_frame_bgra_ref(QSharedPointer<QImage>, QDateTime)),
+		this,
+		SLOT(ShowOneFrameCalibrate(QSharedPointer<QImage>, QDateTime)));
+	
+	connect(birdSvg,
+		SIGNAL(sig_1_frame_bgra_ref(QSharedPointer<QImage>, QDateTime)),
+		this,
+		SLOT(ShowOneFrameTopDown(QSharedPointer<QImage>, QDateTime)));
 }
 /*----------------------------------------------------------------*/
 /**
@@ -1175,10 +1240,22 @@ void MainWindow::initThreadWorkConnect_Calibration()
 {
 	
 	connect(mImageProcSVG.get(),
-		SIGNAL(sig_org_frame_bgra(QSharedPointer<QImage>, QDateTime)),
-		mImageProcCal.get(),
+		SIGNAL(sig_out_frame_bgra(QSharedPointer<QImage>, QDateTime)),
+		mImageProcCalSVG.get(),
 		SLOT(ImageProc(QSharedPointer<QImage>, QDateTime)));
 	
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initThreadWorkConnect_Calibration_Org()
+{
+	connect(mImageProcSVG.get(),
+		SIGNAL(sig_org_frame_bgra(QSharedPointer<QImage>, QDateTime)),
+		mImageProcCalOrg.get(),
+		SLOT(ImageProc(QSharedPointer<QImage>, QDateTime)));
 }
 /*----------------------------------------------------------------*/
 /**
@@ -1199,8 +1276,8 @@ void MainWindow::initThreadWorkConnect_SVG()
 /*----------------------------------------------------------------*/
 void MainWindow::initThreadWorkConnect_TopDown()
 {
-	QObject* procCal = mImageProcCal.get();
-	QObject* topDown = mImageProcTopDown.get();
+	QObject* procCal = mImageProcCalSVG.get();
+	QObject* topDown = mImageProcTopDownSVG.get();
 	
 	Q_ASSERT(procCal != Q_NULLPTR);
 	Q_ASSERT(topDown != Q_NULLPTR);
@@ -1213,7 +1290,36 @@ void MainWindow::initThreadWorkConnect_TopDown()
 	connect(topDown,
 		SIGNAL(sig_point_cloud(QVector<QVector3D>)),
 		this,
-		SLOT(PublishPointCloud(QVector<QVector3D>)));
+		SLOT(PublishPointCloud_SVG(QVector<QVector3D>)));
+
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+void MainWindow::initThreadWorkConnect_TopDown_Org()
+{
+	QObject* procCal = mImageProcCalOrg.get();
+	QObject* topDown = mImageProcTopDownOrg.get();
+
+	Q_ASSERT(procCal != Q_NULLPTR);
+	Q_ASSERT(topDown != Q_NULLPTR);
+
+	connect(procCal,
+		SIGNAL(sig_1_frame_bgra_ref(QSharedPointer<QImage>, QDateTime)),
+		topDown,
+		SLOT(ImageProc(QSharedPointer<QImage>, QDateTime)));
+
+	connect(topDown,
+		SIGNAL(sig_point_cloud(QVector<QVector3D>)),
+		this,
+		SLOT(PublishPointCloud_TS(QVector<QVector3D>)));
+
+	connect(topDown,
+		SIGNAL(sig_pose_position_orientation(QString,QVector3D, QVector4D)),
+		this,
+		SLOT(PublishPose_TS(QString,QVector3D, QVector4D)));
 
 }
 /*----------------------------------------------------------------*/
@@ -1233,16 +1339,26 @@ void MainWindow::ThreadWork_Init()
 /*----------------------------------------------------------------*/
 void MainWindow::ThreadWork_Init_obj()
 {
-	mImagePlayer= QSharedPointer<VideoPlayer>(new VideoPlayer("rtsp://192.168.99.201/stream1"));
-	mImagePlayer->SetScale(1920, 1080);
+	mImagePlayer= QSharedPointer<VideoPlayer>(new VideoPlayer(URL_RTSP_STREAM.toStdString()));
+	mImagePlayer->SetScale(IMG_W, IMG_H);
 	
 	mImageProcSVG=QSharedPointer<SVG_PROC_IMAGE>(new SVG_PROC_IMAGE());
-	mImageProcCal=QSharedPointer<ImageProcCalibration>(new ImageProcCalibration());
-	mImageProcTopDown=QSharedPointer<ImageProcTopDown>(new ImageProcTopDown());
-			
+	mImageProcCalSVG=QSharedPointer<ImageProcCalibration>(new ImageProcCalibration());
+
+	mImageProcTopDownSVG=QSharedPointer<ImageProcTopDownSVG>(new ImageProcTopDownSVG());
+	mImageProcTopDownSVG->setAirViewTf(mAirViewTf);	
+
+	mImageProcCalOrg = QSharedPointer<ImageProcCalibration>(new ImageProcCalibration());
+
+	mImageProcTopDownOrg = QSharedPointer<ImageProcTopDownTrafficSign>(new ImageProcTopDownTrafficSign());
+	mImageProcTopDownOrg->setAirViewTf(mAirViewTf);
+
 	m_thread_obj.push_back(mImageProcSVG);
-	m_thread_obj.push_back(mImageProcCal);
-	m_thread_obj.push_back(mImageProcTopDown);
+	m_thread_obj.push_back(mImageProcCalSVG);
+	m_thread_obj.push_back(mImageProcTopDownSVG);
+
+	m_thread_obj.push_back(mImageProcCalOrg);
+	m_thread_obj.push_back(mImageProcTopDownOrg);
 		
 }
 /*----------------------------------------------------------------*/
@@ -1486,7 +1602,7 @@ void MainWindow::drive_run_policy(
 /*----------------------------------------------------------------*/
 void MainWindow::SetCalGndMode(bool _s)
 {
-	 ImageProcTopDown* rcv_top_down = mImageProcTopDown.get();
+	 ImageProcTopDown* rcv_top_down = mImageProcTopDownSVG.get();
 
 	rcv_top_down->setCalGndMode(!_s);
 }

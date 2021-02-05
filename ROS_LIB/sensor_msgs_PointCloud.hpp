@@ -29,6 +29,8 @@ public:
 		const QString _frame_id);
 	SensorMsgsPointCloud(QObject *parent = nullptr);
 	~SensorMsgsPointCloud();
+public:
+	static const QString	sensor_msgs__PointCloud;
 private:
 	std::string								m_topic;
 private:

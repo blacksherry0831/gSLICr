@@ -12,6 +12,8 @@
 /*-----------------------------------------*/
 #include "MY_SDK_LIB/Base.h"
 /*-----------------------------------------*/
+#include "TrafficSignResult.hpp"
+/*-----------------------------------------*/
 class TrafficSignMethodHu : public  TrafficSignMethodBase
 {
 public:
@@ -49,8 +51,10 @@ public:
 public:
 	std::vector<std::shared_ptr<TrafficSignPropertyHu>> getProperty();
 
-	std::vector<std::shared_ptr<TrafficSignPropertyHu>> 
-		MatchHu( std::vector<std::shared_ptr<TrafficSignPropertyHu>> _tmps);
+	std::vector<TrafficSignResult>
+		TrafficSignMethodHu::MatchHu(
+			std::vector<std::shared_ptr<TrafficSignPropertyHu>> _tmps,
+			const int _output);
 
 
 	

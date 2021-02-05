@@ -27,6 +27,7 @@ public:
 	~geometry_msgs_TransformStamped();
 public:
 	QJsonObject getJsonObj();
+	QString toJsonStr();
 public:
 	void setChildFrameId(const QString	_frame_id);
 };

@@ -140,7 +140,9 @@ void TrafficSignMethodHu::cutTempleteArea(const int _blockSz)
 	cvOr(mImgBinRed00, mImgBinRed01, mImgBinRed);//red
 
 	cvInRangeS(mImgHsv, Cyan_low, Cyan_up, mImgBinGreen);//cyan
-	
+
+	this->mProperty.clear();
+
 	FillExternalContours(mImgBinGreen, mImgBlockGreen,		_blockSz / 2, _blockSz * 2,	"green");
 	FillExternalContours(mImgBinYellow, mImgBlockYellow,	_blockSz / 2, _blockSz * 2,	"yellow");
 	FillExternalContours(mImgBinRed, mImgBlockRed,			_blockSz / 2, _blockSz * 2,	"red");
@@ -292,9 +294,12 @@ TrafficSignMethodHu::getProperty()
 *
 */
 /*-----------------------------------------*/
-std::vector<std::shared_ptr<TrafficSignPropertyHu>> 
-TrafficSignMethodHu::MatchHu(std::vector<std::shared_ptr<TrafficSignPropertyHu>> _tmps)
+std::vector<TrafficSignResult>
+TrafficSignMethodHu::MatchHu(
+	std::vector<std::shared_ptr<TrafficSignPropertyHu>> _tmps,
+	const int _output)
 {
+	std::vector<TrafficSignResult>  results;
 
 	for (int si = 0; si <mProperty.size(); si++)
 	{
@@ -305,18 +310,22 @@ TrafficSignMethodHu::MatchHu(std::vector<std::shared_ptr<TrafficSignPropertyHu>>
 		
 		if (similar <1+1E-3){
 
-				float angle= sample->getTempleteAngle(temp);
+#if _DEBUG
+ if(_output) TrafficSignPropertyHu::MatchOutPut(si,sample, temp);
+#endif // _DEBUG
+ 		
+				sample->getTempleteAngle(temp);	
 
-				TrafficSignPropertyHu::MatchOutPut(si,sample, temp);
-#if 0
-				TrafficSignMethodHu::LogPolarMatchAngle(sample->BinaryImg(),temp->BinaryImg() );
-#endif // 0
+				TrafficSignResult result;
+				result.setSampleTemplate(sample,temp);
+				results.push_back(result);
+
 
 		}
 								
 	}
 
-	return std::vector<std::shared_ptr<TrafficSignPropertyHu>>();
+	return results;
 }
 /*-----------------------------------------*/
 /**

@@ -9,6 +9,19 @@ CarHardware::CarHardware(QObject *parent) :QObject(parent)
 	this->mReconnect = true;
 	this->mIsConnected = false;
 	this->mUrl = "ws://192.168.99.200:9090";
+	this->mWebSocket = QSharedPointer<QWebSocket>(new QWebSocket());
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+CarHardware::CarHardware(QString _url, QObject *parent) :QObject(parent)
+{
+	this->mReconnect = true;
+	this->mIsConnected = false;
+	this->mUrl = QUrl(_url);
+	this->mWebSocket = QSharedPointer<QWebSocket>(new QWebSocket());
 }
 /*----------------------------------------------------------------*/
 /**
@@ -17,7 +30,7 @@ CarHardware::CarHardware(QObject *parent) :QObject(parent)
 /*----------------------------------------------------------------*/
 CarHardware::~CarHardware()
 {
-	mWebSocket.close();
+	mWebSocket->close();
 }
 /*----------------------------------------------------------------*/
 /**
@@ -26,7 +39,7 @@ CarHardware::~CarHardware()
 /*----------------------------------------------------------------*/
 const QWebSocket * CarHardware::GetWebSocket() const
 {
-	return &mWebSocket;
+	return mWebSocket.get();
 }
 /*----------------------------------------------------------------*/
 /**
@@ -35,7 +48,7 @@ const QWebSocket * CarHardware::GetWebSocket() const
 /*----------------------------------------------------------------*/
 void CarHardware::open()
 {
-	this->mWebSocket.open(mUrl);
+	this->mWebSocket->open(mUrl);
 }
 /*----------------------------------------------------------------*/
 /**
@@ -45,9 +58,9 @@ void CarHardware::open()
 void CarHardware::initConnect()
 {
 
-	connect(&mWebSocket, SIGNAL(connected()), this, SLOT(OnWebSocketConnected()));
-	connect(&mWebSocket, SIGNAL(disconnected()), this, SLOT(OnWebSocketDisconnected()));
-	connect(&mWebSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(OnWebSocketError(QAbstractSocket::SocketError)));
+	connect(mWebSocket.get(), SIGNAL(connected()), this, SLOT(OnWebSocketConnected()));
+	connect(mWebSocket.get(), SIGNAL(disconnected()), this, SLOT(OnWebSocketDisconnected()));
+	connect(mWebSocket.get(), SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(OnWebSocketError(QAbstractSocket::SocketError)));
 
 }
 /*----------------------------------------------------------------*/
@@ -57,8 +70,8 @@ void CarHardware::initConnect()
 /*----------------------------------------------------------------*/
 void CarHardware::WebSocketSendMessage(QString _msg)
 {
-		mWebSocket.sendTextMessage(_msg);
-		mWebSocket.flush();
+		mWebSocket->sendTextMessage(_msg);
+		mWebSocket->flush();
 }
 /*----------------------------------------------------------------*/
 /**

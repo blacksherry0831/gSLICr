@@ -31,7 +31,6 @@
 #include <QT_SDK_LIB/QBase.h>
 #include <OPENCV_QT_SDK_LIB\OpencvQtBase.h>
 /*-----------------------------------------*/
-#include <savepicture.h>
 #include <videoplayer.h>
 /*-----------------------------------------*/
 #include "PreProcImageOrg.h"
@@ -40,11 +39,16 @@
 #include "DrivePolicy.h"
 #include "DriveHardware.h"
 #include "CarHardware.h"
+#include "mw_cfg_kv.hpp"
 /*-----------------------------------------*/
 #include "ImageProcCalibration.hpp"
-#include "ImageProcTopDown.hpp"
+/*-----------------------------------------*/
+#include "ImageProcTopDownSVG.hpp"
+#include "ImageProcTopDownTrafficSign.hpp"
 /*-----------------------------------------*/
 #include "ROS_LIB/sensor_msgs_PointCloud.hpp"
+#include "ROS_LIB/geometry_msgs_Pose.hpp"
+#include "ROS_LIB/geometry_msgs_PoseStamped.hpp"
 #include "ROS_LIB/tf_tfMessage.hpp"
 #include "ROS_LIB/advertise_a_topic.hpp"
 /*-----------------------------------------*/
@@ -71,12 +75,14 @@ public:
 private:
 	bool mIsCarRunAuto;
 	bool mShowDirection;
-	bool mIsAdvertiseTopic;
+	bool mIsAdvertiseTopic[3];
 private:
 	void advertiseTopic();
+	int  advertiseTopicOne(const QString _topic,const QString _type);
 private:
 	void initParam();
 	void initObject();
+	void initUICfg();
 	void initRegisterMetaType();
 private:
 	void initMenu();
@@ -86,6 +92,22 @@ private:
 	void initMenuCollect();
 	void initMenuConnect();
 	void initMenuImageProcessing();
+private:
+	const int IMG_W=1920;
+	const int IMG_H=1080;
+private:
+	const QString	URL_ROS_WS				=	"ws://192.168.99.200:9090";
+	const QString	URL_RTSP_STREAM			=	"rtsp://192.168.99.201/stream1";
+private:
+	const QString	ROS_frame_id_base		=	"base_link";
+	const QString	ROS_frame_id_camera		=	"base_front_camera_link";
+private:
+	const QString	ROS_topic_f_cam_svg_pointcloud		=	"/cam_front_svg_pointcloud";
+	const QString	ROS_topic_f_cam_tsign_pose_red		=	"/cam_front_tsign_pose_red";	
+	const QString	ROS_topic_f_cam_tsign_pose_green	=	"/cam_front_tsign_pose_green";
+	const QString	ROS_topic_f_cam_tsign_pose_yellow	=	"/cam_front_tsign_pose_yellow";
+	const QString	ROS_topic_f_cam_tsign_pointcloud	=	"/cam_front_tsign_point_cloud";
+
 private:
 
 private:
@@ -173,6 +195,9 @@ public slots:
 	
 	void ShowOneFrameCalibrate(QSharedPointer<QImage> _img_ptr, const QDateTime _time);
 	void ShowOneFrameTopDown(QSharedPointer<QImage> _img_ptr, const QDateTime _time);
+
+	void ShowOneFrameCalibrateOrg(QSharedPointer<QImage> _img_ptr, const QDateTime _time);
+	void ShowOneFrameTopDownOrg(QSharedPointer<QImage> _img_ptr, const QDateTime _time);
 	
 	void ShowOneFrameOnLabel(QImage * _img, const QDateTime * _time, QLabel * _qlab);
 	
@@ -182,17 +207,31 @@ public slots:
 	void menu_show_run_direction(bool _v);
 	void menu_run_auto(bool _r);
 	void menu_run_current_once(bool _r);
-					
-	void menu_toggle_calibration_SVG_SRC(bool _f);
 
+	void publishPointCloud(
+		QString _topic,
+		QString _frame_base,
+		QString _frame_sensor,
+		QVector<QVector3D> _ptc);
+
+	void publishPointCloud_FrameCamrea(
+		QString _topic,
+		QVector<QVector3D> _ptc);
+
+	void publishPose(
+		QString		_topic,
+		QVector3D	_p3t, 
+		QVector4D	_p4t);
+	
 public slots:
 	void SetCalGndMode(bool _s);
 public:
-	void connect_calibration_SVG();
-	void connect_calibration_SRC();
-	
+	void publishTF_Camera();
 public slots:
-	void PublishPointCloud(QVector<QVector3D> _ptc);
+	void PublishPointCloud_SVG(QVector<QVector3D> _ptc);
+	void PublishPointCloud_TS(QVector<QVector3D> _ptc);
+	void PublishPose_TS(QString _color,QVector3D _p3t, QVector4D _p4t);
+
 	
 private:
     Ui::MainWindow *ui;
@@ -215,20 +254,26 @@ private:
     int obs_y;  //障碍物中心y坐标
     int obs_r;      //障碍物半径
 private:
+		QSharedPointer<MW_CFG_KV>							mMW_CFG;
+private:
+		QSharedPointer<ImgProcAirView>					mAirViewTf;
+private:
 		PreProcImageOrg ppImageOrg;
 		PreProcImageSvg ppImageSvg;
 private:
-		QSharedPointer<VideoPlayer>				mImagePlayer;    //ffpmeg编解码
+		QSharedPointer<VideoPlayer>						mImagePlayer;    //ffpmeg编解码
 private:
-		QSharedPointer<SVG_PROC_IMAGE>			mImageProcSVG;
-		QSharedPointer<ImageProcCalibration>	mImageProcCal;
-		QSharedPointer<ImageProcTopDown>		mImageProcTopDown;
+		QSharedPointer<SVG_PROC_IMAGE>					mImageProcSVG;
+		QSharedPointer<ImageProcCalibration>			mImageProcCalSVG;
+		QSharedPointer<ImageProcTopDownSVG>				mImageProcTopDownSVG;
+		QSharedPointer<ImageProcCalibration>			mImageProcCalOrg;
+		QSharedPointer<ImageProcTopDownTrafficSign>		mImageProcTopDownOrg;
 		
 private:
 		QSharedPointer<CarHardware>				mCarHardware;
 private:
-	    QVector<QSharedPointer<QObject>> m_thread_obj;
-	    QVector<QSharedPointer<QThread>> m_thread_pool;
+	    QVector<QSharedPointer<QObject>>		m_thread_obj;
+	    QVector<QSharedPointer<QThread>>		m_thread_pool;
 public:
 	void ThreadWork_Init();
 	void ThreadWork_Init_thread();
@@ -241,10 +286,17 @@ public:
 	
 	void initThreadWorkConnect();
 	void initThreadWorkConnect_PreImageShow();
+
 	void initThreadWorkConnect_ImageShow();
+	void initThreadWorkConnect_ImageShow_CalOrg();
+	void initThreadWorkConnect_ImageShow_CalSvg();
+	
 	void initThreadWorkConnect_Calibration();
+	void initThreadWorkConnect_Calibration_Org();
+	
 	void initThreadWorkConnect_SVG();
 	void initThreadWorkConnect_TopDown();
+	void initThreadWorkConnect_TopDown_Org();
 
 public:
     QRect *m_rect;            //录频区域

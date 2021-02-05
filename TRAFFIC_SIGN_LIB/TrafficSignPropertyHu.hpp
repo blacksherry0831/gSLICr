@@ -61,6 +61,8 @@ public:
 
 	double	getTempleteAngle(std::shared_ptr<TrafficSignPropertyHu> _t);
 
+	double	getArrowAngle(const std::string _type);
+
 	double calcRotateAngle1(
 		cv::Mat & roi,
 		cv::Mat & tmpl,

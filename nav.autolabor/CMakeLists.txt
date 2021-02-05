@@ -60,4 +60,5 @@ target_link_libraries(EXE_NAV_AUTOLABOR
 						OPENCV_QT_SDK_LIB
 						SGV
 						ROS_LIB
+						TRAFFIC_SIGN_LIB
 						)

@@ -71,6 +71,7 @@ private:
 
 public:
 	void LoadImage(const std::string _p);
+	void CloneImage(IplImage* _src);
 public:
 	static bool IsContourSizeInRange(const CvSeq* _c,const float _min,const float _max);
 	static bool IsContourSizeInRange(const float _area, const float _min, const float _max);

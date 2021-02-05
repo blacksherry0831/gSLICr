@@ -139,6 +139,29 @@ void TrafficSignPropertyBase::setRectOrg(const CvRect _rect)
 *
 */
 /*-----------------------------------------*/
+CvRect	TrafficSignPropertyBase::getRectOrg()const
+{
+	return this->mRectOrg;
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
+CvPoint TrafficSignPropertyBase::getRectOrgCenter() const
+{
+	const CvRect rect = this->mRectOrg;
+	const int cols = rect.width;
+	const int rows = rect.height;
+	const CvPoint center = cvPoint(rect.x + cols / 2, rect.y + rows / 2);
+	return center;
+
+}
+/*-----------------------------------------*/
+/**
+*
+*/
+/*-----------------------------------------*/
 void TrafficSignPropertyBase::setRect(const CvRect _rect, const int _b)
 {
 	this->mRect = _rect;
@@ -158,7 +181,7 @@ void TrafficSignPropertyBase::setColor(std::string _c)
 *
 */
 /*-----------------------------------------*/
-std::string TrafficSignPropertyBase::getColor()
+std::string TrafficSignPropertyBase::getColor() const
 {
 	return  mColor;
 }
@@ -260,6 +283,37 @@ void TrafficSignPropertyBase::cvt2gray()
 }
 /*-----------------------------------------*/
 /**
+*
+*/
+/*-----------------------------------------*/
+std::vector<cv::Point>  TrafficSignPropertyBase::binaryImgPoints_ImgCoord() const
+{
+	std::vector<cv::Point> pts;
+
+	const int X_OFF=mRect.x;
+	const int Y_OFF=mRect.y;
+
+	IplImage * img=BinaryImg();
+	const int W = img->width;
+	const int H = img->height;
+	const int STEP =img->widthStep;
+	const int CH =img->nChannels;
+
+	for (int xi = 0; xi < W; xi+=2) {
+		for (int yi=0; yi <H; yi+=2) {
+			const char* c_ptr = img->imageData + yi*STEP + xi*CH;
+			const unsigned char data_t = c_ptr[0];
+			if (data_t == 255) {
+					pts.push_back(cv::Point(xi+X_OFF,yi+Y_OFF));
+			}
+		}
+	}
+	
+	return pts;
+
+}
+/*-----------------------------------------*/
+/**
 *			try
 			{
 				
@@ -288,7 +342,7 @@ IplImage * TrafficSignPropertyBase::ColorBgraImg()
 *
 */
 /*-----------------------------------------*/
-IplImage * TrafficSignPropertyBase::BinaryImg()
+IplImage * TrafficSignPropertyBase::BinaryImg() const
 {
 	return this->mImgMask;
 }

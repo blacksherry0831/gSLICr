@@ -46,12 +46,18 @@ public:
 
 public:
 	void			setRectOrg(const CvRect _rect);
+	CvRect			getRectOrg()const;
+	CvPoint			getRectOrgCenter()const;
+
 	void			setRect(const CvRect _rect, const int _b);
 	void			setColor(std::string _c);
-	std::string		getColor();
+	std::string		getColor()	const;
 	void			setArea(float _a);
 	float			getArea() const;
 	std::string		getAreaStr() const;
+
+
+
 public:
 	void cpyImageMask(IplImage* _img);
 	void cpyImage(IplImage* _img);
@@ -61,9 +67,11 @@ public:
 public:
 	void cvt2gray();
 public:
+	std::vector<cv::Point> binaryImgPoints_ImgCoord() const;
+public:
 	IplImage * GrayImg();
 	IplImage * ColorBgraImg();
-	IplImage * BinaryImg();
+	IplImage * BinaryImg() const ;
 	
 };
 

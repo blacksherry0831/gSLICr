@@ -52,6 +52,15 @@ QJsonObject geometry_msgs_TransformStamped::getJsonObj()
 *
 */
 /*-------------------------------------*/
+QString geometry_msgs_TransformStamped::toJsonStr()
+{
+	return QString();
+}
+/*-------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------*/
 void geometry_msgs_TransformStamped::setChildFrameId(const QString	_frame_id)
 {
 	this->m_child_frame_id = _frame_id;

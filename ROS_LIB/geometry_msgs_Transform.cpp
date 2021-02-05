@@ -11,6 +11,11 @@ geometry_msgs_Transform::geometry_msgs_Transform()
 	this->m_rotation.setY(0);
 	this->m_rotation.setZ(0);
 	this->m_rotation.setW(1);
+
+	this->m_translation.setX(0);
+	this->m_translation.setY(0);
+	this->m_translation.setZ(0);
+	
 }
 /*-------------------------------------*/
 /**

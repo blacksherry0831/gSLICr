@@ -11,22 +11,13 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # Tell CMake to create the helloworld executable
 					
 CUDA_ADD_EXECUTABLE(EXE_TRAFFIC_SIGN
-							TrafficSignParam.cpp
-							TrafficSignTemplete.cpp
 							
-							TrafficSignMethodBase.cpp
-							TrafficSignMethod.cpp
-							TrafficSignMethodHu.cpp
-							
-							TrafficSignPropertyBase.cpp
-							TrafficSignProperty.cpp
-							TrafficSignPropertyHu.cpp
-							
+
 							main_traffic_sign.cpp
 					)
 
 TARGET_LINK_LIBRARIES(EXE_TRAFFIC_SIGN
-
+								TRAFFIC_SIGN_LIB
 								MY_SDK_LIB)
 				
 ######################################

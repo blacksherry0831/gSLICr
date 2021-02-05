@@ -252,7 +252,7 @@ double TrafficSignPropertyHu::matchShapesImg(TrafficSignPropertyHu * _tsph)
 	 std::shared_ptr<TrafficSignPropertyHu>		_t)
 {
 #if 1
-	 IplImage  * s_img=_s->ColorBgraImg();
+	 IplImage  * s_img = _s->ColorBgraImg();
 	 IplImage  * t_img = _t->ColorBgraImg();
 #else
 	 IplImage  * s_img = _s->BinaryImg();
@@ -335,6 +335,29 @@ double TrafficSignPropertyHu::matchShapesImg(TrafficSignPropertyHu * _tsph)
 	 mRotationAngle = calcRotateAngle1(roi_square,tmp,roiContours);
 
 	 return mRotationAngle;
+ }
+ /*-----------------------------------------*/
+ /**
+ *
+ */
+ /*-----------------------------------------*/
+ double TrafficSignPropertyHu::getArrowAngle(std::string _type)
+ {
+	 double A;
+	 
+	 if (_type == "Forward") {
+		 A = (mRotationAngle - 90) * CV_PI / 180;
+		
+	 }else if (_type == "Left") {
+		 A = (mRotationAngle - 180)* CV_PI / 180;
+		 
+	 } else if (_type == "Right") {
+		  A = (mRotationAngle)* CV_PI / 180; 
+	 } else {
+		 CV_Assert(0);
+	 }
+
+	 return		A;
  }
 /*-----------------------------------------*/
 /**
@@ -468,20 +491,10 @@ double TrafficSignPropertyHu::matchShapesImg(TrafficSignPropertyHu * _tsph)
 		cv::Scalar color = cv::Scalar(0, 0, 0, 255);
 		const int thickness = 2;
 
-		if (_type == "Forward") {
-			const double A = (mRotationAngle - 90) * CV_PI / 180;
-			cv::arrowedLine(mat, center, cv::Point(center.x +R*cos(A), center.y+ R*sin(A)), color, thickness);
-		}
+		const double A = getArrowAngle(_type);
 
-		if (_type == "Left") {
-			const double A = (mRotationAngle-180)* CV_PI / 180;
-			cv::arrowedLine(mat, center, cv::Point(center.x + R*cos(A), center.y + R*sin(A)), color, thickness);
-		}
-
-		if (_type == "Right") {
-			const double A = (mRotationAngle) * CV_PI / 180;
-			cv::arrowedLine(mat, center, cv::Point(center.x + R*cos(A), center.y + R*sin(A)), color, thickness);
-		}
+		cv::arrowedLine(mat, center, cv::Point(center.x +R*cos(A), center.y+ R*sin(A)), color, thickness);
+		
 		
   }
   /*-----------------------------------------*/

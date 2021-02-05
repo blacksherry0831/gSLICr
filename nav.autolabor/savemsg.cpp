@@ -14,6 +14,7 @@
 SaveMsg::SaveMsg(QObject *parent) :
     QThread(parent)
 {
+
 }
 
 SaveMsg::~SaveMsg()

@@ -11,6 +11,7 @@
 #include "opencv2/nonfree/nonfree.hpp"    
 #include "opencv2/legacy/legacy.hpp"
 #include <opencv2/opencv.hpp>
+#include "opencv2/highgui/highgui.hpp"
 #endif
 /*********************************************************/
 #if (CV_MAJOR_VERSION==3)

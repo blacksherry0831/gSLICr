@@ -4,6 +4,12 @@
 *
 */
 /*----------------------------------------------------------------*/
+const QString	SensorMsgsPointCloud::sensor_msgs__PointCloud = "sensor_msgs/PointCloud";
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 SensorMsgsPointCloud::SensorMsgsPointCloud(
 	QObject* parent,
 	const QString _topic, 

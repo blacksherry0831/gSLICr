@@ -45,9 +45,9 @@
          <enum>QLayout::SetMaximumSize</enum>
         </property>
         <item>
-         <widget class="QTabWidget" name="tabWidget">
+         <widget class="QTabWidget" name="tabWidget_top_down_org">
           <property name="currentIndex">
-           <number>2</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tab">
            <attribute name="title">
@@ -87,7 +87,7 @@
                <bool>false</bool>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
               </property>
              </widget>
             </item>
@@ -121,7 +121,7 @@
                <string>TextLabel_image_svg</string>
               </property>
               <property name="alignment">
-               <set>Qt::AlignCenter</set>
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
               </property>
              </widget>
             </item>
@@ -129,7 +129,7 @@
           </widget>
           <widget class="QWidget" name="tab_2">
            <attribute name="title">
-            <string>calibration</string>
+            <string>calibration.svg</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_9">
             <item>
@@ -191,6 +191,63 @@
               </property>
               <property name="text">
                <string>TextLabel_top_down</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_org">
+           <attribute name="title">
+            <string>calibration.org</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_18">
+            <item>
+             <widget class="QLabel" name="label_calibration_org">
+              <property name="minimumSize">
+               <size>
+                <width>480</width>
+                <height>270</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>1920</width>
+                <height>1080</height>
+               </size>
+              </property>
+              <property name="sizeIncrement">
+               <size>
+                <width>16</width>
+                <height>9</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>TextLabel_calibration_org</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_top_down_org">
+              <property name="minimumSize">
+               <size>
+                <width>480</width>
+                <height>270</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>1920</width>
+                <height>1080</height>
+               </size>
+              </property>
+              <property name="sizeIncrement">
+               <size>
+                <width>16</width>
+                <height>9</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>TextLabel_top_down_org</string>
               </property>
              </widget>
             </item>
@@ -1000,7 +1057,6 @@
     <property name="title">
      <string>Connect</string>
     </property>
-    <addaction name="action_toggle_calibration_SVG_SRC"/>
    </widget>
    <widget class="QMenu" name="menuImageProcessing">
     <property name="title">

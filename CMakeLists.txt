@@ -51,6 +51,9 @@ ADD_SUBDIRECTORY(QT_SDK_LIB)
 ADD_SUBDIRECTORY(OPENCV_QT_SDK_LIB)
 ADD_SUBDIRECTORY(SGVBaseCode)
 ADD_SUBDIRECTORY(MemcpyCv_gSLICr)
+
+ADD_SUBDIRECTORY(TRAFFIC_SIGN_LIB)
+
 ###############################################################################
 ADD_SUBDIRECTORY(Fuzzy)
 ###############################################################################

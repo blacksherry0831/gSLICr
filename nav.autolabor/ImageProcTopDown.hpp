@@ -31,43 +31,23 @@ public:
 private:
 	QString mPaths;
 	bool mSaveImageOnce;
+private:
+	QSharedPointer<ImgProcAirView> mAirViewTf;
 public:
 	void init_param();
 	void InitImageSavePath();
-private:
-	QVector<QVector3D> getPointCloud(const IplImage* _img);
-	
-	QVector3D toCamreaCoord(
-		QVector3D _pt,
-		QVector3D _base,
-		const float _mpp);
-	
-	void PushPointAddAxisZ(
-		const QVector3D& _pt,
-		QVector<QVector3D>& _pts,
-		const int Z);
-	void PushPoint(
-		const QVector3D& _pt,
-		QVector<QVector3D>& _pts);
-
-	  QVector<QVector3D> Cvt2PolarCoord(QVector<QVector3D> _xy);
-	  QVector<QVector3D> Cvt2CartesianCoord(QVector<QVector3D> _rt);
-
-
-private:
-	void emit_sig_point_cloud(IplImage* _src);
-public:
-	
-signals:
-	
+private:	
+signals:	
 	void sig_1_frame_bgra_ref(QSharedPointer<QImage>, const QDateTime);
-	void sig_point_cloud(QVector<QVector3D>);
-public slots :
-	
+public slots :	
 	void ImageProc(QSharedPointer<QImage> _img_p, const QDateTime _time);
-private:
-	ImgProcAirView m_imgProcAirV;
-	
+public:
+	void  setAirViewTf(QSharedPointer<ImgProcAirView> _av);
+protected:	
+	bool  airViewBirdsImg(IplImage * _src, IplImage * _dst);
+
+	float airViewMetersPerPixel();
+
 	void ProcImageFrame(
 		QSharedPointer<QImage> _img_p,
 		const QDateTime& _time);
