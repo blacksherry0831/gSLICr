@@ -67,29 +67,62 @@ MainWindow::~MainWindow()
 *
 */
 /*----------------------------------------------------------------*/
+QStringList MainWindow::getTopicAllFrontCam()
+{
+	QStringList	qstrlist_t;
+
+	qstrlist_t.push_back(ROS_topic_f_cam_svg_pointcloud);
+			
+	qstrlist_t.push_back(ROS_topic_f_cam_tsign_pc_red);
+	qstrlist_t.push_back(ROS_topic_f_cam_tsign_pc_green);
+	qstrlist_t.push_back(ROS_topic_f_cam_tsign_pc_yellow);
+
+	qstrlist_t.push_back(ROS_topic_f_cam_tsign_pose_red);
+	qstrlist_t.push_back(ROS_topic_f_cam_tsign_pose_green);
+	qstrlist_t.push_back(ROS_topic_f_cam_tsign_pose_yellow);
+
+	return qstrlist_t;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
+QStringList MainWindow::getTopicTypeAllFrontCam()
+{
+	QStringList	qstrlist_t;
+	
+	qstrlist_t.push_back(SensorMsgsPointCloud::sensor_msgs__PointCloud);
+
+	qstrlist_t.push_back(SensorMsgsPointCloud::sensor_msgs__PointCloud);
+	qstrlist_t.push_back(SensorMsgsPointCloud::sensor_msgs__PointCloud);
+	qstrlist_t.push_back(SensorMsgsPointCloud::sensor_msgs__PointCloud);
+
+	qstrlist_t.push_back(geometry_msgs_PoseStamped::geometry_msgs__PoseStamped);
+	qstrlist_t.push_back(geometry_msgs_PoseStamped::geometry_msgs__PoseStamped);
+	qstrlist_t.push_back(geometry_msgs_PoseStamped::geometry_msgs__PoseStamped);
+		
+	return qstrlist_t;
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 void MainWindow::advertiseTopic()
 {
-
-	const int		topicLen = 5;
-	const QString	topic[topicLen] = {
-		ROS_topic_f_cam_svg_pointcloud,
-		ROS_topic_f_cam_tsign_pose_red,
-		ROS_topic_f_cam_tsign_pose_yellow,
-		ROS_topic_f_cam_tsign_pose_green,
-		ROS_topic_f_cam_tsign_pointcloud
-
-	};
-	const QString	topicType[topicLen] = {
-		SensorMsgsPointCloud::sensor_msgs__PointCloud ,
-		geometry_msgs_PoseStamped::geometry_msgs__PoseStamped,
-		geometry_msgs_PoseStamped::geometry_msgs__PoseStamped,
-		geometry_msgs_PoseStamped::geometry_msgs__PoseStamped,
-		SensorMsgsPointCloud::sensor_msgs__PointCloud ,
-	};
+	QStringList	 topic = getTopicAllFrontCam();
+	QStringList	 topicType = getTopicTypeAllFrontCam();
 	
+	const int topicLen=topic.size();
+	
+	Q_ASSERT(mIsAdvertiseTopic.size() > topicLen);
+
 	for (size_t ti = 0; ti < topicLen; ti++){
 		if (!mIsAdvertiseTopic[ti]) {
-			mIsAdvertiseTopic[ti] = advertiseTopicOne(topic[ti], topicType[ti]);
+			mIsAdvertiseTopic[ti] = advertiseTopicOne(
+				topic[ti],
+				topicType[ti]);
 		}
 	}
 		
@@ -115,13 +148,22 @@ int MainWindow::advertiseTopicOne(
 *
 */
 /*----------------------------------------------------------------*/
+void MainWindow::advertiseTopic_PublishTF()
+{
+	advertiseTopic();
+	publishTF_Camera();
+}
+/*----------------------------------------------------------------*/
+/**
+*
+*/
+/*----------------------------------------------------------------*/
 void MainWindow::initParam()
 {
 	this->mShowDirection = false;
 	this->mIsCarRunAuto=false;
 
-	memset(this->mIsAdvertiseTopic, 0, sizeof(this->mIsAdvertiseTopic));
-	
+	this->mIsAdvertiseTopic.resize(1024, false);
 	//全局变量初始化
 	Quanju::x = 1;
 	Quanju::y = 0;
@@ -223,6 +265,7 @@ void MainWindow::initMenuCollect()
 	connect(ui->actionCollectOnce, SIGNAL(triggered(bool)), &ppImageOrg, SLOT(SetSaveImageOnce(bool)));
 
 	connect(ui->actionCollectOnceTopDown, SIGNAL(triggered(bool)), mImageProcTopDownSVG.get(), SLOT(SetSaveImageOnce(bool)));
+	connect(ui->actionCollectOnceTopDown, SIGNAL(triggered(bool)), mImageProcTopDownOrg.get(), SLOT(SetSaveImageOnce(bool)));
 
 }
 /*----------------------------------------------------------------*/
@@ -1049,9 +1092,15 @@ void MainWindow::publishPose(
 /*----------------------------------------------------------------*/
 void MainWindow::publishTF_Camera()
 {
-	geometry_msgs_TransformStamped tf_camera_front(ROS_frame_id_base, ROS_frame_id_camera);
+	geometry_msgs_TransformStamped tf_camera_front(
+		ROS_frame_id_base, 
+		ROS_frame_id_camera);
+
+	tf_camera_front.setTrans(ROS_TF_cam_Trans);
+
 	tf_tfMessage tf_t;
 	tf_t.setTransformStamped(tf_camera_front);
+
 	mCarHardware->WebSocketSendMessageEx(tf_t.toJsonStr());
 }
 /*----------------------------------------------------------------*/
@@ -1059,25 +1108,40 @@ void MainWindow::publishTF_Camera()
 *
 */
 /*----------------------------------------------------------------*/
-void MainWindow::PublishPointCloud_TS(QVector<QVector3D> _ptc)
+void MainWindow::PublishPointCloud_TS(
+	QString _color,
+	QVector<QVector3D> _ptc)
 {
-	advertiseTopic();
-	publishTF_Camera();
-	publishPointCloud_FrameCamrea(
-		ROS_topic_f_cam_tsign_pointcloud,
-		_ptc);
+	advertiseTopic_PublishTF();
+
+	const QString	topic_ts[] = {
+		ROS_topic_f_cam_tsign_pc_red,
+		ROS_topic_f_cam_tsign_pc_green,
+		ROS_topic_f_cam_tsign_pc_yellow,
+	};
+
+	for each(auto var in topic_ts) {
+		if (var.contains(_color)) {
+			publishPointCloud_FrameCamrea(
+				var,
+				_ptc);
+		}
+	}
+
 }
 /*----------------------------------------------------------------*/
 /**
 *
 */
 /*----------------------------------------------------------------*/
-void MainWindow::PublishPose_TS(QString _color,QVector3D _p3t, QVector4D _p4t)
+void MainWindow::PublishPose_TS(
+	QString _color,
+	QVector3D _p3t,
+	QVector4D _p4t)
 {
-	advertiseTopic();
-	publishTF_Camera();
+	advertiseTopic_PublishTF();
 
-	const QString	topic[3] = {		
+	const QString	topic[] = {		
 		ROS_topic_f_cam_tsign_pose_red,
 		ROS_topic_f_cam_tsign_pose_yellow,
 		ROS_topic_f_cam_tsign_pose_green,
@@ -1097,8 +1161,8 @@ void MainWindow::PublishPose_TS(QString _color,QVector3D _p3t, QVector4D _p4t)
 /*----------------------------------------------------------------*/
 void MainWindow::PublishPointCloud_SVG(QVector<QVector3D> _ptc)
 {
-	advertiseTopic();	
-	publishTF_Camera();
+	advertiseTopic_PublishTF();
+
 	publishPointCloud_FrameCamrea(
 		ROS_topic_f_cam_svg_pointcloud,
 		_ptc);
@@ -1312,9 +1376,9 @@ void MainWindow::initThreadWorkConnect_TopDown_Org()
 		SLOT(ImageProc(QSharedPointer<QImage>, QDateTime)));
 
 	connect(topDown,
-		SIGNAL(sig_point_cloud(QVector<QVector3D>)),
+		SIGNAL(sig_point_cloud(QString,QVector<QVector3D>)),
 		this,
-		SLOT(PublishPointCloud_TS(QVector<QVector3D>)));
+		SLOT(PublishPointCloud_TS(QString,QVector<QVector3D>)));
 
 	connect(topDown,
 		SIGNAL(sig_pose_position_orientation(QString,QVector3D, QVector4D)),

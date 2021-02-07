@@ -139,7 +139,7 @@ void TrafficSignMethodHu::cutTempleteArea(const int _blockSz)
 	cvInRangeS(mImgHsv, R01_low, R01_up, mImgBinRed01);//red
 	cvOr(mImgBinRed00, mImgBinRed01, mImgBinRed);//red
 
-	cvInRangeS(mImgHsv, Cyan_low, Cyan_up, mImgBinGreen);//cyan
+	cvInRangeS(mImgHsv, Green_low, Cyan_up, mImgBinGreen);//cyan
 
 	this->mProperty.clear();
 

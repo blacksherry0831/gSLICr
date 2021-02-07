@@ -70,3 +70,12 @@ void geometry_msgs_TransformStamped::setChildFrameId(const QString	_frame_id)
 *
 */
 /*-------------------------------------*/
+void geometry_msgs_TransformStamped::setTrans(const QVector3D _p3t)
+{
+	this->m_transform.setTranslation(_p3t);
+}
+/*-------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------*/

@@ -59,3 +59,12 @@ QJsonObject geometry_msgs_Transform::getJsonObj()
 *
 */
 /*-------------------------------------*/
+void geometry_msgs_Transform::setTranslation(const QVector3D _p3t)
+{
+	this->m_translation = _p3t;
+}
+/*-------------------------------------*/
+/**
+*
+*/
+/*-------------------------------------*/

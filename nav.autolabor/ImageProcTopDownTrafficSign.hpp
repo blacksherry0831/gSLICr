@@ -17,7 +17,7 @@ public:
     explicit ImageProcTopDownTrafficSign();
     ~ImageProcTopDownTrafficSign();
 signals:
-	void sig_point_cloud(QVector<QVector3D>);
+	void sig_point_cloud(QString, QVector<QVector3D>);
 	void sig_pose_position_orientation(QString,QVector3D,QVector4D);
 private:
 	void emit_pose_position_orientation(

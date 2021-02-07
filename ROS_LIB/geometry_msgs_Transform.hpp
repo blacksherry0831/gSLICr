@@ -22,6 +22,6 @@ public:
 
 	QJsonObject getJsonObj();
 public:
-
+	void setTranslation(const QVector3D _p3t);
 
 };

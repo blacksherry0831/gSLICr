@@ -30,4 +30,6 @@ public:
 	QString toJsonStr();
 public:
 	void setChildFrameId(const QString	_frame_id);
+public:
+	void setTrans(const QVector3D _p3t);
 };

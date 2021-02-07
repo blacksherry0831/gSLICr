@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <cfg.data>
+        <property>debug</property>
+        <save.image>0</save.image>
+        <save.debug>0</save.debug>
+        <output.path>E:\OutPutImg\</output.path>
+        <source.path>X:\ImageDataBase\400img\img-math2-p-220t0.jpg</source.path>
+    </cfg.data>
+</config>

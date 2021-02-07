@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <cfg.data>
+        <property>mainwindow.nav.autolabor.cfg</property>
+        <cam.front.dst.cam2board>0.9</cam.front.dst.cam2board>
+        <cam.front.sz.w.board>11</cam.front.sz.w.board>
+        <cam.front.sz.h.board>8</cam.front.sz.h.board>
+        <cam.front.sz.cell.board>0.03</cam.front.sz.cell.board>
+        <cam.front.sz.map>18</cam.front.sz.map>
+        <cam.front.Aff.X.points>932,1125,900,1166</cam.front.Aff.X.points>
+        <cam.front.Aff.Y.points>832,827,947,941</cam.front.Aff.Y.points>
+    </cfg.data>
+</config>

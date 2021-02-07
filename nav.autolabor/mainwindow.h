@@ -75,10 +75,13 @@ public:
 private:
 	bool mIsCarRunAuto;
 	bool mShowDirection;
-	bool mIsAdvertiseTopic[3];
+	std::vector<bool> mIsAdvertiseTopic;
 private:
+	QStringList	getTopicAllFrontCam();
+	QStringList	getTopicTypeAllFrontCam();
 	void advertiseTopic();
 	int  advertiseTopicOne(const QString _topic,const QString _type);
+	void advertiseTopic_PublishTF();
 private:
 	void initParam();
 	void initObject();
@@ -103,13 +106,16 @@ private:
 	const QString	ROS_frame_id_camera		=	"base_front_camera_link";
 private:
 	const QString	ROS_topic_f_cam_svg_pointcloud		=	"/cam_front_svg_pointcloud";
+private:
 	const QString	ROS_topic_f_cam_tsign_pose_red		=	"/cam_front_tsign_pose_red";	
 	const QString	ROS_topic_f_cam_tsign_pose_green	=	"/cam_front_tsign_pose_green";
 	const QString	ROS_topic_f_cam_tsign_pose_yellow	=	"/cam_front_tsign_pose_yellow";
-	const QString	ROS_topic_f_cam_tsign_pointcloud	=	"/cam_front_tsign_point_cloud";
-
 private:
-
+	const QString	ROS_topic_f_cam_tsign_pc_red		=	"/cam_front_tsign_pc_red";
+	const QString	ROS_topic_f_cam_tsign_pc_green		=	"/cam_front_tsign_pc_green";
+	const QString	ROS_topic_f_cam_tsign_pc_yellow		=	"/cam_front_tsign_pc_yellow";
+private:
+	const QVector3D	ROS_TF_cam_Trans= QVector3D(0.35,0,0);
 private:
 	void initMainWindowUI();
 	void initMainWindowUI_Connect();
@@ -229,7 +235,7 @@ public:
 	void publishTF_Camera();
 public slots:
 	void PublishPointCloud_SVG(QVector<QVector3D> _ptc);
-	void PublishPointCloud_TS(QVector<QVector3D> _ptc);
+	void PublishPointCloud_TS(QString _color, QVector<QVector3D> _ptc);
 	void PublishPose_TS(QString _color,QVector3D _p3t, QVector4D _p4t);
 
 	

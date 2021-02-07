@@ -256,7 +256,8 @@ void ImageProcTopDownTrafficSign::emit_pointcloud(
 {
 	std::vector<cv::Point> pts= _r->BinImgPoints_ImgCoord();
 	QVector<QVector3D> pts3d=cvtPointCloud2CamreaCoord(_src,pts);
-	emit sig_point_cloud(pts3d);
+	const QString	color = QString::fromStdString(_r->getColorStr());
+	emit sig_point_cloud(color,pts3d);
 }
 /*-----------------------------------------*/
 /**
